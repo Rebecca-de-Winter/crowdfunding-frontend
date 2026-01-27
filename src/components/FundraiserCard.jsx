@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
+import "./FundraiserCard.css"; 
 
 function FundraiserCard(props) {
   const { fundraiserData: {image, title} } = props;
 
   return (
-    <div>
+    <div className="fundraiser-card">
       <Link to="/fundraiser">
         <img src={image} />
         <h3>{title}</h3>
