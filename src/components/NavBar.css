@@ -1,0 +1,408 @@
+:root {
+  /* Backyard Festival palette */
+  --bg: #07492d;        /* dark green */
+  --text: #fdf4e1;      /* creamy */
+  --muted: rgb(240, 226, 186);
+  --line: rgba(245, 232, 205, 0.18);
+
+  --accent: #fabb4c;    /* warm yellow */
+  --accent2: #f6a551;   /* orange */
+  --linkHover: #4ec3b8; /* teal */
+}
+
+/* NAV */
+.navbar {
+  position: sticky;
+  width: 100%;
+  top: 0;
+  z-index: 50;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  overflow-x: clip; /* or hidden; clip is nicer when supported */
+}
+
+/* keep centered content but background still full width */
+.navbar-inner {
+  
+  max-width: 100px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Logo (now image) */
+.navbar-logo {
+  text-decoration: none;
+  color: var(--text);
+  line-height: 1;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
+
+.navbar-logo-img {
+  height: 55px;
+  width: auto;
+  display: block;
+}
+
+/* Desktop links */
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-left: 10px;
+  white-space: nowrap; 
+  flex: 1;   
+}
+
+.navbar-link {
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 650;
+  font-size: 0.98rem;
+  font-family: Nunito, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  padding: 8px 10px;
+  border-radius: 999px;
+  transition: transform 0.12s ease, background 0.12s ease, color 0.12s ease;
+}
+
+.navbar-link:hover {
+  color: var(--text);
+  background: rgba(245, 232, 205, 0.08);
+  transform: translateY(-1px);
+}
+
+/* Right side */
+.navbar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+@media (max-width: 1100px) {
+  .navbar-inner {
+    max-width: none;
+    padding: 12px 14px;
+  }
+
+  .navbar-links {
+    gap: 12px;
+  }
+
+  .navbar-link {
+    padding: 6px 8px;
+    font-size: 0.95rem;
+  }
+
+  /* CTA is usually what forces overflow first */
+  .cta-btn {
+    padding: 9px 12px;
+  }
+
+  /* reduce search expansion so it doesn't shove things */
+  .search.open .search-input {
+    width: 170px;
+  }
+}
+
+@media (min-width: 901px) {
+  .search {
+    position: relative;
+    flex-shrink: 0;
+    gap: 0;
+  }
+
+  /* keep the icon button in the normal flow */
+  .search-btn {
+    position: relative;
+    z-index: 3;
+  }
+
+  /* make the input overlay to the left of the magnifier */
+  .search-input {
+    position: absolute;
+    right: 52px;               /* sits just left of the icon button */
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+
+    width: 0;
+    opacity: 0;
+    pointer-events: none;      /* prevents clicks when closed */
+  }
+
+  .search.open .search-input {
+    width: 220px;
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+@media (max-width: 1100px) and (min-width: 901px) {
+  .search.open .search-input {
+    width: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+
+/* make it a bit bigger on mobile */
+@media (max-width: 900px) {
+  .navbar-logo-img {
+    height: 44px;
+  }
+}
+
+@media (max-width: 900px) {
+.navbar { outline: 4px solid hotpink; }
+
+ .login-icon {
+    margin-right: 18px;
+  }
+
+  .navbar-links {
+    display: none;
+  }
+
+  /* Make inner bar behave like MyCause */
+  .navbar-inner {
+    max-width: none;
+    width: 100%;
+    padding: 12px 14px;
+    justify-content: space-between;
+  }
+
+  /* actions row on the right */
+  .navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;                 /* more breathing room */
+    margin-right: 6px;         /* nudges cluster left */
+  }
+
+  /* Hide CTA on mobile top bar */
+  .cta-btn {
+    display: none;
+  }
+
+  /* Make ALL icons bigger and equal */
+  .icon-btn {
+    width: 70px;               /* bigger tap targets */
+    height: 70px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    padding: 0;
+    display: grid;
+    place-items: center;
+  }
+
+  .icon {
+    width: 40px;               /* visibly larger */
+    height: 40px;
+  }
+
+  .icon-btn:hover {
+    background: rgba(245, 232, 205, 0.12);
+    transform: none;
+  }
+
+  /* Keep hamburger visible */
+  .hamburger {
+    display: grid;
+  }
+
+  /* Search expansion – still tidy */
+  .search.open .search-input {
+    width: 160px;
+  }
+}
+
+
+
+/* Icon buttons (desktop default) */
+.icon-btn {
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--text);
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+}
+
+.icon-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(245, 232, 205, 0.08);
+  border-color: rgba(245, 232, 205, 0.25);
+}
+
+.icon {
+  width: 30px;
+  height: 30px;
+  display: block;
+  flex: 0 0 auto;   
+  fill: currentColor;
+}
+
+/* CTA button */
+.cta-btn {
+  text-decoration: none;
+  color: #183b2c;
+  background: linear-gradient(180deg, var(--accent), var(--accent2));
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 900;
+  font-family: Nunito, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+  transition: transform 0.12s ease, filter 0.12s ease;
+  white-space: nowrap;
+}
+
+.cta-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+
+/* SEARCH: remove outer pill; only expand input after click */
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;              /* CHANGED */
+  border: none;            /* CHANGED */
+  background: transparent; /* CHANGED */
+  overflow: visible;       /* CHANGED */
+  position: relative;
+  flex-shrink: 0;    
+}
+
+/* input is hidden until open */
+.search-input {
+  width: 0;
+  opacity: 0;
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  outline: none;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.10);
+  color: var(--text);
+  padding: 8px 12px;
+  font-weight: 700;
+  font-family: Nunito, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  transition: width 0.18s ease, opacity 0.18s ease;
+}
+
+.search-input::placeholder {
+  color: rgba(245, 232, 205, 0.7);
+  font-weight: 700;
+}
+
+/* Open state */
+.search.open .search-input {
+  width: 220px;
+  opacity: 1;
+}
+
+/* Mobile panel */
+.mobile-panel {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px 12px;
+  display: none;
+}
+
+.mobile-panel.open {
+  display: block;
+}
+
+.mobile-links {
+  margin-top: 10px;
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  background: rgba(0, 0, 0, 0.10);
+  border-radius: 18px;
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.mobile-link {
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 800;
+  padding: 12px 12px;
+  border-radius: 14px;
+  background: rgba(245, 232, 205, 0.06);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+.mobile-link:hover {
+  background: rgba(78, 195, 184, 0.18);
+}
+
+.mobile-cta {
+  background: linear-gradient(180deg, var(--accent), var(--accent2));
+  color: #183b2c;
+}
+
+/* LOGIN ICON: hidden on desktop, shown on mobile */
+.login-icon {
+  display: none;
+}
+
+/* Responsive rules */
+@media (max-width: 900px) {
+  .navbar-links {
+    display: none;
+  }
+
+  /* hide CTA on mobile top bar (it stays in the drawer) */
+  .cta-btn {
+    display: none;
+  }
+
+  /* show login icon on mobile */
+  .login-icon {
+    display: grid;
+  }
+
+  .hamburger {
+    display: grid;
+  }
+
+  /* MyCause-like: icon buttons are plain on mobile */
+  .icon-btn {
+    border: none;
+    background: transparent;
+    width: 40px;
+    height: 40px;
+  }
+
+  .icon-btn:hover {
+    background: rgba(245, 232, 205, 0.08);
+    transform: none;
+    border-color: transparent;
+  }
+
+  /* Smaller search expansion on mobile */
+  .search.open .search-input {
+    width: 160px;
+  }
+}
+
+@media (min-width: 901px) {
+  .mobile-panel {
+    display: none !important;
+  }
+  .hamburger {
+    display: none;
+  }
+}

@@ -6,6 +6,8 @@ import HomePage from "./pages/HomePage.jsx";
 import FundraiserPage from "./pages/FundraiserPage.jsx";
 import Layout from "./components/Layout.jsx";
 import NavBar from "./components/NavBar.jsx"; 
+import "./index.css";
+
 
 
 const MyRouter = createBrowserRouter([
@@ -13,8 +15,8 @@ const MyRouter = createBrowserRouter([
       path: "/",
       element: <Layout />,
       children: [
-          { path: "/", element: <HomePage /> },
-          { path: "/fundraiser", element: <FundraiserPage /> },
+          { index: true, element: <HomePage /> },
+          { path: "fundraiser", element: <FundraiserPage /> },
       ],
   },
 ]);
