@@ -71,7 +71,7 @@ function NavBar() {
         {/* Center: Desktop nav links */}
         <nav className="navbar-links" aria-label="Primary navigation">
           <Link to="/" className="navbar-link">Home</Link>
-          <Link to="/fundraiser" className="navbar-link">Fundraiser</Link>
+          <Link to="/fundraisers" className="navbar-link">Fundraisers</Link> 
           <Link to="/resources" className="navbar-link">Resources</Link>
           <Link to="/how-it-works" className="navbar-link">How it Works</Link>
           <Link to="/login" className="navbar-link">Login</Link>
@@ -154,7 +154,7 @@ function NavBar() {
       <div id="mobile-nav" className={`mobile-panel ${menuOpen ? "open" : ""}`}>
         <nav className="mobile-links" aria-label="Mobile navigation">
           <Link to="/" className="mobile-link" onClick={closeMenu}>Home</Link>
-          <Link to="/fundraiser" className="mobile-link" onClick={closeMenu}>Fundraiser</Link>
+          <Link to="/fundraisers" className="mobile-link" onClick={closeMenu}>Fundraisers</Link>
           <Link to="/resources" className="mobile-link" onClick={closeMenu}>Resources</Link>
           <Link to="/how-it-works" className="mobile-link" onClick={closeMenu}>How it Works</Link>
           <Link to="/login" className="mobile-link" onClick={closeMenu}>Login</Link>
