@@ -32,9 +32,7 @@ function NavBar() {
   const searchInputRef = useRef(null);
 
   useEffect(() => {
-    if (searchOpen) {
-      searchInputRef.current?.focus();
-    }
+    if (searchOpen) searchInputRef.current?.focus();
   }, [searchOpen]);
 
   useEffect(() => {
@@ -47,7 +45,6 @@ function NavBar() {
 
   const toggleMenu = () => setMenuOpen((v) => !v);
 
-  // fix: clear query when closing (no stale state)
   const toggleSearch = () => {
     setSearchOpen((prev) => {
       const next = !prev;
@@ -64,7 +61,7 @@ function NavBar() {
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <header className="navbar">
+    <header className={`navbar ${searchOpen ? "search-mode" : ""}`}>
       <div className="navbar-inner">
         {/* Left: Logo */}
         <Link to="/" className="navbar-logo" onClick={closeMenu} aria-label="Backyard Festival Home">
@@ -73,21 +70,11 @@ function NavBar() {
 
         {/* Center: Desktop nav links */}
         <nav className="navbar-links" aria-label="Primary navigation">
-          <Link to="/" className="navbar-link">
-            Home
-          </Link>
-          <Link to="/fundraiser" className="navbar-link">
-            Fundraiser
-          </Link>
-          <Link to="/resources" className="navbar-link">
-            Resources
-          </Link>
-          <Link to="/how-it-works" className="navbar-link">
-            How it Works
-          </Link>
-          <Link to="/login" className="navbar-link">
-            Login
-          </Link>
+          <Link to="/" className="navbar-link">Home</Link>
+          <Link to="/fundraiser" className="navbar-link">Fundraiser</Link>
+          <Link to="/resources" className="navbar-link">Resources</Link>
+          <Link to="/how-it-works" className="navbar-link">How it Works</Link>
+          <Link to="/login" className="navbar-link">Login</Link>
         </nav>
 
         {/* Right: Search + CTA + Login icon (mobile) + Hamburger */}
@@ -115,6 +102,20 @@ function NavBar() {
               placeholder="Search festivals…"
               aria-label="Search festivals"
             />
+
+            {/* Close X (MyCause style) */}
+            {searchOpen && (
+              <button
+                type="button"
+                className="icon-btn search-close"
+                onClick={toggleSearch}
+                aria-label="Close search"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="icon">
+                  <path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.29 19.71 2.88 18.29 9.17 12 2.88 5.71 4.29 4.29 10.59 10.6l6.3-6.31 1.41 1.42Z" />
+                </svg>
+              </button>
+            )}
           </form>
 
           {/* Create Festival CTA (desktop) */}
@@ -152,21 +153,11 @@ function NavBar() {
       {/* Mobile dropdown panel */}
       <div id="mobile-nav" className={`mobile-panel ${menuOpen ? "open" : ""}`}>
         <nav className="mobile-links" aria-label="Mobile navigation">
-          <Link to="/" className="mobile-link" onClick={closeMenu}>
-            Home
-          </Link>
-          <Link to="/fundraiser" className="mobile-link" onClick={closeMenu}>
-            Fundraiser
-          </Link>
-          <Link to="/resources" className="mobile-link" onClick={closeMenu}>
-            Resources
-          </Link>
-          <Link to="/how-it-works" className="mobile-link" onClick={closeMenu}>
-            How it Works
-          </Link>
-          <Link to="/login" className="mobile-link" onClick={closeMenu}>
-            Login
-          </Link>
+          <Link to="/" className="mobile-link" onClick={closeMenu}>Home</Link>
+          <Link to="/fundraiser" className="mobile-link" onClick={closeMenu}>Fundraiser</Link>
+          <Link to="/resources" className="mobile-link" onClick={closeMenu}>Resources</Link>
+          <Link to="/how-it-works" className="mobile-link" onClick={closeMenu}>How it Works</Link>
+          <Link to="/login" className="mobile-link" onClick={closeMenu}>Login</Link>
           <Link to="/create-festival" className="mobile-link mobile-cta" onClick={closeMenu}>
             Create Festival
           </Link>

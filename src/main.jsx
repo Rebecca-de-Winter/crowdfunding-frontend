@@ -5,6 +5,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import HomePage from "./pages/HomePage.jsx";
 import FundraiserPage from "./pages/FundraiserPage.jsx";
 import Layout from "./components/Layout.jsx";
+import Footer from "./components/Footer.jsx"
 import NavBar from "./components/NavBar.jsx"; 
 import "./index.css";
 

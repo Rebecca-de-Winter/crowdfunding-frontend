@@ -1,14 +1,13 @@
 import { Outlet } from "react-router-dom";
 import NavBar from "./NavBar";
+import Footer from "./Footer";
 
 function Layout() {
   return (
     <div>
       <NavBar />
       <Outlet />
-      <footer>
-        By Becky Cole
-      </footer>
+      <Footer />
     </div>
   );
 }
