@@ -17,7 +17,7 @@ function Footer() {
         <div className="bf-footer__cols">
           <div className="bf-footer__col">
             <div className="bf-footer__heading">Explore</div>
-            <Link className="bf-footer__link" to="/fundraiser">Fundraisers</Link>
+            <Link className="bf-footer__link" to="/fundraisers">Fundraisers</Link>
             <Link className="bf-footer__link" to="/create-festival">Create Festival</Link>
             <Link className="bf-footer__link" to="/resources">Resources</Link>
           </div>

@@ -1,11 +1,161 @@
 .fundraiser-card {
-  width: 100%;
-  border: 1px solid black;
-  box-shadow: 0px 0px 5px gray;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  background: rgba(12, 18, 14, 0.55);
+  box-shadow: 0px 10px 24px rgba(0, 0, 0, 0.25);
+  transform: translateY(0);
+  color: var(--text);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+.fundraiser-card__body {
+  border-top: 1px solid rgba(245, 232, 205, 0.12);
 }
 
-.fundraiser-card img {
+.fundraiser-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0px 16px 32px rgba(0, 0, 0, 0.32);
+  border-color: rgba(245, 232, 205, 0.28);
+}
+
+.fundraiser-card__link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.fundraiser-card__imageWrap {
+  position: relative;
+}
+
+.fundraiser-card__image {
   width: 100%;
-  height: 300px;
+  height: 240px;
   object-fit: cover;
+  display: block;
+}
+
+.fundraiser-card__badges {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fundraiser-card__pill {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+}
+
+.fundraiser-card__pill.is-open {
+  border-color: rgba(120, 220, 160, 0.6);
+  background: rgba(120, 220, 160, 0.18);
+  color: rgb(185, 245, 210);
+}
+
+.fundraiser-card__pill.is-closed {
+  border-color: rgba(220, 140, 140, 0.6);
+  background: rgba(220, 140, 140, 0.18);
+  color: rgb(255, 210, 210);
+}
+
+.fundraiser-card__pill--muted {
+  opacity: 0.85;
+}
+
+.fundraiser-card__body {
+  padding: 14px 14px 16px;
+}
+
+.fundraiser-card__title {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+.fundraiser-card__excerpt {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  opacity: 0.95;
+}
+
+.fundraiser-card__excerpt--muted {
+  opacity: 0.75;
+}
+
+.fundraiser-card__meta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.fundraiser-card__metaLeft {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fundraiser-card__metaItem {
+  font-size: 0.9rem;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fundraiser-card__goal {
+  font-size: 0.95rem;
+  font-weight: 800;
+  opacity: 0.95;
+  white-space: nowrap;
+}
+
+.fundraiser-card__progressRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fundraiser-card__progressTrack {
+  height: 10px;
+  border-radius: 999px;
+  flex: 1 1 auto;
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  background: rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+}
+
+.fundraiser-card__progressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: rgba(250, 187, 76, 0.85);
+  width: 0%;
+  transition: width 240ms ease;
+}
+
+.fundraiser-card__progressText {
+  font-size: 0.85rem;
+  font-weight: 700;
+  opacity: 0.9;
+  flex: 0 0 auto;
+}
+
+.fundraiser-card__fine {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.8rem;
+  opacity: 0.75;
 }

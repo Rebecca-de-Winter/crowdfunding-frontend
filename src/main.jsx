@@ -1,9 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import FundraisersPage from "./pages/FundraisersPage.jsx";
 
 import HomePage from "./pages/HomePage.jsx";
 import FundraiserPage from "./pages/FundraiserPage.jsx";
+import LoginPage from "./pages/LoginPage.jsx";
 import Layout from "./components/Layout.jsx";
 import "./index.css";
 
@@ -12,14 +14,12 @@ const MyRouter = createBrowserRouter([
     path: "/",
     element: <Layout />,
     children: [
-      { index: true, element: <HomePage /> },
+  { index: true, element: <HomePage /> },
+  { path: "fundraisers", element: <FundraisersPage /> },
+  { path: "login", element: <LoginPage /> },
+  { path: "fundraiser/:id", element: <FundraiserPage /> },
+],
 
-      // list page alias (so your NavBar link works)
-      { path: "fundraisers", element: <HomePage /> },
-
-      // detail page (relative path is best inside children)
-      { path: "fundraiser/:id", element: <FundraiserPage /> },
-    ],
   },
 ]);
 
