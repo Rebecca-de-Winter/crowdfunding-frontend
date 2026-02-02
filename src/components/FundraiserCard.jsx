@@ -17,19 +17,31 @@ function FundraiserCard({ fundraiserData }) {
     date_created,
   } = fundraiserData;
 
-  const fundraiserLink = `/fundraiser/${id}`;
+  // UPDATED ROUTE to match main.jsx
+  const fundraiserLink = `/fundraisers/${id}`;
 
-  // Nice human label for your status field
-  const statusLabel = status ? status.replaceAll("_", " ") : (is_open ? "open" : "closed");
+  /**
+   * Status display
+   * Your backend Fundraiser model uses:
+   * - draft
+   * - active
+   * - closed
+   * - cancelled
+   *
+   * `is_open` is a computed convenience property (true when status === "active")
+   */
+  const statusLabel = status ? status.replaceAll("_", " ") : null;
+  const openLabel = is_open ? "Open" : "Closed";
 
-  // Goal is a string like "2500.00"
-  const goalNumber = goal ? Number(goal) : null;
+  // Goal comes back as a string like "2500.00" sometimes
+  const goalNumber = goal !== null && goal !== undefined ? Number(goal) : null;
 
-  // We don't have "raised" yet in your JSON, so we show a "setup" bar:
-  // - Draft = small
-  // - Open = medium
-  // - Closed = full
-  const progressPct = status === "draft" ? 20 : is_open ? 55 : 100;
+  /**
+   * Placeholder progress bar:
+   * (You don't have "raised" yet, so we give a visual indicator based on status.)
+   */
+  const progressPct =
+    status === "draft" ? 20 : status === "active" ? 55 : status === "closed" ? 100 : 10;
 
   const excerpt =
     description && description.length > 120
@@ -58,11 +70,13 @@ function FundraiserCard({ fundraiserData }) {
           />
 
           <div className="fundraiser-card__badges">
+            {/* Open/Closed pill (based on computed property) */}
             <span className={`fundraiser-card__pill ${is_open ? "is-open" : "is-closed"}`}>
-              {is_open ? "Open" : "Closed"}
+              {openLabel}
             </span>
 
-            {status ? (
+            {/* Raw status pill (draft/active/closed/cancelled) */}
+            {statusLabel ? (
               <span className="fundraiser-card__pill fundraiser-card__pill--muted">
                 {statusLabel}
               </span>
@@ -83,10 +97,14 @@ function FundraiserCard({ fundraiserData }) {
 
           <div className="fundraiser-card__meta">
             <div className="fundraiser-card__metaLeft">
-              {location ? <span className="fundraiser-card__metaItem">{location}</span> : null}
+              {location ? (
+                <span className="fundraiser-card__metaItem">{location}</span>
+              ) : null}
+
               {(start_date || end_date) ? (
                 <span className="fundraiser-card__metaItem">
-                  {formatDate(start_date)}{end_date ? ` → ${formatDate(end_date)}` : ""}
+                  {formatDate(start_date)}
+                  {end_date ? ` → ${formatDate(end_date)}` : ""}
                 </span>
               ) : null}
             </div>

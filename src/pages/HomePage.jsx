@@ -20,15 +20,23 @@ function HomePage() {
         </p>
 
         <div className="home-cta">
-          <Link className="home-button" to="/fundraisers">Browse Fundraisers</Link>
-          <Link className="home-button home-button--ghost" to="/create-festival">Create Festival</Link>
+          <Link className="home-button" to="/fundraisers">
+            Browse Fundraisers
+          </Link>
+
+          {/*  UPDATED ROUTE */}
+          <Link className="home-button home-button--ghost" to="/fundraisers/new">
+            Create Festival
+          </Link>
         </div>
       </section>
 
       <section className="home-featured">
         <div className="home-sectionHeader">
           <h2>Featured fundraisers</h2>
-          <Link className="home-link" to="/fundraisers">See all</Link>
+          <Link className="home-link" to="/fundraisers">
+            See all
+          </Link>
         </div>
 
         <div className="fundraiser-grid">

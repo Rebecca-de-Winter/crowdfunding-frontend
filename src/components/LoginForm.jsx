@@ -3,56 +3,65 @@ import { useNavigate } from "react-router-dom";
 import postLogin from "../api/post-login.js";
 
 function LoginForm() {
-    const navigate = useNavigate();  
-    const [credentials, setCredentials] = useState({
-        username: "",
-        password: "",
-    });
+  const navigate = useNavigate();
 
-    const handleChange = (event) => {
-        const { id, value } = event.target;
-        setCredentials((prevCredentials) => ({
-            ...prevCredentials,
-            [id]: value,
-        }));
-    };
+  const [credentials, setCredentials] = useState({
+    username: "",
+    password: "",
+  });
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        if (credentials.username && credentials.password) {
-            postLogin(
-                credentials.username,
-                credentials.password
-            ).then((response) => {
-                window.localStorage.setItem("token", response.token);
-                navigate("/");
-            });
-        }
-    };
+  const [error, setError] = useState(null);
+
+  const handleChange = (event) => {
+    const { id, value } = event.target;
+    setCredentials((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError(null);
+
+    if (!credentials.username || !credentials.password) return;
+
+    try {
+      const response = await postLogin(credentials.username, credentials.password);
+      window.localStorage.setItem("token", response.token);
+      navigate("/");
+    } catch (e) {
+      setError(e.message);
+    }
+  };
 
   return (
-    <form>
+    <form onSubmit={handleSubmit}>
       <div>
         <label htmlFor="username">Username:</label>
-                <input
-                    type="text"
-                    id="username"
-                    placeholder="Enter username"
-                    onChange={handleChange}
-                />
+        <input
+          type="text"
+          id="username"
+          placeholder="Enter username"
+          onChange={handleChange}
+          value={credentials.username}
+        />
       </div>
+
       <div>
         <label htmlFor="password">Password:</label>
         <input
-            type="password"
-            id="password"
-            placeholder="Password"
-            onChange={handleChange}
-            />
+          type="password"
+          id="password"
+          placeholder="Password"
+          onChange={handleChange}
+          value={credentials.password}
+        />
       </div>
-      <button type="submit" onClick={handleSubmit}>
-            Login
-      </button>
+
+      {error && <p>{error}</p>}
+
+      <button type="submit">Login</button>
     </form>
   );
 }

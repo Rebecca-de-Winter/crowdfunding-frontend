@@ -1,33 +1,47 @@
-async function postFundraiser(title, description, goal, image_url, location, start_date, end_date, status, enable_rewards, sort_order) {
-  const url = `${import.meta.env.VITE_API_URL}fundraisers`;
-  const response = await fetch(url, {
-    method: "POST", // We need to tell the server that we are sending JSON data so we set the Content-Type header to application/json
-    headers: {
-      "Content-Type": "application/json",
-    },
+import { authFetch } from "./auth-fetch";
+
+async function postFundraiser(
+  title,
+  description,
+  goal,
+  image_url,
+  location,
+  start_date,
+  end_date,
+  status,
+  enable_rewards,
+  sort_order
+) {
+  const url = `${import.meta.env.VITE_API_URL}fundraisers/`;
+
+  const response = await authFetch(url, {
+    method: "POST",
     body: JSON.stringify({
-      "title": title,
-      "description": description,
-      "goal": goal,
-      "image_url": image_url,
-      "location": location,
-      "start_date": start_date,
-      "end_date": end_date,
-      "status": status,
-      "enable_rewards": enable_rewards,
-      "sort_order": sort_order
+      title,
+      description,
+      goal,
+      image_url,
+      location,
+      start_date,
+      end_date,
+      status,
+      enable_rewards,
+      sort_order,
     }),
   });
 
   if (!response.ok) {
-    const fallbackError = `Error trying to login`;
+    const fallbackError = "Error creating fundraiser";
 
-    const data = await response.json().catch(() => {
-      throw new Error(fallbackError);
-    });
+    // Try to parse error body from DRF
+    const data = await response.json().catch(() => null);
 
-    const errorMessage = data?.detail ?? fallbackError;
-    throw new Error(errorMessage);
+    // DRF might return:
+    // - { detail: "..." }
+    // - OR field errors like { goal: ["..."], title: ["..."] }
+    const message = data?.detail ?? (data ? JSON.stringify(data) : fallbackError);
+
+    throw new Error(message);
   }
 
   return await response.json();

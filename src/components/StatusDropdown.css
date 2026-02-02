@@ -1,0 +1,96 @@
+:root {
+  --bg: #07492d;
+  --text: #fdf4e1;
+  --line: rgba(245, 232, 205, 0.18);
+  --accent: #fabb4c;
+  --accent2: #f6a551;
+}
+
+.statusdd {
+  position: relative;
+}
+
+.statusdd__button {
+  width: 100%;
+  box-sizing: border-box;
+
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background-color: rgba(0, 0, 0, 0.22);
+  color: var(--text);
+  backdrop-filter: blur(8px);
+  border-radius: 14px;
+  padding: 12px 44px 12px 12px;
+
+  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 700;
+  text-align: left;
+
+  cursor: pointer;
+  outline: none;
+  position: relative;
+}
+
+.statusdd__button:focus {
+  border-color: rgba(250, 187, 76, 0.55);
+  box-shadow: 0 0 0 3px rgba(250, 187, 76, 0.18);
+}
+
+.statusdd__chev {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  transform: translateY(-50%) rotate(45deg);
+  border-right: 2px solid rgba(253, 244, 225, 0.85);
+  border-bottom: 2px solid rgba(253, 244, 225, 0.85);
+}
+
+.statusdd__menu {
+  position: absolute;
+  z-index: 20;
+  left: 0;
+  right: 0;
+  margin-top: 8px;
+
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background-color: #0b3f2a;          /* solid dark green */
+
+  border-radius: 14px;
+  padding: 6px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+}
+
+.statusdd__item {
+  width: 100%;
+  text-align: left;
+
+  border: none;
+  background: transparent;
+  color: rgba(253, 244, 225, 0.92);
+
+  padding: 10px 10px;
+  border-radius: 12px;
+
+  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 750;
+
+  cursor: pointer;
+}
+
+.statusdd__item:hover {
+  background-color: #fabb4c;  /* solid gold */
+  color: #183b2c;
+}
+
+.statusdd__item.is-selected {
+  background-color: rgba(250, 187, 76, 0.18);
+  border: 1px solid rgba(250, 187, 76, 0.28);
+  color: rgba(253, 244, 225, 0.98);
+}
+
+
+.statusdd.is-disabled .statusdd__button {
+  opacity: 0.7;
+  cursor: not-allowed;
+}

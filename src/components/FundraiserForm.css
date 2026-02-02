@@ -1,0 +1,314 @@
+:root {
+  --bg: #07492d;
+  --text: #fdf4e1;
+  --line: rgba(245, 232, 205, 0.18);
+  --accent: #fabb4c;
+  --accent2: #f6a551;
+}
+
+/* =========================
+   FORM WRAPPER
+   ========================= */
+
+.fundraiser-form {
+  width: min(860px, 100%);
+  margin: 0 auto;
+
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 22px 18px;
+
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(8px);
+}
+
+/* =========================
+   HEADER
+   ========================= */
+
+.fundraiser-form__header {
+  margin-bottom: 12px;
+}
+
+.fundraiser-form__title {
+  margin: 0 0 6px;
+  color: var(--text);
+  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 900;
+  font-size: 1.4rem;
+}
+
+.fundraiser-form__subtitle {
+  margin: 0;
+  color: rgba(253, 244, 225, 0.78);
+  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.req {
+  color: var(--accent);
+  font-weight: 900;
+}
+
+.muted {
+  color: rgba(253, 244, 225, 0.68);
+  font-weight: 650;
+}
+
+/* =========================
+   GRID LAYOUT
+   ========================= */
+
+.fundraiser-form__grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr;
+  margin-top: 14px;
+}
+
+@media (min-width: 780px) {
+  .fundraiser-form__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .field--full {
+    grid-column: 1 / -1;
+  }
+}
+
+/* =========================
+   LABELS
+   ========================= */
+
+.field__label {
+  display: block;
+  margin-bottom: 6px;
+  color: rgba(253, 244, 225, 0.88);
+  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 800;
+}
+
+/* =========================
+   INPUTS & TEXTAREA
+   ========================= */
+
+.field__input,
+.field__textarea {
+  width: 100%;
+  box-sizing: border-box;
+
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.20);
+  color: var(--text);
+
+  border-radius: 14px;
+  padding: 12px 12px;
+
+  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 700;
+
+  outline: none;
+}
+
+.field__textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.field__input::placeholder,
+.field__textarea::placeholder {
+  color: rgba(253, 244, 225, 0.55);
+}
+
+.field__input:focus,
+.field__textarea:focus {
+  border-color: rgba(250, 187, 76, 0.55);
+  box-shadow: 0 0 0 3px rgba(250, 187, 76, 0.18);
+}
+
+/* =========================
+   SELECT (STATUS)
+   ========================= */
+
+.field__select {
+  width: 100%;
+  box-sizing: border-box;
+
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.20);
+  color: var(--text);
+
+  border-radius: 14px;
+  padding: 12px 44px 12px 12px;
+
+  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 700;
+
+  outline: none;
+  cursor: pointer;
+
+  /* remove native arrow */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  /* custom arrow */
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgba(253, 244, 225, 0.85) 50%),
+    linear-gradient(135deg, rgba(253, 244, 225, 0.85) 50%, transparent 50%),
+    linear-gradient(to right, rgba(245, 232, 205, 0.22), rgba(245, 232, 205, 0.22));
+  background-position:
+    calc(100% - 18px) calc(50% - 3px),
+    calc(100% - 12px) calc(50% - 3px),
+    calc(100% - 36px) 50%;
+  background-size:
+    6px 6px,
+    6px 6px,
+    1px 20px;
+  background-repeat: no-repeat;
+}
+
+.field__select:focus {
+  border-color: rgba(250, 187, 76, 0.55);
+  box-shadow: 0 0 0 3px rgba(250, 187, 76, 0.18);
+}
+
+.field__select option {
+  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 600;
+  background-color: #0b3f2a; /* solid dark green */
+  color: #fdf4e1;
+  border-bottom: 1px solid rgba(245, 232, 205, 0.18);
+}
+
+/* =========================
+   HINT TEXT
+   ========================= */
+
+.field__hint {
+  margin-top: 6px;
+  color: rgba(253, 244, 225, 0.62);
+  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 650;
+  font-size: 0.9rem;
+}
+
+/* =========================
+   TOGGLE
+   ========================= */
+
+.toggle__label {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.16);
+
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle__label input {
+  opacity: 0;
+  position: absolute;
+}
+
+.toggle__text {
+  color: rgba(253, 244, 225, 0.88);
+  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 800;
+}
+
+.toggle__slider {
+  width: 52px;
+  height: 30px;
+  border-radius: 999px;
+  background: rgba(253, 244, 225, 0.20);
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  position: relative;
+}
+
+.toggle__slider::after {
+  content: "";
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(253, 244, 225, 0.95);
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  transform: translateY(-50%);
+  transition: left 0.15s ease;
+}
+
+.toggle__label input:checked + .toggle__slider {
+  background: rgba(250, 187, 76, 0.30);
+  border-color: rgba(250, 187, 76, 0.55);
+}
+
+.toggle__label input:checked + .toggle__slider::after {
+  left: 25px;
+}
+
+/* =========================
+   SUBMIT BUTTON
+   ========================= */
+
+.fundraiser-form__footer {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.fundraiser-form__submit {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: linear-gradient(180deg, var(--accent), var(--accent2));
+  color: #183b2c;
+
+  border-radius: 999px;
+  padding: 12px 16px;
+
+  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 900;
+
+  cursor: pointer;
+
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.20);
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.fundraiser-form__submit:hover {
+  transform: translateY(-1px);
+}
+
+.fundraiser-form__submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* FORCE the select to use our dark theme (wins against global select styles) */
+.fundraiser-form .field__select {
+  background-color: rgba(0, 0, 0, 0.20);
+  color: var(--text);
+  border-color: rgba(245, 232, 205, 0.22);
+  color-scheme: dark;
+}
+/* Encourages dark native dropdown UI in supporting browsers */
+.fundraiser-form {
+  color-scheme: dark;
+}
+.fundraiser-form .field__select option {
+  background-color: #0b3f2a;
+  color: #fdf4e1;
+}
+.field__select option:hover,
+.field__select option:checked {
+  background-color: #fabb4c; /* your actual accent gold */
+  color: #183b2c;            /* deep green text for contrast */
+}

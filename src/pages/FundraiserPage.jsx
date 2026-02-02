@@ -31,6 +31,11 @@ function FundraiserPage() {
 
   const heroImg = image_url || "https://picsum.photos/1200/700";
 
+  const formatDate = (iso) => {
+    if (!iso) return "—";
+    return new Date(iso).toLocaleDateString();
+  };
+
   return (
     <div className="fundraiser">
       <Link className="fundraiser__back" to="/fundraisers">
@@ -49,11 +54,14 @@ function FundraiserPage() {
           <div className="fundraiser__meta">
             {location ? <span>{location}</span> : null}
 
+            {/* show formatted dates, and allow blanks */}
             {start_date || end_date ? (
               <span>
-                {start_date ?? "—"} {end_date ? `→ ${end_date}` : ""}
+                {formatDate(start_date)} {end_date ? `→ ${formatDate(end_date)}` : ""}
               </span>
-            ) : null}
+            ) : (
+              <span>Dates: —</span>
+            )}
 
             <span className="statusPill">
               <span
@@ -63,6 +71,11 @@ function FundraiserPage() {
               />
               {is_open ? "Open" : "Closed"}
             </span>
+
+            {/*  handy edit link (especially for your new creation flow) */}
+            <Link className="fundraiser__editLink" to={`/fundraisers/${id}/edit`}>
+              Edit
+            </Link>
           </div>
 
           <p className="fundraiser__desc">{description}</p>
@@ -87,9 +100,7 @@ function FundraiserPage() {
                       <li key={n.id} className="needItem">
                         <div className="needItem__top">
                           <div className="needItem__name">{n.title}</div>
-                          <span className={`badge badge--${n.status}`}>
-                            {n.status}
-                          </span>
+                          <span className={`badge badge--${n.status}`}>{n.status}</span>
                         </div>
 
                         {n.description ? (
@@ -97,9 +108,7 @@ function FundraiserPage() {
                         ) : null}
 
                         <div className="needItem__meta">
-                          <span
-                            className={`badge badge--priority-${n.priority}`}
-                          >
+                          <span className={`badge badge--priority-${n.priority}`}>
                             {n.priority}
                           </span>
                         </div>
@@ -124,9 +133,7 @@ function FundraiserPage() {
                       <li key={n.id} className="needItem">
                         <div className="needItem__top">
                           <div className="needItem__name">{n.title}</div>
-                          <span className={`badge badge--${n.status}`}>
-                            {n.status}
-                          </span>
+                          <span className={`badge badge--${n.status}`}>{n.status}</span>
                         </div>
 
                         {n.description ? (
@@ -134,9 +141,7 @@ function FundraiserPage() {
                         ) : null}
 
                         <div className="needItem__meta">
-                          <span
-                            className={`badge badge--priority-${n.priority}`}
-                          >
+                          <span className={`badge badge--priority-${n.priority}`}>
                             {n.priority}
                           </span>
                         </div>
@@ -161,9 +166,7 @@ function FundraiserPage() {
                       <li key={n.id} className="needItem">
                         <div className="needItem__top">
                           <div className="needItem__name">{n.title}</div>
-                          <span className={`badge badge--${n.status}`}>
-                            {n.status}
-                          </span>
+                          <span className={`badge badge--${n.status}`}>{n.status}</span>
                         </div>
 
                         {n.description ? (
@@ -171,9 +174,7 @@ function FundraiserPage() {
                         ) : null}
 
                         <div className="needItem__meta">
-                          <span
-                            className={`badge badge--priority-${n.priority}`}
-                          >
+                          <span className={`badge badge--priority-${n.priority}`}>
                             {n.priority}
                           </span>
                         </div>
@@ -214,26 +215,22 @@ function FundraiserPage() {
             <div className="panel__actions">
               {is_open ? (
                 <>
-                  <Link className="btn" to={`/fundraiser/${id}/pledge/money`}>
+                  {/* UPDATED ROUTES: plural fundraisers */}
+                  <Link className="btn" to={`/fundraisers/${id}/pledge/money`}>
                     Pledge money
                   </Link>
-                  <Link
-                    className="btn btn--ghost"
-                    to={`/fundraiser/${id}/pledge/time`}
-                  >
+
+                  <Link className="btn btn--ghost" to={`/fundraisers/${id}/pledge/time`}>
                     Volunteer time
                   </Link>
-                  <Link
-                    className="btn btn--ghost"
-                    to={`/fundraiser/${id}/pledge/items`}
-                  >
+
+                  <Link className="btn btn--ghost" to={`/fundraisers/${id}/pledge/items`}>
                     Pledge items
                   </Link>
                 </>
               ) : (
                 <p className="muted">
-                  This fundraiser is closed. Pledges are no longer being
-                  accepted.
+                  This fundraiser is closed. Pledges are no longer being accepted.
                 </p>
               )}
             </div>
@@ -249,9 +246,7 @@ function FundraiserPage() {
                 {reward_tiers.map((r) => (
                   <li className="reward" key={r.id}>
                     <div className="reward__name">{r.name ?? "Reward tier"}</div>
-                    <div className="reward__desc muted">
-                      {r.description ?? ""}
-                    </div>
+                    <div className="reward__desc muted">{r.description ?? ""}</div>
                   </li>
                 ))}
               </ul>
