@@ -248,7 +248,7 @@ function CreateFestivalPage() {
         <div className="cf-sectionHeader">
           <h2 className="cf-h2">Start blank</h2>
           <p className="cf-help">
-            Draft first, then set status to <strong>Active</strong> when you’re ready to accept pledges.
+            Set your status to Draft first, then set status to <strong>Active</strong> when you’re ready to accept pledges.
           </p>
         </div>
 
@@ -259,7 +259,7 @@ function CreateFestivalPage() {
 
       <section className="cf-section">
         <div className="cf-sectionHeader">
-          <h2 className="cf-h2">Or use a template</h2>
+          <h2 className="cf-h2">...Or use a template</h2>
           <p className="cf-help">Preview what you’ll get (needs + rewards), then click “Use this template”.</p>
         </div>
 

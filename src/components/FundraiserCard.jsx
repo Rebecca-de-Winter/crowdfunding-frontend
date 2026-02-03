@@ -30,7 +30,6 @@ function FundraiserCard({ fundraiserData }) {
    *
    * `is_open` is a computed convenience property (true when status === "active")
    */
-  const statusLabel = status ? status.replaceAll("_", " ") : null;
   const openLabel = is_open ? "Open" : "Closed";
 
   // Goal comes back as a string like "2500.00" sometimes
@@ -74,13 +73,6 @@ function FundraiserCard({ fundraiserData }) {
             <span className={`fundraiser-card__pill ${is_open ? "is-open" : "is-closed"}`}>
               {openLabel}
             </span>
-
-            {/* Raw status pill (draft/active/closed/cancelled) */}
-            {statusLabel ? (
-              <span className="fundraiser-card__pill fundraiser-card__pill--muted">
-                {statusLabel}
-              </span>
-            ) : null}
           </div>
         </div>
 
@@ -96,25 +88,28 @@ function FundraiserCard({ fundraiserData }) {
           )}
 
           <div className="fundraiser-card__meta">
-            <div className="fundraiser-card__metaLeft">
-              {location ? (
-                <span className="fundraiser-card__metaItem">{location}</span>
-              ) : null}
+  <div className="fundraiser-card__metaLeft">
+    {/* Row 1: Location (or blank spacer) */}
+    <span className="fundraiser-card__metaItem">
+      {location || "\u00A0"}
+    </span>
 
-              {(start_date || end_date) ? (
-                <span className="fundraiser-card__metaItem">
-                  {formatDate(start_date)}
-                  {end_date ? ` → ${formatDate(end_date)}` : ""}
-                </span>
-              ) : null}
-            </div>
+    {/* Row 2: Dates (or blank spacer to keep alignment consistent) */}
+    <span className="fundraiser-card__metaItem fundraiser-card__metaItem--date">
+      {(start_date || end_date)
+        ? `${formatDate(start_date)}${end_date ? ` → ${formatDate(end_date)}` : ""}`
+        : "\u00A0"}
+    </span>
+  </div>
 
-            <div className="fundraiser-card__metaRight">
-              {goalNumber ? (
-                <span className="fundraiser-card__goal">{formatMoney(goalNumber)}</span>
-              ) : null}
-            </div>
-          </div>
+  <div className="fundraiser-card__metaRight">
+  <span className={`fundraiser-card__goal ${goalNumber ? "" : "is-ghost"}`}>
+    {goalNumber ? formatMoney(goalNumber) : "A$0.00"}
+  </span>
+</div>
+
+</div>
+
 
           <div className="fundraiser-card__progressRow">
             <div className="fundraiser-card__progressTrack" aria-hidden="true">

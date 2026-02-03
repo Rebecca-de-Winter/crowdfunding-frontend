@@ -1,0 +1,564 @@
+:root {
+  --bg: #07492d;
+  --text: #fdf4e1;
+  --line: rgba(245, 232, 205, 0.18);
+  --accent: #fabb4c;
+  --accent2: #f6a551;
+
+  --gap: 18px; /* ✅ single source of truth for spacing */
+}
+
+.editfundraiser {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 22px 16px 60px;
+  color: var(--text);
+}
+
+.editfundraiser__back {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: var(--text);
+  text-decoration: none;
+  opacity: 0.9;
+}
+
+.editfundraiser__form {
+  display: grid;
+  gap: var(--gap);
+}
+
+/* =========================
+   AUTH BANNER (does NOT affect grids)
+   ========================= */
+.authBanner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(250, 187, 76, 0.35);
+  background: rgba(250, 187, 76, 0.12);
+}
+.authBanner strong {
+  font-weight: 900;
+}
+.authBanner span {
+  opacity: 0.9;
+}
+
+/* =========================
+   TOP GRID (Hero + sidebar)
+   ========================= */
+.editfundraiser__topGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--gap);
+}
+
+@media (min-width: 980px) {
+  .editfundraiser__topGrid {
+    grid-template-columns: 1fr 360px;
+    align-items: stretch; /* ✅ makes hero fill row height */
+  }
+}
+
+/* Hero */
+.editfundraiser__hero {
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.3);
+
+  height: 100%; /* ✅ fill the grid row height */
+}
+
+.editfundraiser__heroImg {
+  width: 100%;
+  height: 100%;      /* ✅ fill container */
+  min-height: 420px; /* ✅ still a nice hero */
+  object-fit: cover;
+  display: block;
+}
+
+/* Sidebar stacks */
+.editfundraiser__sidebarTop {
+  display: grid;
+  gap: var(--gap);
+  align-content: start;
+}
+
+/* =========================
+   BELOW GRID (Story + Enable rewards; Needs + Rewards)
+   ========================= */
+.editfundraiser__belowGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--gap);
+}
+
+@media (min-width: 980px) {
+  .editfundraiser__belowGrid {
+    grid-template-columns: 1fr 360px;
+    align-items: stretch; /* ✅ makes story + enable equal height */
+  }
+
+  .storyCol,
+  .rightLowerCol {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding-top: 14px;
+  }
+
+  /* Make panels stretch */
+  .storyCol .panel,
+  .rightLowerCol .panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .editfundraiser__needsHeaderSpan {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Right column blocks */
+.rightLowerCol,
+.rightRewardsCol {
+  display: grid;
+  gap: var(--gap);
+  align-content: start;
+}
+
+/* =========================
+   Panels
+   ========================= */
+.panel {
+  background: rgba(12, 18, 14, 0.55);
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  border-radius: 22px;
+  padding: 16px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.panel__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.panel__row:last-child {
+  margin-bottom: 0; /* ✅ stops fake “extra” spacing */
+}
+
+.panel__label {
+  opacity: 0.85;
+  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 800;
+  opacity: 0.9;
+}
+
+.panel__value {
+  font-weight: 800;
+}
+
+.panel__title {
+  margin: 0 0 10px;
+  font-weight: 900;
+}
+.panel .sidebarInput {
+  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 800;
+}
+.panel__row .panel__value {
+  width: 180px;   /* tweak: 160–220 */
+}
+
+/* =========================
+   Form fields
+   ========================= */
+.field {
+  margin: 0 0 14px;
+}
+.field--full {
+  width: 100%;
+}
+
+.field__label {
+  display: block;
+  margin-bottom: 6px;
+  color: rgba(253, 244, 225, 0.9);
+  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 800;
+}
+
+.field__input,
+.field__textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text);
+  border-radius: 14px;
+  padding: 12px;
+  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 700;
+  outline: none;
+}
+
+.field__input:focus,
+.field__textarea:focus {
+  border-color: rgba(250, 187, 76, 0.55);
+  box-shadow: 0 0 0 3px rgba(250, 187, 76, 0.18);
+}
+
+.field__hint {
+  margin: 8px 0 0;
+  opacity: 0.75;
+  font-size: 0.9rem;
+}
+
+/* Story panel: stretch + keep button at bottom */
+.storyPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.storyField {
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* ✅ textarea area can grow/shrink */
+}
+
+/* ✅ Key: textarea grows to fill available height so bottoms align */
+.storyPanel__textarea {
+  flex: 1;
+  min-height: 120px;
+  resize: none; /* ✅ prevents user dragging it and breaking alignment */
+}
+
+/* =========================
+   Enable rewards panel: stretch nicely
+   ========================= */
+.enablePanel {
+  display: flex;
+  flex-direction: column;
+}
+.enablePanel__note {
+  margin-top: auto; /* ✅ pushes note towards bottom if you want */
+  opacity: 0.78;
+}
+
+/* =========================
+   Alerts
+   ========================= */
+.form-alert {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 14px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(250, 187, 76, 0.35);
+  background: rgba(250, 187, 76, 0.12);
+  color: rgba(253, 244, 225, 0.95);
+}
+
+.muted {
+  opacity: 0.78;
+}
+
+/* =========================
+   Sidebar inputs
+   ========================= */
+.sidebarField {
+  margin-top: 10px;
+}
+
+.sidebarLabel {
+  font-weight: 800;
+  opacity: 0.9;
+  margin-bottom: 6px;
+}
+
+.sidebarInput {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text);
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-weight: 800;
+  outline: none;
+}
+
+.sidebarInput:focus {
+  border-color: rgba(250, 187, 76, 0.55);
+  box-shadow: 0 0 0 3px rgba(250, 187, 76, 0.18);
+}
+
+.sidebarRow {
+  display: grid;
+  gap: 10px;
+}
+
+.blockBox {
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.16);
+  border-radius: 14px;
+  padding: 8px;
+}
+
+/* Toggle styling */
+.toggle__label {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 14px;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+.toggle__label input {
+  opacity: 0;
+  position: absolute;
+  pointer-events: none;
+}
+
+.toggle__text {
+  color: rgba(253, 244, 225, 0.88);
+  font-weight: 800;
+}
+
+.toggle__slider {
+  width: 52px;
+  height: 30px;
+  border-radius: 999px;
+  background: rgba(253, 244, 225, 0.2);
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  position: relative;
+}
+
+.toggle__slider::after {
+  content: "";
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(253, 244, 225, 0.95);
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  transform: translateY(-50%);
+  transition: left 0.15s ease;
+}
+
+.toggle__label input:checked + .toggle__slider {
+  background: rgba(250, 187, 76, 0.3);
+  border-color: rgba(250, 187, 76, 0.55);
+}
+
+.toggle__label input:checked + .toggle__slider::after {
+  left: 25px;
+}
+
+/* =========================
+   Section header
+   ========================= */
+.sectionHeader__title {
+  margin: 0;
+}
+.sectionHeader__sub {
+  margin: 6px 0 0;
+  opacity: 0.8;
+}
+
+/* =========================
+   Needs stack
+   ========================= */
+.needsStack {
+  display: grid;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.needsCard {
+  background: rgba(12, 18, 14, 0.55);
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+}
+
+.needsCard__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.needsCard__titleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.needsCard__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.needsCard__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.needs__count {
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-weight: 900;
+  font-size: 0.85rem;
+}
+
+.needs__empty {
+  margin: 0;
+  opacity: 0.78;
+}
+
+.needSummary {
+  border: 1px solid rgba(245, 232, 205, 0.12);
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 14px;
+  padding: 10px;
+}
+
+.needItem__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.needItem__name {
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.needItem__desc {
+  margin: 0 0 8px;
+  opacity: 0.92;
+  line-height: 1.35;
+}
+
+.needItem__meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.badge {
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.28);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-transform: lowercase;
+  opacity: 0.95;
+}
+
+.badge--open {
+  border-color: rgba(120, 220, 160, 0.55);
+  background: rgba(120, 220, 160, 0.14);
+}
+
+.badge--closed {
+  border-color: rgba(220, 140, 140, 0.55);
+  background: rgba(220, 140, 140, 0.14);
+}
+
+.badge--priority-high {
+  border-color: rgba(250, 187, 76, 0.65);
+  background: rgba(250, 187, 76, 0.14);
+}
+
+.badge--priority-medium {
+  border-color: rgba(245, 232, 205, 0.35);
+  background: rgba(245, 232, 205, 0.1);
+}
+
+.badge--priority-low {
+  border-color: rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.22);
+  opacity: 0.9;
+}
+
+/* mini buttons */
+.miniBtn {
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--text);
+  font-weight: 900;
+  border-radius: 12px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+.miniBtn:hover {
+  filter: brightness(1.05);
+}
+.miniBtn--danger {
+  border-color: rgba(220, 140, 140, 0.55);
+  background: rgba(220, 140, 140, 0.14);
+}
+
+/* footer */
+.editfundraiser__footer {
+  margin-top: auto;
+  padding-top: 6px;
+  display: grid;
+  gap: 10px;
+  justify-content: start;
+}
+
+.fundraiser-form__submit {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: linear-gradient(180deg, var(--accent), var(--accent2));
+  color: #183b2c;
+  border-radius: 999px;
+  padding: 12px 16px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.fundraiser-form__submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* links row */
+.edit-linksRow {
+  margin-top: 10px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.edit-linksRow a {
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(245, 232, 205, 0.25);
+}
+.edit-linksRow a:hover {
+  border-bottom-color: rgba(250, 187, 76, 0.7);
+}

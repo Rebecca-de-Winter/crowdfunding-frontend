@@ -127,7 +127,7 @@
 
 @media (min-width: 980px) {
   .cf-templateGrid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 16px;
   }
 }

@@ -98,7 +98,7 @@ function FundraiserForm({ onSubmit, isSaving = false }) {
             className="field__input"
             type="text"
             id="title"
-            placeholder="e.g. Becky’s Backyard BBQ"
+            placeholder="e.g. Rock Concert at the Local Park"
             value={fundraiser.title}
             onChange={handleChange}
             disabled={isSaving}
@@ -113,7 +113,7 @@ function FundraiserForm({ onSubmit, isSaving = false }) {
           <textarea
             className="field__textarea"
             id="description"
-            placeholder="Short and magical: what are you raising money/time/items for?"
+            placeholder="Short and sweet: what are you raising money/time/items for?"
             value={fundraiser.description}
             onChange={handleChange}
             disabled={isSaving}

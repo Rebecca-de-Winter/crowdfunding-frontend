@@ -170,11 +170,6 @@
   grid-template-columns: 1fr;
 }
 
-@media (min-width: 980px) {
-  .needs__grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
 
 .needs__block {
   background: rgba(12, 18, 14, 0.55);
