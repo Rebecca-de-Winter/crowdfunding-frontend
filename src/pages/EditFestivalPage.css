@@ -146,6 +146,7 @@
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 10px;
+  align-items: center; /* ✅ ADD */
 }
 .panel__row:last-child {
   margin-bottom: 0; /* ✅ stops fake “extra” spacing */
@@ -160,6 +161,9 @@
 
 .panel__value {
   font-weight: 800;
+  display: flex;        /* ✅ ADD */
+  align-items: center;  /* ✅ ADD */
+  justify-content: flex-end; /* ✅ keeps it hugging the right */
 }
 
 .panel__title {
@@ -284,14 +288,27 @@
 .sidebarInput {
   width: 100%;
   box-sizing: border-box;
+
+  height: 46px;
+  padding: 0 14px;        /* horizontal only */
+  border-radius: 999px;
+
   border: 1px solid rgba(245, 232, 205, 0.22);
   background: rgba(0, 0, 0, 0.2);
   color: var(--text);
-  border-radius: 14px;
-  padding: 10px 12px;
+
+  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   font-weight: 800;
+  font-size: 15px;        /* ✅ helps consistent centering */
+  line-height: 46px;      /* ✅ strongest vertical centering for inputs */
   outline: none;
 }
+
+/* If you want the tiniest down-nudge for Nunito on Chrome/Windows */
+.sidebarInput#goal {
+  padding-top: 1px;       /* ✅ NOW it works because it's after padding */
+}
+
 
 .sidebarInput:focus {
   border-color: rgba(250, 187, 76, 0.55);
@@ -561,4 +578,13 @@
 }
 .edit-linksRow a:hover {
   border-bottom-color: rgba(250, 187, 76, 0.7);
+}
+
+/* ===== Force centering for Goal input ===== */
+.panel__value .sidebarInput#goal {
+  height: 46px;
+  padding: 0 14px;
+  border-radius: 999px;
+
+  line-height: 46px;     /* strongest centering trick */
 }
