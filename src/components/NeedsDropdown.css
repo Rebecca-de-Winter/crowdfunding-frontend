@@ -1,0 +1,96 @@
+.needsDD {
+  position: relative;
+  width: 100%;
+}
+
+/* the pill button */
+.needsDD__btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  border-radius: 999px;
+  padding: 10px 14px;
+
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.16);
+  color: rgba(253, 244, 225, 0.92);
+
+  font-weight: 900;
+  font-size: 0.95rem;
+  line-height: 1.2;
+
+  cursor: pointer;
+}
+
+.needsDD__btn:hover {
+  transform: translateY(-1px);
+}
+
+.needsDD__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.needsDD__text {
+  text-align: left;
+}
+
+.needsDD__text.is-placeholder {
+  opacity: 0.75;
+}
+
+.needsDD__chev {
+  margin-left: 10px;
+  opacity: 0.9;
+  font-weight: 900;
+}
+
+/* dropdown menu container */
+.needsDD__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 60;
+
+  border-radius: 18px;
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  background: rgba(11, 63, 42, 0.98);
+
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
+  padding: 10px;
+
+  display: grid;
+  gap: 8px;
+}
+
+/* each option looks like a mini pill button (same vibe as rewards) */
+.needsDD__item {
+  width: 100%;
+  text-align: left;
+
+  border-radius: 999px;
+  padding: 10px 14px;
+
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.16);
+  color: rgba(253, 244, 225, 0.92);
+
+  font-weight: 900;
+  font-size: 0.95rem;
+
+  cursor: pointer;
+}
+
+.needsDD__item:hover {
+  transform: translateY(-1px);
+}
+
+/* selected option highlight */
+.needsDD__item.is-active {
+  border-color: rgba(250, 187, 76, 0.35);
+  background: rgba(250, 187, 76, 0.12);
+}

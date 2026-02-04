@@ -10,6 +10,8 @@ import updateRewardTier from "../api/update-reward-tier";
 import deleteRewardTier from "../api/delete-reward-tier";
 import RewardTypeDropdown from "../components/RewardTypeDropdown";
 
+import NeedsPanel from "../components/NeedsPanel";
+
 import "./EditFestivalPage.css";
 
 function toDateInputValue(value) {
@@ -42,6 +44,8 @@ export default function EditFestivalPage() {
   const [tierBusy, setTierBusy] = useState(false);
   const [tierError, setTierError] = useState(null);
 
+  const [needs, setNeeds] = useState([]);
+
   const isAuthed = Boolean(window.localStorage.getItem("token"));
 
   /* =========================
@@ -63,6 +67,7 @@ export default function EditFestivalPage() {
     });
 
     setTiers(fundraiser.reward_tiers ?? []);
+    setNeeds(fundraiser.needs ?? []);
   }, [fundraiser]);
 
   const tierCount = useMemo(() => tiers.length, [tiers]);
@@ -153,7 +158,6 @@ export default function EditFestivalPage() {
       return;
     }
 
-    // minimum contribution required for money tiers in most builds
     if (newTier.reward_type === "money" && String(newTier.minimum_contribution).trim() === "") {
       setTierError("Minimum contribution is required for money rewards.");
       return;
@@ -164,7 +168,8 @@ export default function EditFestivalPage() {
     try {
       const payload = {
         reward_type: newTier.reward_type,
-        quantity_available: newTier.quantity_available === "" ? null : Number(newTier.quantity_available),
+        quantity_available:
+          newTier.quantity_available === "" ? null : Number(newTier.quantity_available),
         name: newTier.name,
         description: newTier.description,
         image_url: newTier.image_url || null,
@@ -304,11 +309,16 @@ export default function EditFestivalPage() {
 
         {/* BELOW GRID */}
         <div className="editfundraiser__belowGrid">
-          {/* STORY */}
+          {/* STORY + NEEDS */}
           <div className="storyCol">
             <div className="panel storyPanel">
-              <label className="field__label">Title</label>
-              <input className="field__input" id="title" value={form.title} onChange={handleChange} />
+              <label className="field__label field__label--title">Title</label>
+              <input
+                className="field__input"
+                id="title"
+                value={form.title}
+                onChange={handleChange}
+              />
 
               <label className="field__label">Story / Description</label>
               <textarea
@@ -317,6 +327,17 @@ export default function EditFestivalPage() {
                 value={form.description}
                 onChange={handleChange}
               />
+
+              <NeedsPanel
+  fundraiserId={id}
+  needs={needs}
+  disabled={isSaving || tierBusy}
+  onAddNeed={(created) => setNeeds((cur) => [created, ...cur])}
+  onEditNeed={(need) => console.log("Stage 2 edit", need)}
+  onDeleteNeed={(need) => console.log("Stage 2 delete", need)}
+  onReorderNeed={(a, b, aSort, bSort) => console.log("Stage 2 reorder", a, b, aSort, bSort)}
+/>
+
 
               {saveError && <div className="form-alert">{saveError}</div>}
 
@@ -381,7 +402,6 @@ export default function EditFestivalPage() {
                     </button>
                   </div>
 
-                  {/* ADD REWARD FORM (spacing fixes live in CSS below) */}
                   {showAddTier && (
                     <div className="tierAdd" role="region" aria-label="Add reward">
                       <form className="tierAdd__grid" onSubmit={handleCreateTier}>
@@ -389,7 +409,9 @@ export default function EditFestivalPage() {
                           <label className="tierAdd__label">Type</label>
                           <RewardTypeDropdown
                             value={newTier.reward_type}
-                            onChange={(value) => setNewTier((cur) => ({ ...cur, reward_type: value }))}
+                            onChange={(value) =>
+                              setNewTier((cur) => ({ ...cur, reward_type: value }))
+                            }
                           />
                         </div>
 
@@ -459,7 +481,11 @@ export default function EditFestivalPage() {
                             {tierBusy ? "Adding…" : "Add reward"}
                           </button>
 
-                          <button type="button" className="rtBtn rtBtn--secondary" onClick={cancelAddTier}>
+                          <button
+                            type="button"
+                            className="rtBtn rtBtn--secondary"
+                            onClick={cancelAddTier}
+                          >
                             Cancel
                           </button>
                         </div>

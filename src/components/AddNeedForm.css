@@ -1,0 +1,86 @@
+.needAdd {
+  border: 1px solid rgba(245, 232, 205, 0.14);
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.needAdd__grid {
+  display: grid;
+  gap: 14px;
+}
+
+.needAdd__field {
+  display: grid;
+  gap: 6px;
+}
+
+.needAdd__label {
+  font-weight: 900;
+  opacity: 0.92;
+}
+
+.needAdd__input,
+.needAdd__textarea,
+.needAdd__select {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.2);
+  color: #fdf4e1;
+  padding: 10px 12px;
+  font-weight: 800;
+}
+
+.needAdd__textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.needAdd__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.needAdd__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 6px;
+}
+
+.needAdd__error {
+  border: 1px solid rgba(220, 140, 140, 0.45);
+  background: rgba(220, 140, 140, 0.12);
+  border-radius: 12px;
+  padding: 10px;
+  font-weight: 900;
+}
+.needAdd .inlineDD__select {
+  background: rgba(0, 0, 0, 0.16) !important;
+  color: rgba(253, 244, 225, 0.92) !important;
+  border: 1px solid rgba(245, 232, 205, 0.22) !important;
+}
+
+.needAdd .inlineDD__select option {
+  background: #0b3f2a;
+  color: rgba(253, 244, 225, 0.92);
+}
+/* Force the needs dropdown to look like your pill inputs (scoped to AddNeedForm only) */
+.needAdd .needsDD__select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+
+  border-radius: 999px !important;
+  border: 1px solid rgba(245, 232, 205, 0.22) !important;
+  background: rgba(0, 0, 0, 0.2) !important;
+  color: #fdf4e1 !important;
+
+  padding: 10px 38px 10px 14px !important;
+  font-weight: 900 !important;
+  font-size: 0.95rem !important;
+
+  display: block !important;
+}

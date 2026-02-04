@@ -1,0 +1,49 @@
+.inlineDD {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.inlineDD__select {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  border-radius: 999px;
+  padding: 10px 38px 10px 14px;
+
+  border: 1px solid rgba(245, 232, 205, 0.22);
+
+  /* FORCE dark styling (overrides any global select styles) */
+  background: rgba(0, 0, 0, 0.16) !important;
+  color: rgba(253, 244, 225, 0.92) !important;
+
+  font-weight: 900;
+  font-size: 0.95rem;
+  line-height: 1.2;
+
+  /* Helps browser render controls in dark mode */
+  color-scheme: dark;
+}
+
+.inlineDD__select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.inlineDD__chev {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  opacity: 0.9;
+  font-weight: 900;
+}
+
+/* Dropdown menu items (this is what fixes the “white menu”) */
+.inlineDD__select option {
+  background: #0b3f2a;
+  color: rgba(253, 244, 225, 0.92);
+}
