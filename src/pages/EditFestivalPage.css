@@ -92,22 +92,23 @@
 @media (min-width: 980px) {
   .editfundraiser__belowGrid {
     grid-template-columns: 1fr 360px;
-    align-items: stretch;
+    align-items: start; /* ✅ stop equal-height stretching */
   }
+
+  /* let each column be its natural height */
   .storyCol,
   .rightRewardsCol {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
+    display: block;
+    height: auto;
   }
+
   .storyCol .panel,
   .rightRewardsCol .panel {
-    flex: 1;
     display: flex;
     flex-direction: column;
-    min-height: 0;
   }
 }
+
 
 /* PANELS */
 .panel {
@@ -482,13 +483,4 @@
   gap: 10px;
   justify-content: flex-end;
   padding-top: 8px;
-}
-.storyPanel .field__label {
-  font-size: 1.08rem;
-   font-weight: 850;
-}
-/* Make "Title" label match panel headings */
-.storyPanel .field__label:first-of-type {
-  font-size: 1.2rem;   /* same as Enable rewards heading */
-  font-weight: 900;
 }
