@@ -1,0 +1,305 @@
+:root {
+  --bg: #07492d;
+  --text: #fdf4e1;
+  --line: rgba(245, 232, 205, 0.18);
+  --accent: #fabb4c;
+  --accent2: #f6a551;
+}
+
+/* Card */
+.rtCard {
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(12, 18, 14, 0.55);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+/* subtle type tint */
+.rtCard.is-money { background: rgba(12, 18, 14, 0.55); }
+.rtCard.is-time  { background: rgba(12, 18, 14, 0.55); }
+.rtCard.is-item  { background: rgba(12, 18, 14, 0.55); }
+
+.rtCard__media {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(245, 232, 205, 0.14);
+}
+
+.rtCard__img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  display: block;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.rtCard__img--empty {
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(250, 187, 76, 0.18),
+    rgba(0, 0, 0, 0.12) 55%,
+    rgba(0, 0, 0, 0.18)
+  );
+}
+
+/* ---------- Pill: smaller + colour-coded ---------- */
+.rtTypeChip {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 5px 10px;
+  border-radius: 999px;
+
+  font-weight: 900;
+  font-size: 0.78rem;
+  letter-spacing: 0.2px;
+
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(253, 244, 225, 0.95);
+
+  backdrop-filter: blur(6px);
+}
+
+.rtTypeChip__icon {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  font-weight: 1000;
+  font-size: 0.85rem;
+}
+
+/* Type colour coding */
+.rtTypeChip.is-money { border-color: rgba(250, 187, 76, 0.55); }
+.rtTypeChip.is-money .rtTypeChip__icon { background: rgba(250, 187, 76, 0.25); }
+
+.rtTypeChip.is-time { border-color: rgba(120, 220, 160, 0.5); }
+.rtTypeChip.is-time .rtTypeChip__icon { background: rgba(120, 220, 160, 0.2); }
+
+.rtTypeChip.is-item { border-color: rgba(140, 180, 255, 0.45); }
+.rtTypeChip.is-item .rtTypeChip__icon { background: rgba(140, 180, 255, 0.18); }
+
+.rtCard__body {
+  display: grid;
+  gap: 10px;
+}
+
+/* --- Header layout: keep price top-right --- */
+.rtCard__header {
+  display: grid;
+  gap: 8px;
+}
+
+.rtCard__topRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 12px;
+}
+
+.rtCard__name {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.rtCard__price {
+  text-align: right;
+  min-width: 84px;
+}
+
+.rtCard__from {
+  display: block;
+  font-size: 0.72rem;
+  opacity: 0.85;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+}
+
+.rtCard__money {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 1000;
+}
+
+.rtCard__desc {
+  margin: 0;
+  opacity: 0.92;
+  line-height: 1.35;
+}
+
+/* ✅ right aligned Edit/Delete */
+.rtCard__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 2px;
+}
+
+/* Quantity line */
+.rtCard__meta {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 0.85rem;
+  opacity: 0.92;
+}
+
+.rtCard__metaLabel {
+  opacity: 0.78;
+  font-weight: 900;
+}
+
+.rtCard__metaValue {
+  font-weight: 1000;
+}
+
+/* Buttons */
+.rtBtn {
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--text);
+
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+
+  border-radius: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.rtBtn:hover { filter: brightness(1.05); }
+
+.rtBtn--primary {
+  border-color: rgba(250, 187, 76, 0.5);
+  background: rgba(250, 187, 76, 0.85);
+  color: #183b2c;
+}
+
+.rtBtn--danger {
+  border-color: rgba(220, 140, 140, 0.55);
+  background: rgba(220, 140, 140, 0.14);
+}
+
+/* optional ghost style (safe even if unused) */
+.rtBtn--ghost {
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.rtBtn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Editor */
+.rtEditor {
+  margin-top: 10px;
+  border-top: 1px solid rgba(245, 232, 205, 0.14);
+  padding-top: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.rtEditor__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.rtEditor__title {
+  font-weight: 1000;
+  opacity: 0.95;
+}
+
+.rtEditor__error {
+  border: 1px solid rgba(220, 140, 140, 0.45);
+  background: rgba(220, 140, 140, 0.12);
+  border-radius: 14px;
+  padding: 10px;
+  font-weight: 800;
+}
+
+/* Form */
+.rtForm {
+  display: grid;
+  gap: 12px;
+}
+
+.rtForm__field {
+  display: grid;
+  gap: 6px;
+}
+
+.rtForm__label {
+  font-weight: 900;
+  opacity: 0.9;
+}
+
+.rtForm__label--small {
+  font-size: 0.88rem;
+  opacity: 0.82;
+}
+
+.rtForm__label--nowrap {
+  white-space: nowrap;
+}
+
+.rtInput,
+.rtTextarea {
+  width: 100%;
+  box-sizing: border-box;
+
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.20);
+  color: var(--text);
+
+  border-radius: 18px;
+  padding: 10px 12px;
+
+  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 800;
+
+  outline: none;
+}
+
+.rtInput {
+  height: 40px;
+  line-height: 1;
+}
+
+.rtTextarea {
+  resize: vertical;
+  min-height: 92px;
+}
+
+.rtInput:focus,
+.rtTextarea:focus {
+  border-color: rgba(250, 187, 76, 0.55);
+  box-shadow: 0 0 0 3px rgba(250, 187, 76, 0.18);
+}
+
+/* Save/Cancel footer (right aligned, same height) */
+.rtEditor__footerBtns {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 6px;
+}
