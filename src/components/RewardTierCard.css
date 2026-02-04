@@ -4,9 +4,16 @@
   --line: rgba(245, 232, 205, 0.18);
   --accent: #fabb4c;
   --accent2: #f6a551;
+
+  --btn-h: 38px;
+  --btn-radius: 999px;
+
+  --font: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
-/* Card */
+/* =========================
+   CARD (full-bleed media)
+   ========================= */
 .rtCard {
   border: 1px solid rgba(245, 232, 205, 0.18);
   border-radius: 18px;
@@ -15,20 +22,16 @@
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
 
   display: grid;
-  gap: 10px;
-  padding: 12px;
+  gap: 0;
+  padding: 0;
 }
 
-/* subtle type tint */
-.rtCard.is-money { background: rgba(12, 18, 14, 0.55); }
-.rtCard.is-time  { background: rgba(12, 18, 14, 0.55); }
-.rtCard.is-item  { background: rgba(12, 18, 14, 0.55); }
-
+/* Media becomes top section */
 .rtCard__media {
   position: relative;
-  border-radius: 14px;
   overflow: hidden;
-  border: 1px solid rgba(245, 232, 205, 0.14);
+  border: 0;
+  border-bottom: 1px solid rgba(245, 232, 205, 0.14);
 }
 
 .rtCard__img {
@@ -48,7 +51,16 @@
   );
 }
 
-/* ---------- Pill: smaller + colour-coded ---------- */
+/* Body padding */
+.rtCard__body {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+/* =========================
+   TYPE CHIP (solid + readable)
+   ========================= */
 .rtTypeChip {
   position: absolute;
   top: 10px;
@@ -58,46 +70,56 @@
   align-items: center;
   gap: 8px;
 
-  padding: 5px 10px;
+  padding: 6px 12px;
   border-radius: 999px;
 
-  font-weight: 900;
+  font-family: var(--font);
   font-size: 0.78rem;
-  letter-spacing: 0.2px;
+  font-weight: 900;
 
-  border: 1px solid rgba(245, 232, 205, 0.22);
-  background: rgba(0, 0, 0, 0.35);
-  color: rgba(253, 244, 225, 0.95);
+  color: #0b1a13;
+  border: 1px solid rgba(0, 0, 0, 0.25);
 
-  backdrop-filter: blur(6px);
+  /* stronger separation from bright images */
+  box-shadow:
+    0 10px 20px rgba(0, 0, 0, 0.45),
+    0 0 0 2px rgba(255, 255, 255, 0.55);
 }
 
 .rtTypeChip__icon {
   width: 18px;
   height: 18px;
+  border-radius: 999px;
   display: grid;
   place-items: center;
-  border-radius: 999px;
   font-weight: 1000;
-  font-size: 0.85rem;
+  line-height: 1;
 }
 
-/* Type colour coding */
-.rtTypeChip.is-money { border-color: rgba(250, 187, 76, 0.55); }
-.rtTypeChip.is-money .rtTypeChip__icon { background: rgba(250, 187, 76, 0.25); }
-
-.rtTypeChip.is-time { border-color: rgba(120, 220, 160, 0.5); }
-.rtTypeChip.is-time .rtTypeChip__icon { background: rgba(120, 220, 160, 0.2); }
-
-.rtTypeChip.is-item { border-color: rgba(140, 180, 255, 0.45); }
-.rtTypeChip.is-item .rtTypeChip__icon { background: rgba(140, 180, 255, 0.18); }
-
-.rtCard__body {
-  display: grid;
-  gap: 10px;
+/* Money */
+.rtTypeChip.is-money { background: #fabb4c; }
+.rtTypeChip.is-money .rtTypeChip__icon {
+  background: #fff3cf;
+  color: #8a5b00;
 }
 
-/* --- Header layout: keep price top-right --- */
+/* Time */
+.rtTypeChip.is-time { background: #7fd3a6; }
+.rtTypeChip.is-time .rtTypeChip__icon {
+  background: #e7fff3;
+  color: #1f6b46;
+}
+
+/* Item (blue) */
+.rtTypeChip.is-item { background: #8fb3ff; }
+.rtTypeChip.is-item .rtTypeChip__icon {
+  background: #edf2ff;
+  color: #2b4fa3;
+}
+
+/* =========================
+   HEADER / PRICE LAYOUT
+   ========================= */
 .rtCard__header {
   display: grid;
   gap: 8px;
@@ -112,6 +134,7 @@
 
 .rtCard__name {
   margin: 0;
+  font-family: var(--font);
   font-size: 1.02rem;
   font-weight: 900;
   line-height: 1.2;
@@ -120,6 +143,7 @@
 .rtCard__price {
   text-align: right;
   min-width: 84px;
+  font-family: var(--font);
 }
 
 .rtCard__from {
@@ -140,14 +164,7 @@
   margin: 0;
   opacity: 0.92;
   line-height: 1.35;
-}
-
-/* ✅ right aligned Edit/Delete */
-.rtCard__actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  padding-top: 2px;
+  font-family: var(--font);
 }
 
 /* Quantity line */
@@ -157,6 +174,7 @@
   align-items: baseline;
   font-size: 0.85rem;
   opacity: 0.92;
+  font-family: var(--font);
 }
 
 .rtCard__metaLabel {
@@ -164,51 +182,81 @@
   font-weight: 900;
 }
 
-.rtCard__metaValue {
-  font-weight: 1000;
+.rtCard__metaValue { font-weight: 1000; }
+
+/* =========================
+   ACTIONS (Edit/Delete right)
+   ========================= */
+.rtCard__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 2px;
 }
 
-/* Buttons */
+/* =========================
+   BUTTONS (Edit/Delete)
+   ========================= */
 .rtBtn {
-  border: 1px solid rgba(245, 232, 205, 0.22);
-  background: rgba(0, 0, 0, 0.22);
-  color: var(--text);
+  height: var(--btn-h);
+  padding: 0 16px;
 
-  height: 38px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 14px;
 
-  border-radius: 12px;
+  border-radius: var(--btn-radius);
+
+  font-family: var(--font);
   font-weight: 900;
+  letter-spacing: 0.25px;
+
   cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.15s ease, filter 0.15s ease, background 0.15s ease;
 }
 
-.rtBtn:hover { filter: brightness(1.05); }
-
-.rtBtn--primary {
-  border-color: rgba(250, 187, 76, 0.5);
-  background: rgba(250, 187, 76, 0.85);
-  color: #183b2c;
+.rtBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.35);
 }
 
-.rtBtn--danger {
-  border-color: rgba(220, 140, 140, 0.55);
-  background: rgba(220, 140, 140, 0.14);
-}
-
-/* optional ghost style (safe even if unused) */
-.rtBtn--ghost {
-  background: rgba(0, 0, 0, 0.18);
-}
+.rtBtn:active { transform: translateY(0); }
 
 .rtBtn:disabled {
-  opacity: 0.65;
+  opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
-/* Editor */
+/* ✅ EDIT: solid green (no muddy translucency) */
+.rtBtn--ghost {
+  background: #0b4129;
+  border: 1.5px solid rgba(245, 232, 205, 0.45);
+  color: rgba(253, 244, 225, 0.97);
+}
+
+.rtBtn--ghost:hover {
+  background: #0f5736;
+  filter: brightness(1.02);
+  border-color: rgba(245, 232, 205, 0.65);
+}
+
+/* ✅ DELETE: strong red */
+.rtBtn--danger {
+  background: #7a1f1f;
+  border: 1.5px solid rgba(255, 210, 210, 0.35);
+  color: #fff;
+}
+
+.rtBtn--danger:hover {
+  background: #922626;
+  border-color: rgba(255, 210, 210, 0.5);
+}
+
+/* =========================
+   EDITOR (expanded form)
+   ========================= */
 .rtEditor {
   margin-top: 10px;
   border-top: 1px solid rgba(245, 232, 205, 0.14);
@@ -217,14 +265,8 @@
   gap: 12px;
 }
 
-.rtEditor__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
 .rtEditor__title {
+  font-family: var(--font);
   font-weight: 1000;
   opacity: 0.95;
 }
@@ -234,6 +276,7 @@
   background: rgba(220, 140, 140, 0.12);
   border-radius: 14px;
   padding: 10px;
+  font-family: var(--font);
   font-weight: 800;
 }
 
@@ -249,6 +292,7 @@
 }
 
 .rtForm__label {
+  font-family: var(--font);
   font-weight: 900;
   opacity: 0.9;
 }
@@ -256,10 +300,6 @@
 .rtForm__label--small {
   font-size: 0.88rem;
   opacity: 0.82;
-}
-
-.rtForm__label--nowrap {
-  white-space: nowrap;
 }
 
 .rtInput,
@@ -274,9 +314,8 @@
   border-radius: 18px;
   padding: 10px 12px;
 
-  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family: var(--font);
   font-weight: 800;
-
   outline: none;
 }
 
@@ -296,10 +335,49 @@
   box-shadow: 0 0 0 3px rgba(250, 187, 76, 0.18);
 }
 
-/* Save/Cancel footer (right aligned, same height) */
+/* Save/Cancel footer */
 .rtEditor__footerBtns {
   display: flex;
   gap: 10px;
   justify-content: flex-end;
   padding-top: 6px;
+}
+
+/* Save / Cancel buttons inside editor */
+.btn--primary,
+.btn--secondary,
+.btn--cancel {
+  height: 40px;
+  padding: 0 18px;
+  border-radius: var(--btn-radius);
+  font-family: var(--font);
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.btn--primary {
+  background: #fabb4c;
+  color: #0b1a13;
+  border: none;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+}
+
+.btn--primary:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+
+.btn--secondary,
+.btn--cancel {
+  background: #0f1f18;
+  color: rgba(253,244,225,0.95);
+  border: 1.5px solid rgba(245,232,205,0.35);
+}
+
+.btn--secondary:hover,
+.btn--cancel:hover {
+  transform: translateY(-1px);
+  border-color: rgba(245,232,205,0.6);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.35);
 }
