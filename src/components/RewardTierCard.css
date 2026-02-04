@@ -80,7 +80,6 @@
   color: #0b1a13;
   border: 1px solid rgba(0, 0, 0, 0.25);
 
-  /* stronger separation from bright images */
   box-shadow:
     0 10px 20px rgba(0, 0, 0, 0.45),
     0 0 0 2px rgba(255, 255, 255, 0.55);
@@ -195,7 +194,7 @@
 }
 
 /* =========================
-   BUTTONS (Edit/Delete)
+   BUTTONS (shared)
    ========================= */
 .rtBtn {
   height: var(--btn-h);
@@ -212,12 +211,13 @@
   letter-spacing: 0.25px;
 
   cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.15s ease, filter 0.15s ease, background 0.15s ease;
+  transition: transform 0.12s ease, box-shadow 0.15s ease, filter 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
 
 .rtBtn:hover {
   transform: translateY(-1px);
   box-shadow: 0 10px 18px rgba(0, 0, 0, 0.35);
+  filter: brightness(1.03);
 }
 
 .rtBtn:active { transform: translateY(0); }
@@ -227,9 +227,28 @@
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+  filter: none;
 }
 
-/* ✅ EDIT: solid green (no muddy translucency) */
+/* ✅ PRIMARY (Add/Save) */
+.rtBtn--primary {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: linear-gradient(180deg, var(--accent), var(--accent2));
+  color: #183b2c;
+}
+
+/* ✅ SECONDARY (Cancel) */
+.rtBtn--secondary {
+  background: rgba(10, 16, 13, 0.55);
+  border: 1.5px solid rgba(245, 232, 205, 0.35);
+  color: rgba(253, 244, 225, 0.96);
+}
+
+.rtBtn--secondary:hover {
+  border-color: rgba(245, 232, 205, 0.6);
+}
+
+/* ✅ EDIT: solid green (match your brief) */
 .rtBtn--ghost {
   background: #0b4129;
   border: 1.5px solid rgba(245, 232, 205, 0.45);
@@ -238,7 +257,6 @@
 
 .rtBtn--ghost:hover {
   background: #0f5736;
-  filter: brightness(1.02);
   border-color: rgba(245, 232, 205, 0.65);
 }
 
@@ -341,43 +359,4 @@
   gap: 10px;
   justify-content: flex-end;
   padding-top: 6px;
-}
-
-/* Save / Cancel buttons inside editor */
-.btn--primary,
-.btn--secondary,
-.btn--cancel {
-  height: 40px;
-  padding: 0 18px;
-  border-radius: var(--btn-radius);
-  font-family: var(--font);
-  font-weight: 900;
-  cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.15s ease, filter 0.15s ease;
-}
-
-.btn--primary {
-  background: #fabb4c;
-  color: #0b1a13;
-  border: none;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.35);
-}
-
-.btn--primary:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.03);
-}
-
-.btn--secondary,
-.btn--cancel {
-  background: #0f1f18;
-  color: rgba(253,244,225,0.95);
-  border: 1.5px solid rgba(245,232,205,0.35);
-}
-
-.btn--secondary:hover,
-.btn--cancel:hover {
-  transform: translateY(-1px);
-  border-color: rgba(245,232,205,0.6);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.35);
 }

@@ -1,15 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import useFundraiser from "../hooks/use-fundraiser";
 import updateFundraiser from "../api/update-fundraiser";
 
 import RewardTierList from "../components/RewardTierList";
-import RewardTypeDropdown from "../components/RewardTypeDropdown";
-
 import createRewardTier from "../api/create-reward-tier";
 import updateRewardTier from "../api/update-reward-tier";
 import deleteRewardTier from "../api/delete-reward-tier";
+import RewardTypeDropdown from "../components/RewardTypeDropdown";
 
 import "./EditFestivalPage.css";
 
@@ -18,13 +17,13 @@ function toDateInputValue(value) {
   return String(value).slice(0, 10);
 }
 
-const emptyNewTier = {
+const emptyTier = {
   reward_type: "money",
+  quantity_available: "",
   name: "",
   description: "",
   image_url: "",
-  minimum_contribution_value: "",
-  max_backers: "",
+  minimum_contribution: "",
 };
 
 export default function EditFestivalPage() {
@@ -34,18 +33,19 @@ export default function EditFestivalPage() {
   const { fundraiser, isLoading, error } = useFundraiser(id);
 
   const [form, setForm] = useState(null);
-  const [tiers, setTiers] = useState([]);
-
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
 
-  const [isAddingReward, setIsAddingReward] = useState(false);
-  const [newTier, setNewTier] = useState(emptyNewTier);
+  const [tiers, setTiers] = useState([]);
+  const [showAddTier, setShowAddTier] = useState(false);
+  const [newTier, setNewTier] = useState(emptyTier);
+  const [tierBusy, setTierBusy] = useState(false);
+  const [tierError, setTierError] = useState(null);
 
   const isAuthed = Boolean(window.localStorage.getItem("token"));
 
   /* =========================
-     Initialise form + tiers
+     Initialise form from API
      ========================= */
   useEffect(() => {
     if (!fundraiser) return;
@@ -65,12 +65,14 @@ export default function EditFestivalPage() {
     setTiers(fundraiser.reward_tiers ?? []);
   }, [fundraiser]);
 
+  const tierCount = useMemo(() => tiers.length, [tiers]);
+
   if (isLoading) return <p>Loading…</p>;
   if (error) return <p>{error.message}</p>;
   if (!fundraiser || !form) return <p>Preparing form…</p>;
 
   /* =========================
-     Handlers (fundraiser)
+     Handlers
      ========================= */
   function handleChange(event) {
     const { id: fieldId, value, type, checked } = event.target;
@@ -95,6 +97,7 @@ export default function EditFestivalPage() {
     }
 
     setIsSaving(true);
+
     try {
       const updated = await updateFundraiser(id, {
         title: form.title,
@@ -117,73 +120,105 @@ export default function EditFestivalPage() {
   }
 
   /* =========================
-     Reward Tier CRUD
+     Reward Tier actions
      ========================= */
-  async function handleCreateTier() {
-    setSaveError(null);
-
-    if (!isAuthed) {
-      setSaveError("You must be logged in to add reward tiers.");
-      return;
-    }
-
-    if (!newTier.name.trim()) {
-      setSaveError("Reward name is required.");
-      return;
-    }
-
-    const payload = {
-      fundraiser: Number(id),
-      reward_type: newTier.reward_type,
-      name: newTier.name.trim(),
-      description: newTier.description ?? "",
-      image_url: newTier.image_url ?? "",
-      max_backers: newTier.max_backers === "" ? null : Number(newTier.max_backers),
-      minimum_contribution_value:
-        newTier.reward_type === "money" && newTier.minimum_contribution_value !== ""
-          ? Number(newTier.minimum_contribution_value)
-          : null,
-    };
-
-    setIsSaving(true);
-    try {
-      const created = await createRewardTier(payload);
-      setTiers((prev) => [created, ...prev]);
-      setNewTier(emptyNewTier);
-      setIsAddingReward(false);
-    } catch (e) {
-      setSaveError(e?.message ?? "Could not add reward tier.");
-    } finally {
-      setIsSaving(false);
-    }
+  function openAddTier() {
+    setTierError(null);
+    setNewTier(emptyTier);
+    setShowAddTier(true);
   }
 
-  async function handleUpdateTier(tierId, payload) {
-    setSaveError(null);
-    setIsSaving(true);
+  function cancelAddTier() {
+    setTierError(null);
+    setShowAddTier(false);
+    setNewTier(emptyTier);
+  }
+
+  function handleNewTierField(e) {
+    const { id: fieldId, value } = e.target;
+    setNewTier((cur) => ({ ...cur, [fieldId]: value }));
+  }
+
+  async function handleCreateTier(e) {
+    e.preventDefault();
+    setTierError(null);
+
+    if (!isAuthed) {
+      setTierError("Log in to add rewards.");
+      return;
+    }
+
+    if (!newTier.name.trim() || !newTier.description.trim()) {
+      setTierError("Name and description are required.");
+      return;
+    }
+
+    // minimum contribution required for money tiers in most builds
+    if (newTier.reward_type === "money" && String(newTier.minimum_contribution).trim() === "") {
+      setTierError("Minimum contribution is required for money rewards.");
+      return;
+    }
+
+    setTierBusy(true);
+
     try {
-      const updated = await updateRewardTier(tierId, payload);
-      setTiers((prev) => prev.map((t) => (t.id === tierId ? updated : t)));
-      return updated;
-    } catch (e) {
-      setSaveError(e?.message ?? "Could not update reward tier.");
-      throw e;
+      const payload = {
+        reward_type: newTier.reward_type,
+        quantity_available: newTier.quantity_available === "" ? null : Number(newTier.quantity_available),
+        name: newTier.name,
+        description: newTier.description,
+        image_url: newTier.image_url || null,
+        minimum_contribution:
+          newTier.minimum_contribution === "" ? null : Number(newTier.minimum_contribution),
+      };
+
+      const created = await createRewardTier(id, payload);
+
+      setTiers((cur) => [created, ...cur]);
+      setShowAddTier(false);
+      setNewTier(emptyTier);
+    } catch (err) {
+      setTierError(err.message);
     } finally {
-      setIsSaving(false);
+      setTierBusy(false);
     }
   }
 
   async function handleDeleteTier(tierId) {
-    setSaveError(null);
-    setIsSaving(true);
+    setTierError(null);
+
+    if (!isAuthed) {
+      setTierError("Log in to delete rewards.");
+      return;
+    }
+
+    setTierBusy(true);
     try {
       await deleteRewardTier(tierId);
-      setTiers((prev) => prev.filter((t) => t.id !== tierId));
-    } catch (e) {
-      setSaveError(e?.message ?? "Could not delete reward tier.");
-      throw e;
+      setTiers((cur) => cur.filter((t) => t.id !== tierId));
+    } catch (err) {
+      setTierError(err.message);
     } finally {
-      setIsSaving(false);
+      setTierBusy(false);
+    }
+  }
+
+  async function handleUpdateTier(tierId, updates) {
+    setTierError(null);
+
+    if (!isAuthed) {
+      setTierError("Log in to edit rewards.");
+      return;
+    }
+
+    setTierBusy(true);
+    try {
+      const updated = await updateRewardTier(tierId, updates);
+      setTiers((cur) => cur.map((t) => (t.id === tierId ? updated : t)));
+    } catch (err) {
+      setTierError(err.message);
+    } finally {
+      setTierBusy(false);
     }
   }
 
@@ -196,7 +231,7 @@ export default function EditFestivalPage() {
       <form className="editfundraiser__form" onSubmit={handleSubmit}>
         {!isAuthed && (
           <div className="panel authBanner">
-            <strong>You&apos;re not logged in.</strong>
+            <strong>You're not logged in.</strong>
             <span>Log in to save changes.</span>
           </div>
         )}
@@ -273,12 +308,7 @@ export default function EditFestivalPage() {
           <div className="storyCol">
             <div className="panel storyPanel">
               <label className="field__label">Title</label>
-              <input
-                className="field__input"
-                id="title"
-                value={form.title}
-                onChange={handleChange}
-              />
+              <input className="field__input" id="title" value={form.title} onChange={handleChange} />
 
               <label className="field__label">Story / Description</label>
               <textarea
@@ -338,133 +368,108 @@ export default function EditFestivalPage() {
                   <div className="rewardTierBox__header">
                     <div className="rewardTierBox__left">
                       <h4 className="rewardTierBox__title">Reward tiers</h4>
-                      <span className="rewardTierBox__count">{tiers.length}</span>
+                      <span className="rewardTierBox__count">{tierCount}</span>
                     </div>
 
                     <button
                       type="button"
                       className="miniBtn miniBtn--primary"
-                      onClick={() => setIsAddingReward((v) => !v)}
-                      disabled={isSaving || !isAuthed}
+                      onClick={openAddTier}
+                      disabled={isSaving || tierBusy || !isAuthed}
                     >
                       + Add reward
                     </button>
                   </div>
 
-                  {isAddingReward && (
-                    <div className="tierAdd">
-                      <div className="tierAdd__grid">
-                        <div className="rtForm__field">
-                          <div className="rtForm__label">Type</div>
+                  {/* ADD REWARD FORM (spacing fixes live in CSS below) */}
+                  {showAddTier && (
+                    <div className="tierAdd" role="region" aria-label="Add reward">
+                      <form className="tierAdd__grid" onSubmit={handleCreateTier}>
+                        <div className="tierAdd__field">
+                          <label className="tierAdd__label">Type</label>
                           <RewardTypeDropdown
                             value={newTier.reward_type}
-                            onChange={(val) => setNewTier((t) => ({ ...t, reward_type: val }))}
-                            disabled={isSaving}
+                            onChange={(value) => setNewTier((cur) => ({ ...cur, reward_type: value }))}
                           />
                         </div>
 
-                        <div className="rtForm__field">
-                          <div className="rtForm__label rtForm__label--small">
-                            Quantity available (optional)
-                          </div>
+                        <div className="tierAdd__field">
+                          <label className="tierAdd__label">
+                            Quantity available <span className="tierAdd__optional">(optional)</span>
+                          </label>
                           <input
-                            className="rtInput rtInput--sm"
-                            type="number"
-                            min="0"
-                            step="1"
+                            className="tierAdd__input"
+                            id="quantity_available"
+                            value={newTier.quantity_available}
+                            onChange={handleNewTierField}
                             placeholder="e.g. 10"
-                            value={newTier.max_backers}
-                            onChange={(e) =>
-                              setNewTier((t) => ({ ...t, max_backers: e.target.value }))
-                            }
-                            disabled={isSaving}
+                            inputMode="numeric"
                           />
                         </div>
 
-                        <div className="rtForm__field">
-                          <div className="rtForm__label">Name</div>
+                        <div className="tierAdd__field">
+                          <label className="tierAdd__label">Name</label>
                           <input
-                            className="rtInput rtInput--sm"
+                            className="tierAdd__input"
+                            id="name"
                             value={newTier.name}
-                            onChange={(e) => setNewTier((t) => ({ ...t, name: e.target.value }))}
-                            disabled={isSaving}
+                            onChange={handleNewTierField}
                           />
                         </div>
 
-                        <div className="rtForm__field">
-                          <div className="rtForm__label">Description</div>
+                        <div className="tierAdd__field">
+                          <label className="tierAdd__label">Description</label>
                           <textarea
-                            className="rtTextarea rtTextarea--sm"
-                            rows={3}
+                            className="tierAdd__textarea"
+                            id="description"
                             value={newTier.description}
-                            onChange={(e) =>
-                              setNewTier((t) => ({ ...t, description: e.target.value }))
-                            }
-                            disabled={isSaving}
+                            onChange={handleNewTierField}
                           />
                         </div>
 
-                        <div className="rtForm__field">
-                          <div className="rtForm__label">Image URL</div>
+                        <div className="tierAdd__field">
+                          <label className="tierAdd__label">Image URL</label>
                           <input
-                            className="rtInput rtInput--sm"
+                            className="tierAdd__input"
+                            id="image_url"
                             value={newTier.image_url}
-                            onChange={(e) =>
-                              setNewTier((t) => ({ ...t, image_url: e.target.value }))
-                            }
-                            disabled={isSaving}
+                            onChange={handleNewTierField}
                           />
                         </div>
 
-                        {newTier.reward_type === "money" && (
-                          <div className="rtForm__field">
-                            <div className="rtForm__label">Minimum contribution</div>
-                            <input
-                              className="rtInput rtInput--sm"
-                              type="number"
-                              min="0"
-                              step="1"
-                              value={newTier.minimum_contribution_value}
-                              onChange={(e) =>
-                                setNewTier((t) => ({
-                                  ...t,
-                                  minimum_contribution_value: e.target.value,
-                                }))
-                              }
-                              disabled={isSaving}
-                            />
-                          </div>
-                        )}
-                      </div>
+                        <div className="tierAdd__field">
+                          <label className="tierAdd__label">Minimum contribution</label>
+                          <input
+                            className="tierAdd__input"
+                            id="minimum_contribution"
+                            value={newTier.minimum_contribution}
+                            onChange={handleNewTierField}
+                            inputMode="decimal"
+                          />
+                        </div>
 
-                      <div className="tierAdd__actions">
-                        <button
-                          type="button"
-                          className="miniBtn miniBtn--primary"
-                          onClick={handleCreateTier}
-                          disabled={isSaving || !isAuthed}
-                        >
-                          Add reward
-                        </button>
+                        {tierError && <div className="tierAdd__error">{tierError}</div>}
 
-                        <button
-                          type="button"
-                          className="miniBtn"
-                          onClick={() => {
-                            setIsAddingReward(false);
-                            setNewTier(emptyNewTier);
-                          }}
-                          disabled={isSaving}
-                        >
-                          Cancel
-                        </button>
-                      </div>
+                        <div className="tierAdd__actions">
+                          <button
+                            type="submit"
+                            className="rtBtn rtBtn--primary"
+                            disabled={tierBusy || !isAuthed}
+                          >
+                            {tierBusy ? "Adding…" : "Add reward"}
+                          </button>
+
+                          <button type="button" className="rtBtn rtBtn--secondary" onClick={cancelAddTier}>
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
                     </div>
                   )}
 
                   <RewardTierList
                     tiers={tiers}
-                    disabled={isSaving}
+                    disabled={tierBusy || isSaving}
                     onDeleteTier={handleDeleteTier}
                     onUpdateTier={handleUpdateTier}
                   />

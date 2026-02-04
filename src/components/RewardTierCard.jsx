@@ -268,7 +268,7 @@ export default function RewardTierCard({ tier, disabled = false, onDelete, onUpd
                 </button>
                 <button
                   type="button"
-                  className="rtBtn"
+                  className="rtBtn rtBtn--secondary"
                   onClick={cancelEdit}
                   disabled={disabled || isSaving}
                 >
