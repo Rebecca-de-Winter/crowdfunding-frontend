@@ -46,6 +46,7 @@ export default function EditNeedModal({
   onClose,
   onSaved,
   disabled = false,
+  variant = "inline", // "inline" | "overlay"
 }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -64,6 +65,7 @@ export default function EditNeedModal({
   const [base, setBase] = useState(baseInitial);
 
   const [money, setMoney] = useState({ target_amount: "", comment: "" });
+
   const [item, setItem] = useState({
     item_name: "",
     quantity_needed: 1,
@@ -72,6 +74,7 @@ export default function EditNeedModal({
     donation_reward_tier: null,
     loan_reward_tier: null,
   });
+
   const [time, setTime] = useState({
     role_title: "",
     location: "",
@@ -81,6 +84,17 @@ export default function EditNeedModal({
     reward_tier: null,
   });
 
+  // Lock page scroll ONLY for overlay mode
+  useEffect(() => {
+    if (!open || variant !== "overlay") return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open, variant]);
+
+  // Load detail row when opened / need changes
   useEffect(() => {
     if (!open || !need) return;
 
@@ -154,23 +168,24 @@ export default function EditNeedModal({
 
     if (type === "time") {
       if (!time.role_title.trim()) return setErr("Role title is required.");
-      if (!time.start_datetime || !time.end_datetime) return setErr("Start and End are required.");
+      if (!time.start_datetime || !time.end_datetime) {
+        return setErr("Start and End are required.");
+      }
     }
 
     setBusy(true);
     try {
-      // ✅ Base PUT: include required fields for PUT semantics
       const updatedBase = await updateNeed(need.id, {
-        fundraiser: need.fundraiser,
+        fundraiser: need.fundraiser ?? need.fundraiser_id,
         need_type: need.need_type,
         title: base.title.trim(),
         description: base.description ?? "",
         status: base.status,
         priority: base.priority,
-        sort_order: need.sort_order ?? null,
+        sort_order: need.sort_order ?? 0,
       });
 
-      // ✅ Detail PUT: DO NOT send `need` (it triggers uniqueness validation)
+      // Detail PUT (don’t send `need` key to avoid uniqueness issues)
       if (detailId) {
         if (type === "money") {
           await updateNeedDetail("money", detailId, {
@@ -207,206 +222,233 @@ export default function EditNeedModal({
     }
   }
 
-  return (
-    <div className="modal__backdrop" role="dialog" aria-modal="true">
-      <div className="modal modal--need">
-        <div className="modal__head">
-          <h3 className="modal__title">Edit {prettyType(type)} need</h3>
-          <button type="button" className="modal__x" onClick={onClose} aria-label="Close">
-            ×
-          </button>
-        </div>
-
-        {err && <div className="modal__error">{err}</div>}
-
-        <div className="modal__grid">
-          <div className="field field--full">
-            <label className="field__label">Title</label>
-            <input
-              className="field__input"
-              value={base.title}
-              onChange={(e) => setBaseField("title", e.target.value)}
-              disabled={isDisabled}
-            />
-          </div>
-
-          <div className="field field--full">
-            <label className="field__label">Description</label>
-            <textarea
-              className="field__textarea"
-              value={base.description}
-              onChange={(e) => setBaseField("description", e.target.value)}
-              disabled={isDisabled}
-            />
-          </div>
-
-          <div className="field">
-            <label className="field__label">Status</label>
-            <NeedsDropdown
-              value={base.status}
-              onChange={(v) => setBaseField("status", v)}
-              options={STATUS_OPTS}
-              disabled={isDisabled}
-            />
-          </div>
-
-          <div className="field">
-            <label className="field__label">Priority</label>
-            <NeedsDropdown
-              value={base.priority}
-              onChange={(v) => setBaseField("priority", v)}
-              options={PRIORITY_OPTS}
-              disabled={isDisabled}
-            />
-          </div>
-
-          {type === "money" && (
-            <>
-              <div className="field field--full">
-                <label className="field__label">Target amount</label>
-                <input
-                  className="field__input"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={money.target_amount}
-                  onChange={(e) => setMoney((m) => ({ ...m, target_amount: e.target.value }))}
-                  disabled={isDisabled}
-                />
-              </div>
-
-              <div className="field field--full">
-                <label className="field__label">Comment</label>
-                <input
-                  className="field__input"
-                  value={money.comment}
-                  onChange={(e) => setMoney((m) => ({ ...m, comment: e.target.value }))}
-                  disabled={isDisabled}
-                />
-              </div>
-            </>
-          )}
-
-          {type === "item" && (
-            <>
-              <div className="field field--full">
-                <label className="field__label">Item name</label>
-                <input
-                  className="field__input"
-                  value={item.item_name}
-                  onChange={(e) => setItem((p) => ({ ...p, item_name: e.target.value }))}
-                  disabled={isDisabled}
-                />
-              </div>
-
-              <div className="field">
-                <label className="field__label">Quantity</label>
-                <input
-                  className="field__input"
-                  type="number"
-                  min="1"
-                  value={item.quantity_needed}
-                  onChange={(e) => setItem((p) => ({ ...p, quantity_needed: e.target.value }))}
-                  disabled={isDisabled}
-                />
-              </div>
-
-              <div className="field">
-                <label className="field__label">Mode</label>
-                <NeedsDropdown
-                  value={item.mode}
-                  onChange={(v) => setItem((p) => ({ ...p, mode: v }))}
-                  options={ITEM_MODE_OPTS}
-                  disabled={isDisabled}
-                />
-              </div>
-
-              <div className="field field--full">
-                <label className="field__label">Notes</label>
-                <textarea
-                  className="field__textarea"
-                  value={item.notes}
-                  onChange={(e) => setItem((p) => ({ ...p, notes: e.target.value }))}
-                  disabled={isDisabled}
-                />
-              </div>
-            </>
-          )}
-
-          {type === "time" && (
-            <>
-              <div className="field field--full">
-                <label className="field__label">Role title</label>
-                <input
-                  className="field__input"
-                  value={time.role_title}
-                  onChange={(e) => setTime((p) => ({ ...p, role_title: e.target.value }))}
-                  disabled={isDisabled}
-                />
-              </div>
-
-              <div className="field">
-                <label className="field__label">Volunteers</label>
-                <input
-                  className="field__input"
-                  type="number"
-                  min="1"
-                  value={time.volunteers_needed}
-                  onChange={(e) => setTime((p) => ({ ...p, volunteers_needed: e.target.value }))}
-                  disabled={isDisabled}
-                />
-              </div>
-
-              <div className="field">
-                <label className="field__label">Location</label>
-                <input
-                  className="field__input"
-                  value={time.location}
-                  onChange={(e) => setTime((p) => ({ ...p, location: e.target.value }))}
-                  disabled={isDisabled}
-                />
-              </div>
-
-              <div className="field">
-                <label className="field__label">Start</label>
-                <input
-                  className="field__input"
-                  type="datetime-local"
-                  value={time.start_datetime}
-                  onChange={(e) => setTime((p) => ({ ...p, start_datetime: e.target.value }))}
-                  disabled={isDisabled}
-                />
-              </div>
-
-              <div className="field">
-                <label className="field__label">End</label>
-                <input
-                  className="field__input"
-                  type="datetime-local"
-                  value={time.end_datetime}
-                  onChange={(e) => setTime((p) => ({ ...p, end_datetime: e.target.value }))}
-                  disabled={isDisabled}
-                />
-              </div>
-            </>
-          )}
-
-          {!detailId && (
-            <div className="modal__hint field--full">
-              Heads up: I couldn’t find the detail row for this need yet (so only base fields will save).
-            </div>
-          )}
-        </div>
-
-        <div className="modal__foot">
-          <button type="button" className="btn ghost" onClick={onClose} disabled={isDisabled}>
-            Cancel
-          </button>
-          <button type="button" className="btn primary" onClick={handleSave} disabled={isDisabled}>
-            {busy ? "Saving…" : "Save changes"}
-          </button>
-        </div>
+  const modalInner = (
+    <div className={`modal modal--need ${variant === "inline" ? "modal--inline" : ""}`}>
+      <div className="modal__head">
+        <h3 className="modal__title">Edit {prettyType(type)} need</h3>
+        {/* No X button — only Cancel */}
       </div>
+
+      {err && <div className="modal__error">{err}</div>}
+
+      <div className="modal__grid">
+        <div className="field field--full">
+          <label className="field__label">Title</label>
+          <input
+            className="field__input"
+            value={base.title}
+            onChange={(e) => setBaseField("title", e.target.value)}
+            disabled={isDisabled}
+            autoFocus
+          />
+        </div>
+
+        <div className="field field--full">
+          <label className="field__label">Description</label>
+          <textarea
+            className="field__textarea"
+            value={base.description}
+            onChange={(e) => setBaseField("description", e.target.value)}
+            disabled={isDisabled}
+          />
+        </div>
+
+        <div className="field">
+          <label className="field__label">Status</label>
+          <NeedsDropdown
+            value={base.status}
+            onChange={(v) => setBaseField("status", v)}
+            options={STATUS_OPTS}
+            disabled={isDisabled}
+          />
+        </div>
+
+        <div className="field">
+          <label className="field__label">Priority</label>
+          <NeedsDropdown
+            value={base.priority}
+            onChange={(v) => setBaseField("priority", v)}
+            options={PRIORITY_OPTS}
+            disabled={isDisabled}
+          />
+        </div>
+
+        {type === "money" && (
+          <>
+            <div className="field field--full">
+              <label className="field__label">Target amount</label>
+              <input
+                className="field__input"
+                type="number"
+                min="0"
+                step="0.01"
+                value={money.target_amount}
+                onChange={(e) => setMoney((m) => ({ ...m, target_amount: e.target.value }))}
+                disabled={isDisabled}
+              />
+            </div>
+
+            <div className="field field--full">
+              <label className="field__label">Comment</label>
+              <input
+                className="field__input"
+                value={money.comment}
+                onChange={(e) => setMoney((m) => ({ ...m, comment: e.target.value }))}
+                disabled={isDisabled}
+              />
+            </div>
+          </>
+        )}
+
+        {type === "item" && (
+          <>
+            <div className="field field--full">
+              <label className="field__label">Item name</label>
+              <input
+                className="field__input"
+                value={item.item_name}
+                onChange={(e) => setItem((p) => ({ ...p, item_name: e.target.value }))}
+                disabled={isDisabled}
+              />
+            </div>
+
+            <div className="field">
+              <label className="field__label">Quantity</label>
+              <input
+                className="field__input"
+                type="number"
+                min="1"
+                value={item.quantity_needed}
+                onChange={(e) => setItem((p) => ({ ...p, quantity_needed: e.target.value }))}
+                disabled={isDisabled}
+              />
+            </div>
+
+            <div className="field">
+              <label className="field__label">Mode</label>
+              <NeedsDropdown
+                value={item.mode}
+                onChange={(v) => setItem((p) => ({ ...p, mode: v }))}
+                options={ITEM_MODE_OPTS}
+                disabled={isDisabled}
+              />
+            </div>
+
+            <div className="field field--full">
+              <label className="field__label">Notes</label>
+              <textarea
+                className="field__textarea"
+                value={item.notes}
+                onChange={(e) => setItem((p) => ({ ...p, notes: e.target.value }))}
+                disabled={isDisabled}
+              />
+            </div>
+          </>
+        )}
+
+        {type === "time" && (
+          <>
+            <div className="field field--full">
+              <label className="field__label">Role title</label>
+              <input
+                className="field__input"
+                value={time.role_title}
+                onChange={(e) => setTime((p) => ({ ...p, role_title: e.target.value }))}
+                disabled={isDisabled}
+              />
+            </div>
+
+            <div className="field">
+              <label className="field__label">Volunteers</label>
+              <input
+                className="field__input"
+                type="number"
+                min="1"
+                value={time.volunteers_needed}
+                onChange={(e) => setTime((p) => ({ ...p, volunteers_needed: e.target.value }))}
+                disabled={isDisabled}
+              />
+            </div>
+
+            <div className="field">
+              <label className="field__label">Location</label>
+              <input
+                className="field__input"
+                value={time.location}
+                onChange={(e) => setTime((p) => ({ ...p, location: e.target.value }))}
+                disabled={isDisabled}
+              />
+            </div>
+
+            <div className="field">
+              <label className="field__label">Start</label>
+              <input
+                className="field__input"
+                type="datetime-local"
+                value={time.start_datetime}
+                onChange={(e) => setTime((p) => ({ ...p, start_datetime: e.target.value }))}
+                disabled={isDisabled}
+              />
+            </div>
+
+            <div className="field">
+              <label className="field__label">End</label>
+              <input
+                className="field__input"
+                type="datetime-local"
+                value={time.end_datetime}
+                onChange={(e) => setTime((p) => ({ ...p, end_datetime: e.target.value }))}
+                disabled={isDisabled}
+              />
+            </div>
+          </>
+        )}
+
+        {!detailId && (
+          <div className="modal__hint field--full">
+            Heads up: I couldn’t find the detail row for this need yet (so only base fields will save).
+          </div>
+        )}
+      </div>
+
+      <div className="modal__foot">
+        <button
+          type="button"
+          className="rtBtn rtBtn--secondary"
+          onClick={onClose}
+          disabled={isDisabled}
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          className="rtBtn rtBtn--primary"
+          onClick={handleSave}
+          disabled={isDisabled}
+        >
+          {busy ? "Saving…" : "Save changes"}
+        </button>
+      </div>
+    </div>
+  );
+
+  // Inline editor (no backdrop)
+  if (variant === "inline") {
+    return <div className="inlineEditor">{modalInner}</div>;
+  }
+
+  // Overlay editor (optional)
+  return (
+    <div
+      className="modal__backdrop"
+      role="dialog"
+      aria-modal="true"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose?.();
+      }}
+    >
+      <div onMouseDown={(e) => e.stopPropagation()}>{modalInner}</div>
     </div>
   );
 }

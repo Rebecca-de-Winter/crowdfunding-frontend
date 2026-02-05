@@ -84,6 +84,7 @@
 .needAcc__body {
   padding: 10px 12px 12px;
   border-top: 1px solid rgba(245, 232, 205, 0.12);
+  background: transparent/* VERY subtle */
 }
 
 .needsEmpty {
@@ -94,16 +95,55 @@
 .needsList {
   display: grid;
   gap: 10px;
+
+  padding: 6px;
+  border-radius: 14px;
+
+  /* tray effect (no muddy fill) */
+  background: transparent;
+  border: 0;
+  
 }
 
 .needRow {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 12px;
-  padding: 10px 10px;
+
+  padding: 12px;
   border-radius: 14px;
-  border: 1px solid rgba(245, 232, 205, 0.14);
-  background: rgba(0, 0, 0, 0.16);
+  /* border:  1.5px solid rgba(255, 255, 255, 0.06);  */
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(8, 110, 73, 0.12),
+      rgba(0, 0, 0, 0.0) 55%
+    ),
+    rgba(0, 0, 0, 0.16);
+
+  box-shadow:
+    0 0 0 1px rgba(160, 240, 210, 0.14),
+    0 10px 24px rgba(0, 0, 0, 0.35);
+  position: relative;
+}
+
+.needRow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  pointer-events: none;
+
+  box-shadow:
+  inset 0 1px 0 rgba(140, 230, 190, 0.22),
+  inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+ /* accent glow */
+}
+
+.needRow.is-active {
+  box-shadow:
+    0 0 0 1px rgba(160, 240, 210, 0.28),
+    0 16px 32px rgba(0, 0, 0, 0.45);
 }
 
 .needRow__title {
@@ -172,4 +212,39 @@
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+}
+/* =========================
+   Inline Edit panel styling
+   ========================= */
+
+/* If you're rendering the editor inside the needs list, it should span full width */
+.inlineEditor {
+  width: 100%;
+  padding: 0;
+
+  border-radius: 18px;
+  padding: 12px;
+  margin: 12px 0 16px;
+}
+
+/* Kill any previous "indent" rules */
+.needInlineEdit {
+  margin: 10px 0 14px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+/* IMPORTANT: remove the old 34px indent completely */
+@media (min-width: 680px) {
+  .needInlineEdit {
+    margin-left: 0;
+  }
+}
+.modal--inline {
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(250, 187, 76, 0.25); /* warm accent edge */
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }

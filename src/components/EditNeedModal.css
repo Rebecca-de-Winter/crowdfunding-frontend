@@ -1,6 +1,152 @@
-.modal--need {
-  width: min(760px, 100%);
+/* =========================
+   INLINE WRAPPER
+   ========================= */
+
+.inlineEditor {
+  width: 100%;
+  margin: 16px 0 0;
+  padding: 0;
 }
+
+/* If a parent (accordion body / list) adds padding, cancel it out */
+.needAcc__body .inlineEditor,
+.needsList .inlineEditor {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  width: 100% !important;
+}
+
+/* =========================
+   MODAL BASE
+   ========================= */
+
+.modal {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  border-radius: 18px;
+  padding: 20px 22px;
+
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(8px);
+}
+
+.modal--inline {
+  width: 100% !important;
+  max-width: none !important;
+  max-height: none;
+  overflow: visible;
+}
+
+/* Force the inline modal to line up with the same “row width” */
+.needAcc__body .inlineEditor .modal,
+.needsList .inlineEditor .modal {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+/* =========================
+   HEADER
+   ========================= */
+
+.modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.modal__title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+/* =========================
+   ERROR
+   ========================= */
+
+.modal__error {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(160, 30, 30, 0.35);
+  border: 1px solid rgba(245, 100, 100, 0.4);
+  font-weight: 700;
+}
+
+/* =========================
+   FORM GRID
+   ========================= */
+
+.modal__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 18px;
+  margin-bottom: 20px;
+}
+
+.field--full {
+  grid-column: 1 / -1;
+}
+
+/* =========================
+   FIELDS
+   ========================= */
+
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.field__label {
+  font-weight: 800;
+  margin-bottom: 6px;
+  opacity: 0.9;
+}
+
+.field__input,
+.field__textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.field__textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.field__input:disabled,
+.field__textarea:disabled {
+  opacity: 0.65;
+}
+
+/* =========================
+   FOOTER ACTIONS
+   ========================= */
+
+.modal__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+/* =========================
+   HINT
+   ========================= */
 
 .modal__hint {
   opacity: 0.8;
@@ -8,11 +154,20 @@
   padding: 10px 12px;
   border: 1px solid rgba(245, 232, 205, 0.18);
   border-radius: 14px;
-  background: rgba(0,0,0,0.12);
+  background: rgba(0, 0, 0, 0.12);
 }
 
-/* Ensure RewardTypeDropdown buttons fill the field */
-.field .rtdrop__button {
-  width: 100%;
-  border-radius: 14px;
+/* =========================
+   OVERLAY (OPTIONAL)
+   ========================= */
+
+.modal__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
 }

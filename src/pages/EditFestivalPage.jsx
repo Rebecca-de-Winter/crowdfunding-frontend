@@ -342,13 +342,7 @@ export default function EditFestivalPage() {
                 onDeleteNeed={(deleted) =>
                   setNeeds((cur) => cur.filter((n) => n.id !== deleted.id))
                 }
-                onReorderNeed={(updatedA, updatedB) =>
-                  setNeeds((cur) =>
-                    cur.map((n) =>
-                      n.id === updatedA.id ? updatedA : n.id === updatedB.id ? updatedB : n
-                    )
-                  )
-                }
+                
               />
 
               {saveError && <div className="form-alert">{saveError}</div>}
