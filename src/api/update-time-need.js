@@ -4,7 +4,7 @@ export default async function updateTimeNeed(timeNeedId, payload) {
   const token = window.localStorage.getItem("token");
 
   const response = await fetch(`${API_URL}time-needs/${timeNeedId}/`, {
-    method: "PATCH",
+    method: "PUT",
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Token ${token}` } : {}),

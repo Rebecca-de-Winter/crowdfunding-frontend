@@ -88,7 +88,9 @@ export default function EditFestivalPage() {
   }
 
   async function handleSubmit(event) {
-    event.preventDefault();
+    // IMPORTANT: handleSubmit can be called from a button click now
+    event?.preventDefault?.();
+
     setSaveError(null);
 
     if (!isAuthed) {
@@ -145,7 +147,7 @@ export default function EditFestivalPage() {
   }
 
   async function handleCreateTier(e) {
-    e.preventDefault();
+    e?.preventDefault?.();
     setTierError(null);
 
     if (!isAuthed) {
@@ -233,7 +235,8 @@ export default function EditFestivalPage() {
         ← View fundraiser
       </Link>
 
-      <form className="editfundraiser__form" onSubmit={handleSubmit}>
+      {/* IMPORTANT: NOT a <form> anymore (prevents nested-form bugs) */}
+      <div className="editfundraiser__form">
         {!isAuthed && (
           <div className="panel authBanner">
             <strong>You're not logged in.</strong>
@@ -329,22 +332,32 @@ export default function EditFestivalPage() {
               />
 
               <NeedsPanel
-  fundraiserId={id}
-  needs={needs}
-  disabled={isSaving || tierBusy}
-  onAddNeed={(created) => setNeeds((cur) => [created, ...cur])}
-  onEditNeed={(need) => console.log("Stage 2 edit", need)}
-  onDeleteNeed={(need) => console.log("Stage 2 delete", need)}
-  onReorderNeed={(a, b, aSort, bSort) => console.log("Stage 2 reorder", a, b, aSort, bSort)}
-/>
-
+                fundraiserId={id}
+                needs={needs}
+                disabled={isSaving || tierBusy}
+                onAddNeed={(created) => setNeeds((cur) => [created, ...cur])}
+                onEditNeed={(updated) =>
+                  setNeeds((cur) => cur.map((n) => (n.id === updated.id ? updated : n)))
+                }
+                onDeleteNeed={(deleted) =>
+                  setNeeds((cur) => cur.filter((n) => n.id !== deleted.id))
+                }
+                onReorderNeed={(updatedA, updatedB) =>
+                  setNeeds((cur) =>
+                    cur.map((n) =>
+                      n.id === updatedA.id ? updatedA : n.id === updatedB.id ? updatedB : n
+                    )
+                  )
+                }
+              />
 
               {saveError && <div className="form-alert">{saveError}</div>}
 
               <div className="editfundraiser__footer">
                 <button
                   className="fundraiser-form__submit"
-                  type="submit"
+                  type="button"
+                  onClick={handleSubmit}
                   disabled={isSaving || !isAuthed}
                 >
                   {isSaving ? "Saving…" : "Save changes"}
@@ -404,7 +417,8 @@ export default function EditFestivalPage() {
 
                   {showAddTier && (
                     <div className="tierAdd" role="region" aria-label="Add reward">
-                      <form className="tierAdd__grid" onSubmit={handleCreateTier}>
+                      {/* IMPORTANT: no nested form */}
+                      <div className="tierAdd__grid">
                         <div className="tierAdd__field">
                           <label className="tierAdd__label">Type</label>
                           <RewardTypeDropdown
@@ -417,7 +431,8 @@ export default function EditFestivalPage() {
 
                         <div className="tierAdd__field">
                           <label className="tierAdd__label">
-                            Quantity available <span className="tierAdd__optional">(optional)</span>
+                            Quantity available{" "}
+                            <span className="tierAdd__optional">(optional)</span>
                           </label>
                           <input
                             className="tierAdd__input"
@@ -474,8 +489,9 @@ export default function EditFestivalPage() {
 
                         <div className="tierAdd__actions">
                           <button
-                            type="submit"
+                            type="button"
                             className="rtBtn rtBtn--primary"
+                            onClick={handleCreateTier}
                             disabled={tierBusy || !isAuthed}
                           >
                             {tierBusy ? "Adding…" : "Add reward"}
@@ -485,11 +501,12 @@ export default function EditFestivalPage() {
                             type="button"
                             className="rtBtn rtBtn--secondary"
                             onClick={cancelAddTier}
+                            disabled={tierBusy}
                           >
                             Cancel
                           </button>
                         </div>
-                      </form>
+                      </div>
                     </div>
                   )}
 
@@ -504,7 +521,7 @@ export default function EditFestivalPage() {
             </div>
           </aside>
         </div>
-      </form>
+      </div>
     </div>
   );
 }

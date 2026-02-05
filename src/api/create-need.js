@@ -7,7 +7,7 @@ export default async function createNeed(fundraiserId, payload) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Token ${token}`,
+      ...(token ? { Authorization: `Token ${token}` } : {}),
     },
     body: JSON.stringify({
       fundraiser: fundraiserId,
