@@ -88,9 +88,7 @@ export default function EditFestivalPage() {
   }
 
   async function handleSubmit(event) {
-    // IMPORTANT: handleSubmit can be called from a button click now
     event?.preventDefault?.();
-
     setSaveError(null);
 
     if (!isAuthed) {
@@ -146,6 +144,15 @@ export default function EditFestivalPage() {
     setNewTier((cur) => ({ ...cur, [fieldId]: value }));
   }
 
+  // ✅ helper so changing type can also clear minimum contribution if not money
+  function handleRewardTypeChange(value) {
+    setNewTier((cur) => ({
+      ...cur,
+      reward_type: value,
+      minimum_contribution: value === "money" ? cur.minimum_contribution : "",
+    }));
+  }
+
   async function handleCreateTier(e) {
     e?.preventDefault?.();
     setTierError(null);
@@ -160,6 +167,7 @@ export default function EditFestivalPage() {
       return;
     }
 
+    // ✅ Only required for money tiers
     if (newTier.reward_type === "money" && String(newTier.minimum_contribution).trim() === "") {
       setTierError("Minimum contribution is required for money rewards.");
       return;
@@ -175,8 +183,12 @@ export default function EditFestivalPage() {
         name: newTier.name,
         description: newTier.description,
         image_url: newTier.image_url || null,
+
+        // ✅ Only send minimum_contribution for money; otherwise null
         minimum_contribution:
-          newTier.minimum_contribution === "" ? null : Number(newTier.minimum_contribution),
+          newTier.reward_type === "money" && String(newTier.minimum_contribution).trim() !== ""
+            ? Number(newTier.minimum_contribution)
+            : null,
       };
 
       const created = await createRewardTier(id, payload);
@@ -235,7 +247,6 @@ export default function EditFestivalPage() {
         ← View fundraiser
       </Link>
 
-      {/* IMPORTANT: NOT a <form> anymore (prevents nested-form bugs) */}
       <div className="editfundraiser__form">
         {!isAuthed && (
           <div className="panel authBanner">
@@ -244,7 +255,6 @@ export default function EditFestivalPage() {
           </div>
         )}
 
-        {/* TOP GRID */}
         <div className="editfundraiser__topGrid">
           <div className="editfundraiser__hero">
             <img
@@ -310,9 +320,7 @@ export default function EditFestivalPage() {
           </aside>
         </div>
 
-        {/* BELOW GRID */}
         <div className="editfundraiser__belowGrid">
-          {/* STORY + NEEDS */}
           <div className="storyCol">
             <div className="panel storyPanel">
               <label className="field__label field__label--title">Title</label>
@@ -342,7 +350,6 @@ export default function EditFestivalPage() {
                 onDeleteNeed={(deleted) =>
                   setNeeds((cur) => cur.filter((n) => n.id !== deleted.id))
                 }
-                
               />
 
               {saveError && <div className="form-alert">{saveError}</div>}
@@ -360,7 +367,6 @@ export default function EditFestivalPage() {
             </div>
           </div>
 
-          {/* REWARDS */}
           <aside className="rightRewardsCol">
             <div className="panel enablePanel">
               <div className="enablePanel__head">
@@ -411,15 +417,12 @@ export default function EditFestivalPage() {
 
                   {showAddTier && (
                     <div className="tierAdd" role="region" aria-label="Add reward">
-                      {/* IMPORTANT: no nested form */}
                       <div className="tierAdd__grid">
                         <div className="tierAdd__field">
                           <label className="tierAdd__label">Type</label>
                           <RewardTypeDropdown
                             value={newTier.reward_type}
-                            onChange={(value) =>
-                              setNewTier((cur) => ({ ...cur, reward_type: value }))
-                            }
+                            onChange={handleRewardTypeChange}
                           />
                         </div>
 
@@ -468,16 +471,20 @@ export default function EditFestivalPage() {
                           />
                         </div>
 
-                        <div className="tierAdd__field">
-                          <label className="tierAdd__label">Minimum contribution</label>
-                          <input
-                            className="tierAdd__input"
-                            id="minimum_contribution"
-                            value={newTier.minimum_contribution}
-                            onChange={handleNewTierField}
-                            inputMode="decimal"
-                          />
-                        </div>
+                        {/* ✅ Only show for money */}
+                        {newTier.reward_type === "money" && (
+                          <div className="tierAdd__field">
+                            <label className="tierAdd__label">Minimum contribution</label>
+                            <input
+                              className="tierAdd__input"
+                              id="minimum_contribution"
+                              value={newTier.minimum_contribution}
+                              onChange={handleNewTierField}
+                              inputMode="decimal"
+                              placeholder="e.g. 25"
+                            />
+                          </div>
+                        )}
 
                         {tierError && <div className="tierAdd__error">{tierError}</div>}
 
