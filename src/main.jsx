@@ -8,8 +8,8 @@ import FundraisersPage from "./pages/FundraisersPage.jsx";
 import FundraiserPage from "./pages/FundraiserPage.jsx";
 import CreateFestivalPage from "./pages/CreateFestivalPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
-
 import EditFestivalPage from "./pages/EditFestivalPage.jsx";
+import PledgeNeedPage from "./pages/PledgeNeedPage.jsx";
 
 import "./index.css";
 
@@ -34,10 +34,8 @@ const MyRouter = createBrowserRouter([
       // edit page
       { path: "fundraisers/:id/edit", element: <EditFestivalPage /> },
 
-      // NOTE:
-      // We intentionally remove the old singular route:
-      // { path: "fundraiser/:id", element: <FundraiserPage /> },
-      // because it conflicts with your new consistent URL scheme.
+      // pledge a specific need
+      { path: "fundraisers/:id/needs/:needId/pledge", element: <PledgeNeedPage /> },
     ],
   },
 ]);

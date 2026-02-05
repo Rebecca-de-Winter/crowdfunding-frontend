@@ -448,3 +448,45 @@
     grid-column: 1 / -1;
   }
 }
+/* =========================
+   Progress bars (summary)
+   ========================= */
+
+.progressRow {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.progressBar {
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  background: rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.progressBar__fill {
+  height: 100%;
+  width: 0%;
+  background: rgba(250, 187, 76, 0.85);
+}
+
+.progressMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+.needItem__actions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn--small {
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+}

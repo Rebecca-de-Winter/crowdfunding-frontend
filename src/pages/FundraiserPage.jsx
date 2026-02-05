@@ -1,10 +1,21 @@
+// src/pages/FundraiserPage.jsx
 import { useParams, Link } from "react-router-dom";
 import useFundraiser from "../hooks/use-fundraiser";
+import useFundraiserSummary from "../hooks/use-fundraiser-summary";
 import "./FundraiserPage.css";
 
 function FundraiserPage() {
   const { id } = useParams();
+
+  // Base fundraiser (needs, reward_tiers, etc.)
   const { fundraiser, isLoading, error } = useFundraiser(id);
+
+  // Report summary (totals)
+  const {
+    summary,
+    isLoading: isSummaryLoading,
+    error: summaryError,
+  } = useFundraiserSummary(id);
 
   if (isLoading) return <p>Loading…</p>;
   if (error) return <p>{error.message}</p>;
@@ -20,10 +31,15 @@ function FundraiserPage() {
     end_date,
     is_open,
     enable_rewards,
-    needs = [],
-    reward_tiers = [],
-    pledges = [],
+    needs: rawNeeds,
+    reward_tiers: rawRewardTiers,
+    pledges: rawPledges,
   } = fundraiser;
+
+  // IMPORTANT: avoid `needs = []` defaults in destructuring (can trip lint rules)
+  const needs = rawNeeds ?? [];
+  const reward_tiers = rawRewardTiers ?? [];
+  const pledges = rawPledges ?? [];
 
   const moneyNeeds = needs.filter((n) => n.need_type === "money");
   const timeNeeds = needs.filter((n) => n.need_type === "time");
@@ -35,6 +51,12 @@ function FundraiserPage() {
     if (!iso) return "—";
     return new Date(iso).toLocaleDateString();
   };
+
+  // Summary totals (report endpoint)
+  const totals = summary?.totals;
+  const moneyPledged = totals?.total_money_pledged ?? "0";
+  const timeHoursPledged = totals?.total_time_hours_pledged ?? "0";
+  const itemQtyPledged = totals?.total_item_quantity_pledged ?? 0;
 
   return (
     <div className="fundraiser">
@@ -54,10 +76,10 @@ function FundraiserPage() {
           <div className="fundraiser__meta">
             {location ? <span>{location}</span> : null}
 
-            {/* show formatted dates, and allow blanks */}
             {start_date || end_date ? (
               <span>
-                {formatDate(start_date)} {end_date ? `→ ${formatDate(end_date)}` : ""}
+                {formatDate(start_date)}{" "}
+                {end_date ? `→ ${formatDate(end_date)}` : ""}
               </span>
             ) : (
               <span>Dates: —</span>
@@ -72,7 +94,6 @@ function FundraiserPage() {
               {is_open ? "Open" : "Closed"}
             </span>
 
-            {/*  handy edit link (especially for your new creation flow) */}
             <Link className="fundraiser__editLink" to={`/fundraisers/${id}/edit`}>
               Edit
             </Link>
@@ -100,7 +121,15 @@ function FundraiserPage() {
                       <li key={n.id} className="needItem">
                         <div className="needItem__top">
                           <div className="needItem__name">{n.title}</div>
-                          <span className={`badge badge--${n.status}`}>{n.status}</span>
+                          <span className={`badge badge--${n.status}`}>
+                            {n.status}
+                          </span>
+                          <div className="needItem__actions">
+  <Link className="btn btn--small" to={`/fundraisers/${id}/needs/${n.id}/pledge`}>
+    Pledge money
+  </Link>
+</div>
+
                         </div>
 
                         {n.description ? (
@@ -133,7 +162,15 @@ function FundraiserPage() {
                       <li key={n.id} className="needItem">
                         <div className="needItem__top">
                           <div className="needItem__name">{n.title}</div>
-                          <span className={`badge badge--${n.status}`}>{n.status}</span>
+                          <span className={`badge badge--${n.status}`}>
+                            {n.status}
+                          </span>
+                          <div className="needItem__actions">
+  <Link className="btn btn--small" to={`/fundraisers/${id}/needs/${n.id}/pledge`}>
+    Pledge time
+  </Link>
+</div>
+
                         </div>
 
                         {n.description ? (
@@ -166,7 +203,15 @@ function FundraiserPage() {
                       <li key={n.id} className="needItem">
                         <div className="needItem__top">
                           <div className="needItem__name">{n.title}</div>
-                          <span className={`badge badge--${n.status}`}>{n.status}</span>
+                          <span className={`badge badge--${n.status}`}>
+                            {n.status}
+                          </span>
+                          <div className="needItem__actions">
+  <Link className="btn btn--small" to={`/fundraisers/${id}/needs/${n.id}/pledge`}>
+    Pledge items
+  </Link>
+</div>
+
                         </div>
 
                         {n.description ? (
@@ -186,7 +231,7 @@ function FundraiserPage() {
             </div>
           </section>
 
-          {/* PLEDGES */}
+          {/* PLEDGES (basic list for now) */}
           <section className="fundraiser__section">
             <h2>Pledges</h2>
 
@@ -196,7 +241,10 @@ function FundraiserPage() {
               <ul className="simpleList">
                 {pledges.map((p) => (
                   <li key={p.id}>
-                    {p.amount ?? "—"} from {p.supporter ?? "anonymous"}
+                    {p.comment ?? "—"}{" "}
+                    <span className="muted">
+                      ({p.supporter_username ?? "anonymous"})
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -212,10 +260,30 @@ function FundraiserPage() {
               <div className="panel__value">${goal}</div>
             </div>
 
+            {summaryError ? (
+              <p className="muted">Couldn’t load totals.</p>
+            ) : isSummaryLoading ? (
+              <p className="muted">Loading totals…</p>
+            ) : (
+              <div className="progressRow">
+                <div className="progressMeta">
+                  <span>Money pledged</span>
+                  <span>${moneyPledged}</span>
+                </div>
+                <div className="progressMeta">
+                  <span>Time pledged</span>
+                  <span>{timeHoursPledged} hrs</span>
+                </div>
+                <div className="progressMeta">
+                  <span>Items pledged</span>
+                  <span>{itemQtyPledged}</span>
+                </div>
+              </div>
+            )}
+
             <div className="panel__actions">
               {is_open ? (
                 <>
-                  {/* UPDATED ROUTES: plural fundraisers */}
                   <Link className="btn" to={`/fundraisers/${id}/pledge/money`}>
                     Pledge money
                   </Link>
@@ -241,7 +309,7 @@ function FundraiserPage() {
 
             {!enable_rewards ? (
               <p className="muted">Rewards are disabled for this fundraiser.</p>
-            ) : reward_tiers && reward_tiers.length > 0 ? (
+            ) : reward_tiers.length > 0 ? (
               <ul className="rewardList">
                 {reward_tiers.map((r) => (
                   <li className="reward" key={r.id}>
