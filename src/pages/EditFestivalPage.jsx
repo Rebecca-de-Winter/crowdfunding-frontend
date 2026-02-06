@@ -12,6 +12,9 @@ import RewardTypeDropdown from "../components/RewardTypeDropdown";
 
 import NeedsPanel from "../components/NeedsPanel";
 
+import getCurrentUser from "../api/get-current-user";
+import getFundraiser from "../api/get-fundraiser";
+
 import "./EditFestivalPage.css";
 
 function toDateInputValue(value) {
@@ -48,6 +51,56 @@ export default function EditFestivalPage() {
 
   const isAuthed = Boolean(window.localStorage.getItem("token"));
 
+  // ✅ Owner gate: logged-in users still shouldn't edit other people's fundraisers
+  const [canEdit, setCanEdit] = useState(false);
+  const [checkingOwner, setCheckingOwner] = useState(true);
+
+  useEffect(() => {
+  let cancelled = false;
+
+  async function checkOwner() {
+    try {
+      if (!isAuthed) {
+        if (!cancelled) {
+          setCanEdit(false);
+          setCheckingOwner(false);
+        }
+        return;
+      }
+
+      const me = await getCurrentUser();
+      const fr = await getFundraiser(id);
+
+      if (cancelled) return;
+
+      if (me.id !== fr.owner) {
+        navigate(`/fundraisers/${id}`, {
+          replace: true,
+          state: { flash: "You don’t have permission to edit this fundraiser." },
+        });
+        return;
+      }
+
+      setCanEdit(true);
+    } catch {
+      if (!cancelled) {
+        navigate("/login", { replace: true });
+      }
+    } finally {
+      if (!cancelled) {
+        setCheckingOwner(false);
+      }
+    }
+  }
+
+  checkOwner();
+
+  return () => {
+    cancelled = true;
+  };
+}, [id, isAuthed, navigate]);
+
+
   /* =========================
      Initialise form from API
      ========================= */
@@ -71,6 +124,12 @@ export default function EditFestivalPage() {
   }, [fundraiser]);
 
   const tierCount = useMemo(() => tiers.length, [tiers]);
+
+  // ✅ While we verify ownership, don't render the edit UI
+  if (checkingOwner) return <p>Checking permissions…</p>;
+
+  // ✅ If not allowed (should already have redirected), show a safe fallback
+  if (!canEdit) return <p>You don’t have permission to edit this fundraiser.</p>;
 
   if (isLoading) return <p>Loading…</p>;
   if (error) return <p>{error.message}</p>;
@@ -118,7 +177,9 @@ export default function EditFestivalPage() {
 
       navigate(`/fundraisers/${updated.id}`);
     } catch (err) {
-      setSaveError(err.message);
+      // ✅ Friendly permission message if backend blocks
+      const msg = err?.message || "Could not save changes.";
+      setSaveError(msg.includes("permission") ? "You don’t have permission to edit this fundraiser." : msg);
     } finally {
       setIsSaving(false);
     }
@@ -144,7 +205,6 @@ export default function EditFestivalPage() {
     setNewTier((cur) => ({ ...cur, [fieldId]: value }));
   }
 
-  // ✅ helper so changing type can also clear minimum contribution if not money
   function handleRewardTypeChange(value) {
     setNewTier((cur) => ({
       ...cur,
@@ -167,7 +227,6 @@ export default function EditFestivalPage() {
       return;
     }
 
-    // ✅ Only required for money tiers
     if (newTier.reward_type === "money" && String(newTier.minimum_contribution).trim() === "") {
       setTierError("Minimum contribution is required for money rewards.");
       return;
@@ -183,8 +242,6 @@ export default function EditFestivalPage() {
         name: newTier.name,
         description: newTier.description,
         image_url: newTier.image_url || null,
-
-        // ✅ Only send minimum_contribution for money; otherwise null
         minimum_contribution:
           newTier.reward_type === "money" && String(newTier.minimum_contribution).trim() !== ""
             ? Number(newTier.minimum_contribution)
@@ -324,12 +381,7 @@ export default function EditFestivalPage() {
           <div className="storyCol">
             <div className="panel storyPanel">
               <label className="field__label field__label--title">Title</label>
-              <input
-                className="field__input"
-                id="title"
-                value={form.title}
-                onChange={handleChange}
-              />
+              <input className="field__input" id="title" value={form.title} onChange={handleChange} />
 
               <label className="field__label">Story / Description</label>
               <textarea
@@ -347,9 +399,7 @@ export default function EditFestivalPage() {
                 onEditNeed={(updated) =>
                   setNeeds((cur) => cur.map((n) => (n.id === updated.id ? updated : n)))
                 }
-                onDeleteNeed={(deleted) =>
-                  setNeeds((cur) => cur.filter((n) => n.id !== deleted.id))
-                }
+                onDeleteNeed={(deleted) => setNeeds((cur) => cur.filter((n) => n.id !== deleted.id))}
               />
 
               {saveError && <div className="form-alert">{saveError}</div>}
@@ -428,8 +478,7 @@ export default function EditFestivalPage() {
 
                         <div className="tierAdd__field">
                           <label className="tierAdd__label">
-                            Quantity available{" "}
-                            <span className="tierAdd__optional">(optional)</span>
+                            Quantity available <span className="tierAdd__optional">(optional)</span>
                           </label>
                           <input
                             className="tierAdd__input"
@@ -471,7 +520,6 @@ export default function EditFestivalPage() {
                           />
                         </div>
 
-                        {/* ✅ Only show for money */}
                         {newTier.reward_type === "money" && (
                           <div className="tierAdd__field">
                             <label className="tierAdd__label">Minimum contribution</label>

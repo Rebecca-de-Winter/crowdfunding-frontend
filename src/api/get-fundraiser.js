@@ -1,19 +1,23 @@
+import { authFetch } from "./auth-fetch";
+
 async function getFundraiser(fundraiserId) {
-  const url = `${import.meta.env.VITE_API_URL}fundraisers/${fundraiserId}/`;
-  const response = await fetch(url, { method: "GET" });
+  const base = import.meta.env.VITE_API_URL.endsWith("/")
+    ? import.meta.env.VITE_API_URL
+    : `${import.meta.env.VITE_API_URL}/`;
+
+  const url = `${base}fundraisers/${fundraiserId}/`;
+
+  const response = await authFetch(url, { method: "GET" });
+
+  const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
     const fallbackError = `Error fetching fundraiser with id ${fundraiserId}`;
-
-    const data = await response.json().catch(() => {
-      throw new Error(fallbackError);
-    });
-
     const errorMessage = data?.detail ?? fallbackError;
     throw new Error(errorMessage);
   }
 
-  return await response.json();
+  return data;
 }
 
 export default getFundraiser;
