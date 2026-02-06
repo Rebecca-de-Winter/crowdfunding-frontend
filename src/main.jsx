@@ -11,6 +11,7 @@ import LoginPage from "./pages/LoginPage.jsx";
 import SignUpPage from "./pages/SignUpPage.jsx";
 import EditFestivalPage from "./pages/EditFestivalPage.jsx";
 import PledgeNeedPage from "./pages/PledgeNeedPage.jsx";
+import RequireAuth from "./components/RequireAuth.jsx";
 
 import "./index.css";
 
@@ -22,23 +23,43 @@ const MyRouter = createBrowserRouter([
       { index: true, element: <HomePage /> },
 
       { path: "login", element: <LoginPage /> },
-      
       { path: "signup", element: <SignUpPage /> },
 
       // list page
       { path: "fundraisers", element: <FundraisersPage /> },
 
-      // create page
-      { path: "fundraisers/new", element: <CreateFestivalPage /> },
+      // create page (protected)
+      {
+        path: "fundraisers/new",
+        element: (
+          <RequireAuth>
+            <CreateFestivalPage />
+          </RequireAuth>
+        ),
+      },
 
       // detail page
       { path: "fundraisers/:id", element: <FundraiserPage /> },
 
-      // edit page
-      { path: "fundraisers/:id/edit", element: <EditFestivalPage /> },
+      // edit page (protected)
+      {
+        path: "fundraisers/:id/edit",
+        element: (
+          <RequireAuth>
+            <EditFestivalPage />
+          </RequireAuth>
+        ),
+      },
 
-      // pledge a specific need
-      { path: "fundraisers/:id/needs/:needId/pledge", element: <PledgeNeedPage /> },
+      // pledge a specific need (protected)
+      {
+        path: "fundraisers/:id/needs/:needId/pledge",
+        element: (
+          <RequireAuth>
+            <PledgeNeedPage />
+          </RequireAuth>
+        ),
+      },
     ],
   },
 ]);
