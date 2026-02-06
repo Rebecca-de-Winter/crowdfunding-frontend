@@ -8,6 +8,7 @@ import FundraisersPage from "./pages/FundraisersPage.jsx";
 import FundraiserPage from "./pages/FundraiserPage.jsx";
 import CreateFestivalPage from "./pages/CreateFestivalPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
+import SignUpPage from "./pages/SignUpPage.jsx";
 import EditFestivalPage from "./pages/EditFestivalPage.jsx";
 import PledgeNeedPage from "./pages/PledgeNeedPage.jsx";
 
@@ -21,6 +22,8 @@ const MyRouter = createBrowserRouter([
       { index: true, element: <HomePage /> },
 
       { path: "login", element: <LoginPage /> },
+      
+      { path: "signup", element: <SignUpPage /> },
 
       // list page
       { path: "fundraisers", element: <FundraisersPage /> },

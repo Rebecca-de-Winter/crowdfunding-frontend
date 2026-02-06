@@ -1,9 +1,17 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import useFundraisers from "../hooks/use-fundraisers";
 import FundraiserCard from "../components/FundraiserCard";
 import "./HomePage.css";
 
 function HomePage() {
+  // Read and consume flash ONCE during initial render (no useEffect)
+  const [flash, setFlash] = useState(() => {
+    const msg = sessionStorage.getItem("flash");
+    if (msg) sessionStorage.removeItem("flash");
+    return msg || null;
+  });
+
   const { fundraisers, isLoading, error } = useFundraisers();
 
   if (isLoading) return <p>Loading fundraisers…</p>;
@@ -13,6 +21,35 @@ function HomePage() {
 
   return (
     <div className="page home">
+      {/* Tiny inline keyframes so you don't need new CSS */}
+      <style>{`
+        @keyframes flashFade {
+          0% { opacity: 0; transform: translateY(-4px); }
+          10% { opacity: 1; transform: translateY(0); }
+          85% { opacity: 1; transform: translateY(0); }
+          100% { opacity: 0; transform: translateY(-4px); }
+        }
+      `}</style>
+
+      {flash && (
+        <div
+          onAnimationEnd={() => setFlash(null)} //  state update via event handler, not effect
+          style={{
+            margin: "12px auto 0",
+            maxWidth: 1100,
+            padding: "10px 12px",
+            borderRadius: 14,
+            border: "1px solid rgba(245, 232, 205, 0.22)",
+            background: "rgba(0, 0, 0, 0.20)",
+            color: "rgba(253, 244, 225, 0.92)",
+            fontWeight: 800,
+            animation: "flashFade 3.5s ease forwards",
+          }}
+        >
+          {flash}
+        </div>
+      )}
+
       <section className="home-hero">
         <h1 className="home-title">Backyard Festival</h1>
         <p className="home-subtitle">
@@ -24,7 +61,6 @@ function HomePage() {
             Browse Fundraisers
           </Link>
 
-          {/*  UPDATED ROUTE */}
           <Link className="home-button home-button--ghost" to="/fundraisers/new">
             Create Festival
           </Link>

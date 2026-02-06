@@ -1,3 +1,5 @@
+import { authFetch } from "./auth-fetch";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 function endpointForType(type) {
@@ -8,12 +10,8 @@ function endpointForType(type) {
 }
 
 export default async function getNeedDetail(type, detailId) {
-  const token = window.localStorage.getItem("token");
-
-  const res = await fetch(`${API_URL}${endpointForType(type)}${detailId}/`, {
-    headers: {
-      ...(token ? { Authorization: `Token ${token}` } : {}),
-    },
+  const res = await authFetch(`${API_URL}${endpointForType(type)}${detailId}/`, {
+    method: "GET",
   });
 
   if (!res.ok) {

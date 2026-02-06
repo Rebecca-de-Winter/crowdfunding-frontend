@@ -1,21 +1,34 @@
 // src/pages/FundraiserPage.jsx
 import { useParams, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import useFundraiser from "../hooks/use-fundraiser";
-import useFundraiserSummary from "../hooks/use-fundraiser-summary";
+import useFundraiserPledgesReport from "../hooks/use-fundraiser-pledges-report";
+import getCurrentUser from "../api/get-current-user";
 import "./FundraiserPage.css";
 
 function FundraiserPage() {
   const { id } = useParams();
 
-  // Base fundraiser (needs, reward_tiers, etc.)
   const { fundraiser, isLoading, error } = useFundraiser(id);
 
-  // Report summary (totals)
+  // ✅ Use pledges report for totals + pledge list
   const {
-    summary,
-    isLoading: isSummaryLoading,
-    error: summaryError,
-  } = useFundraiserSummary(id);
+    report,
+    isLoading: isReportLoading,
+    error: reportError,
+  } = useFundraiserPledgesReport(id);
+
+  // ✅ Logged-in user (for ownership UI)
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const token = window.localStorage.getItem("token");
+    if (!token) return;
+
+    getCurrentUser()
+      .then(setCurrentUser)
+      .catch(() => setCurrentUser(null));
+  }, []);
 
   if (isLoading) return <p>Loading…</p>;
   if (error) return <p>{error.message}</p>;
@@ -33,13 +46,13 @@ function FundraiserPage() {
     enable_rewards,
     needs: rawNeeds,
     reward_tiers: rawRewardTiers,
-    pledges: rawPledges,
+    owner,
   } = fundraiser;
 
-  // IMPORTANT: avoid `needs = []` defaults in destructuring (can trip lint rules)
+  const isOwner = currentUser?.id === owner;
+
   const needs = rawNeeds ?? [];
   const reward_tiers = rawRewardTiers ?? [];
-  const pledges = rawPledges ?? [];
 
   const moneyNeeds = needs.filter((n) => n.need_type === "money");
   const timeNeeds = needs.filter((n) => n.need_type === "time");
@@ -47,13 +60,12 @@ function FundraiserPage() {
 
   const heroImg = image_url || "https://picsum.photos/1200/700";
 
-  const formatDate = (iso) => {
-    if (!iso) return "—";
-    return new Date(iso).toLocaleDateString();
-  };
+  const formatDate = (iso) => (iso ? new Date(iso).toLocaleDateString() : "—");
 
-  // Summary totals (report endpoint)
-  const totals = summary?.totals;
+  // ✅ From pledges report
+  const totals = report?.totals;
+  const pledges = report?.pledges ?? [];
+
   const moneyPledged = totals?.total_money_pledged ?? "0";
   const timeHoursPledged = totals?.total_time_hours_pledged ?? "0";
   const itemQtyPledged = totals?.total_item_quantity_pledged ?? 0;
@@ -65,7 +77,6 @@ function FundraiserPage() {
       </Link>
 
       <div className="fundraiser__top">
-        {/* LEFT: hero + story */}
         <div className="fundraiser__left">
           <div className="fundraiser__hero">
             <img className="fundraiser__heroImg" src={heroImg} alt={title} />
@@ -78,25 +89,23 @@ function FundraiserPage() {
 
             {start_date || end_date ? (
               <span>
-                {formatDate(start_date)}{" "}
-                {end_date ? `→ ${formatDate(end_date)}` : ""}
+                {formatDate(start_date)} {end_date ? `→ ${formatDate(end_date)}` : ""}
               </span>
             ) : (
               <span>Dates: —</span>
             )}
 
             <span className="statusPill">
-              <span
-                className={`statusDot ${
-                  is_open ? "statusDot--open" : "statusDot--closed"
-                }`}
-              />
+              <span className={`statusDot ${is_open ? "statusDot--open" : "statusDot--closed"}`} />
               {is_open ? "Open" : "Closed"}
             </span>
 
-            <Link className="fundraiser__editLink" to={`/fundraisers/${id}/edit`}>
-              Edit
-            </Link>
+            {/* ✅ Only show Edit link if current user owns this fundraiser */}
+            {isOwner ? (
+              <Link className="fundraiser__editLink" to={`/fundraisers/${id}/edit`}>
+                Edit
+              </Link>
+            ) : null}
           </div>
 
           <p className="fundraiser__desc">{description}</p>
@@ -106,7 +115,7 @@ function FundraiserPage() {
             <h2>What this fundraiser needs</h2>
 
             <div className="needs__grid">
-              {/* Money block */}
+              {/* Money */}
               <div className="needs__block">
                 <div className="needs__blockHeader">
                   <h3 className="needs__blockTitle">Money</h3>
@@ -121,25 +130,19 @@ function FundraiserPage() {
                       <li key={n.id} className="needItem">
                         <div className="needItem__top">
                           <div className="needItem__name">{n.title}</div>
-                          <span className={`badge badge--${n.status}`}>
-                            {n.status}
-                          </span>
-                          <div className="needItem__actions">
-  <Link className="btn btn--small" to={`/fundraisers/${id}/needs/${n.id}/pledge`}>
-    Pledge money
-  </Link>
-</div>
-
+                          <span className={`badge badge--${n.status}`}>{n.status}</span>
                         </div>
 
-                        {n.description ? (
-                          <p className="needItem__desc">{n.description}</p>
-                        ) : null}
+                        {n.description ? <p className="needItem__desc">{n.description}</p> : null}
 
                         <div className="needItem__meta">
-                          <span className={`badge badge--priority-${n.priority}`}>
-                            {n.priority}
-                          </span>
+                          <span className={`badge badge--priority-${n.priority}`}>{n.priority}</span>
+
+                          <div className="needItem__actions">
+                            <Link className="btn btn--small" to={`/fundraisers/${id}/needs/${n.id}/pledge`}>
+                              Pledge money
+                            </Link>
+                          </div>
                         </div>
                       </li>
                     ))}
@@ -147,7 +150,7 @@ function FundraiserPage() {
                 )}
               </div>
 
-              {/* Time block */}
+              {/* Time */}
               <div className="needs__block">
                 <div className="needs__blockHeader">
                   <h3 className="needs__blockTitle">Time</h3>
@@ -162,25 +165,19 @@ function FundraiserPage() {
                       <li key={n.id} className="needItem">
                         <div className="needItem__top">
                           <div className="needItem__name">{n.title}</div>
-                          <span className={`badge badge--${n.status}`}>
-                            {n.status}
-                          </span>
-                          <div className="needItem__actions">
-  <Link className="btn btn--small" to={`/fundraisers/${id}/needs/${n.id}/pledge`}>
-    Pledge time
-  </Link>
-</div>
-
+                          <span className={`badge badge--${n.status}`}>{n.status}</span>
                         </div>
 
-                        {n.description ? (
-                          <p className="needItem__desc">{n.description}</p>
-                        ) : null}
+                        {n.description ? <p className="needItem__desc">{n.description}</p> : null}
 
                         <div className="needItem__meta">
-                          <span className={`badge badge--priority-${n.priority}`}>
-                            {n.priority}
-                          </span>
+                          <span className={`badge badge--priority-${n.priority}`}>{n.priority}</span>
+
+                          <div className="needItem__actions">
+                            <Link className="btn btn--small" to={`/fundraisers/${id}/needs/${n.id}/pledge`}>
+                              Volunteer time
+                            </Link>
+                          </div>
                         </div>
                       </li>
                     ))}
@@ -188,7 +185,7 @@ function FundraiserPage() {
                 )}
               </div>
 
-              {/* Items block */}
+              {/* Items */}
               <div className="needs__block">
                 <div className="needs__blockHeader">
                   <h3 className="needs__blockTitle">Items</h3>
@@ -203,25 +200,19 @@ function FundraiserPage() {
                       <li key={n.id} className="needItem">
                         <div className="needItem__top">
                           <div className="needItem__name">{n.title}</div>
-                          <span className={`badge badge--${n.status}`}>
-                            {n.status}
-                          </span>
-                          <div className="needItem__actions">
-  <Link className="btn btn--small" to={`/fundraisers/${id}/needs/${n.id}/pledge`}>
-    Pledge items
-  </Link>
-</div>
-
+                          <span className={`badge badge--${n.status}`}>{n.status}</span>
                         </div>
 
-                        {n.description ? (
-                          <p className="needItem__desc">{n.description}</p>
-                        ) : null}
+                        {n.description ? <p className="needItem__desc">{n.description}</p> : null}
 
                         <div className="needItem__meta">
-                          <span className={`badge badge--priority-${n.priority}`}>
-                            {n.priority}
-                          </span>
+                          <span className={`badge badge--priority-${n.priority}`}>{n.priority}</span>
+
+                          <div className="needItem__actions">
+                            <Link className="btn btn--small" to={`/fundraisers/${id}/needs/${n.id}/pledge`}>
+                              Pledge item
+                            </Link>
+                          </div>
                         </div>
                       </li>
                     ))}
@@ -231,20 +222,22 @@ function FundraiserPage() {
             </div>
           </section>
 
-          {/* PLEDGES (basic list for now) */}
+          {/* ✅ Pledges list from report */}
           <section className="fundraiser__section">
             <h2>Pledges</h2>
 
-            {pledges.length === 0 ? (
+            {reportError ? (
+              <p className="muted">Couldn’t load pledges.</p>
+            ) : isReportLoading ? (
+              <p className="muted">Loading pledges…</p>
+            ) : pledges.length === 0 ? (
               <p className="muted">No pledges yet.</p>
             ) : (
               <ul className="simpleList">
                 {pledges.map((p) => (
                   <li key={p.id}>
-                    {p.comment ?? "—"}{" "}
-                    <span className="muted">
-                      ({p.supporter_username ?? "anonymous"})
-                    </span>
+                    <strong>{p.need_title}</strong> — {p.comment ?? "—"}{" "}
+                    <span className="muted">({p.supporter_username ?? "anonymous"})</span>
                   </li>
                 ))}
               </ul>
@@ -252,7 +245,7 @@ function FundraiserPage() {
           </section>
         </div>
 
-        {/* RIGHT: action stack */}
+        {/* RIGHT */}
         <aside className="fundraiser__right">
           <div className="panel">
             <div className="panel__row">
@@ -260,9 +253,9 @@ function FundraiserPage() {
               <div className="panel__value">${goal}</div>
             </div>
 
-            {summaryError ? (
+            {reportError ? (
               <p className="muted">Couldn’t load totals.</p>
-            ) : isSummaryLoading ? (
+            ) : isReportLoading ? (
               <p className="muted">Loading totals…</p>
             ) : (
               <div className="progressRow">
@@ -280,28 +273,6 @@ function FundraiserPage() {
                 </div>
               </div>
             )}
-
-            <div className="panel__actions">
-              {is_open ? (
-                <>
-                  <Link className="btn" to={`/fundraisers/${id}/pledge/money`}>
-                    Pledge money
-                  </Link>
-
-                  <Link className="btn btn--ghost" to={`/fundraisers/${id}/pledge/time`}>
-                    Volunteer time
-                  </Link>
-
-                  <Link className="btn btn--ghost" to={`/fundraisers/${id}/pledge/items`}>
-                    Pledge items
-                  </Link>
-                </>
-              ) : (
-                <p className="muted">
-                  This fundraiser is closed. Pledges are no longer being accepted.
-                </p>
-              )}
-            </div>
           </div>
 
           <div className="panel">
