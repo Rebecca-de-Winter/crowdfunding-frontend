@@ -20,8 +20,11 @@ const emptyNeed = {
   role_title: "",
   location: "",
   volunteers_needed: 1,
-  start_datetime: "",
-  end_datetime: "",
+  start_date: "",
+  start_time: "",
+  end_date: "",
+  end_time: "",
+
   reward_tier: null,
 };
 
@@ -59,8 +62,10 @@ export default function AddNeedForm({ onCancel, onCreate, disabled }) {
       role_title: value === "time" ? f.role_title : "",
       location: value === "time" ? f.location : "",
       volunteers_needed: value === "time" ? f.volunteers_needed : 1,
-      start_datetime: value === "time" ? f.start_datetime : "",
-      end_datetime: value === "time" ? f.end_datetime : "",
+      start_date: value === "time" ? f.start_date : "",
+      start_time: value === "time" ? f.start_time : "",
+      end_date: value === "time" ? f.end_date : "",
+      end_time: value === "time" ? f.end_time : "",
       reward_tier: value === "time" ? f.reward_tier : null,
       item_name: value === "item" ? f.item_name : "",
       quantity_needed: value === "item" ? f.quantity_needed : 1,
@@ -79,8 +84,10 @@ export default function AddNeedForm({ onCancel, onCreate, disabled }) {
     if (form.need_type === "time") {
       return (
         form.role_title.trim() &&
-        form.start_datetime &&
-        form.end_datetime &&
+        form.start_date &&
+        form.start_time &&
+        form.end_date &&
+        form.end_time &&
         Number(form.volunteers_needed) >= 1
       );
     }
@@ -110,7 +117,10 @@ export default function AddNeedForm({ onCancel, onCreate, disabled }) {
 
     if (form.need_type === "time") {
       if (!form.role_title.trim()) return setError("Role title is required.");
-      if (!form.start_datetime || !form.end_datetime) return setError("Start and end are required.");
+      if (!form.start_date || !form.start_time || !form.end_date || !form.end_time) {
+        return setError("Start and end date/time are required.");
+      }
+
       if (Number(form.volunteers_needed) < 1) return setError("Volunteers needed must be 1+.");
     }
 
@@ -285,27 +295,51 @@ export default function AddNeedForm({ onCancel, onCreate, disabled }) {
             </div>
 
             <div className="needAdd__row">
-              <div className="needAdd__field">
-                <label className="needAdd__label">Start</label>
-                <input
-                  className="needAdd__input"
-                  type="datetime-local"
-                  value={form.start_datetime}
-                  onChange={(e) => setField("start_datetime", e.target.value)}
-                  disabled={disabled || busy}
-                />
-              </div>
+  <div className="needAdd__field">
+    <label className="needAdd__label">Start date</label>
+    <input
+      className="needAdd__input"
+      type="date"
+      value={form.start_date}
+      onChange={(e) => setField("start_date", e.target.value)}
+      disabled={disabled || busy}
+    />
+  </div>
 
-              <div className="needAdd__field">
-                <label className="needAdd__label">End</label>
-                <input
-                  className="needAdd__input"
-                  type="datetime-local"
-                  value={form.end_datetime}
-                  onChange={(e) => setField("end_datetime", e.target.value)}
-                  disabled={disabled || busy}
-                />
-              </div>
+  <div className="needAdd__field">
+    <label className="needAdd__label">Start time</label>
+    <input
+      className="needAdd__input"
+      type="time"
+      value={form.start_time}
+      onChange={(e) => setField("start_time", e.target.value)}
+      disabled={disabled || busy}
+    />
+  </div>
+</div>
+
+<div className="needAdd__row">
+  <div className="needAdd__field">
+    <label className="needAdd__label">End date</label>
+    <input
+      className="needAdd__input"
+      type="date"
+      value={form.end_date}
+      onChange={(e) => setField("end_date", e.target.value)}
+      disabled={disabled || busy}
+    />
+  </div>
+
+  <div className="needAdd__field">
+    <label className="needAdd__label">End time</label>
+    <input
+      className="needAdd__input"
+      type="time"
+      value={form.end_time}
+      onChange={(e) => setField("end_time", e.target.value)}
+      disabled={disabled || busy}
+    />
+  </div>
             </div>
           </>
         )}
