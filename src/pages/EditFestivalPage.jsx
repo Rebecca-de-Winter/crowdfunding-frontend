@@ -51,7 +51,7 @@ export default function EditFestivalPage() {
 
   const isAuthed = Boolean(window.localStorage.getItem("token"));
 
-  // ✅ Owner gate: logged-in users still shouldn't edit other people's fundraisers
+  // Owner gate: logged-in users still shouldn't edit other people's fundraisers
   const [canEdit, setCanEdit] = useState(false);
   const [checkingOwner, setCheckingOwner] = useState(true);
 
@@ -125,10 +125,10 @@ export default function EditFestivalPage() {
 
   const tierCount = useMemo(() => tiers.length, [tiers]);
 
-  // ✅ While we verify ownership, don't render the edit UI
+  //  While we verify ownership, don't render the edit UI
   if (checkingOwner) return <p>Checking permissions…</p>;
 
-  // ✅ If not allowed (should already have redirected), show a safe fallback
+  //  If not allowed (should already have redirected), show a safe fallback
   if (!canEdit) return <p>You don’t have permission to edit this fundraiser.</p>;
 
   if (isLoading) return <p>Loading…</p>;
@@ -177,7 +177,7 @@ export default function EditFestivalPage() {
 
       navigate(`/fundraisers/${updated.id}`);
     } catch (err) {
-      // ✅ Friendly permission message if backend blocks
+      // Friendly permission message if backend blocks
       const msg = err?.message || "Could not save changes.";
       setSaveError(msg.includes("permission") ? "You don’t have permission to edit this fundraiser." : msg);
     } finally {
