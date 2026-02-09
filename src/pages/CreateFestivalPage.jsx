@@ -51,9 +51,7 @@ function CreateFestivalPage() {
     location,
     start_date,
     end_date,
-    status,
     enable_rewards,
-    sort_order
   ) {
     setError(null);
     setIsSaving(true);
@@ -67,9 +65,9 @@ function CreateFestivalPage() {
         location,
         start_date,
         end_date,
-        status,
+        "draft",
         enable_rewards,
-        sort_order
+        0
       );
 
       navigate(`/fundraisers/${created.id}/edit`);
@@ -248,12 +246,12 @@ function CreateFestivalPage() {
         <div className="cf-sectionHeader">
           <h2 className="cf-h2">Start blank</h2>
           <p className="cf-help">
-            Set your status to Draft first, then set status to <strong>Active</strong> when you’re ready to accept pledges.
+            Create your festival as a Draft first, then set status to <strong>Active</strong> from the edit screen when you’re ready to accept pledges.
           </p>
         </div>
 
         <div className="cf-card">
-          <FundraiserForm onSubmit={handleCreateBlank} isSaving={isSaving} />
+          <FundraiserForm onSubmit={handleCreateBlank} isSaving={isSaving} hideAdminFields />
         </div>
       </section>
 

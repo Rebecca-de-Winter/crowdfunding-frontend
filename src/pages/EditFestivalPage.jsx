@@ -13,6 +13,7 @@ import getFundraiser from "../api/get-fundraiser";
 import StatusDropdown from "../components/StatusDropdown";
 
 
+
 import "./EditFestivalPage.css";
 
 function toDateInputValue(value) {

@@ -506,3 +506,65 @@
 .editfundraiser__sidebarTop .statusdd__menu {
   border-radius: 22px;
 }
+.dangerZone {
+  margin-top: 14px;
+  border: 1px solid rgba(246, 165, 81, 0.35);
+  background: rgba(246, 165, 81, 0.10);
+}
+
+.dangerBtn {
+  appearance: none;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 900;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--text);
+}
+
+.dangerBtn:hover {
+  background: rgba(245, 232, 205, 0.10);
+}
+
+.dangerBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.dangerInline {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(245, 232, 205, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dangerInline__hint {
+  margin: 0;
+  color: rgba(253, 244, 225, 0.70);
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.dangerInline__btn {
+  appearance: none;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 900;
+  cursor: pointer;
+
+  border: 1px solid rgba(246, 165, 81, 0.35);
+  background: rgba(246, 165, 81, 0.12);
+  color: rgba(253, 244, 225, 0.92);
+}
+
+.dangerInline__btn:hover {
+  background: rgba(246, 165, 81, 0.18);
+}
+
+.dangerInline__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

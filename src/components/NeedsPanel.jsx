@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./NeedsPanel.css";
 
 import AddNeedForm from "./AddNeedForm";
@@ -14,6 +14,24 @@ import deleteTimeNeed from "../api/delete-time-need";
 import updateNeed from "../api/update-need";
 import EditNeedModal from "./EditNeedModal";
 import NeedPills from "./NeedPills";
+
+// ✅ Item detail fetcher (returns the item-need detail row for a base need id)
+import getItemNeedByNeedId from "../api/get-item-need-by-need-id";
+
+function safeLower(v) {
+  return String(v ?? "").trim().toLowerCase();
+}
+
+function itemModeLabelFromDetail(detail) {
+  const mode = safeLower(detail?.mode);
+  const hasDonation = detail?.donation_reward_tier != null;
+  const hasLoan = detail?.loan_reward_tier != null;
+
+  if (mode.includes("donat") || (hasDonation && !hasLoan)) return "Donation";
+  if (mode.includes("loan") || (!hasDonation && hasLoan)) return "Loan";
+  if (mode.includes("either") || (hasDonation && hasLoan)) return "Either";
+  return null;
+}
 
 function groupByType(needs = []) {
   const money = [];
@@ -52,6 +70,7 @@ function sortNeeds(arr) {
 function NeedRow({
   need,
   disabled,
+  typeLabel = null,
   onEdit,
   onDelete,
   onMoveUp,
@@ -67,7 +86,7 @@ function NeedRow({
 
         {/* ✅ unified pills (Type/Status/Priority) */}
         <NeedPills
-          typeLabel={null}                 // edit page doesn’t have item detail loaded here
+          typeLabel={typeLabel}
           status={need.status ?? "open"}
           priority={need.priority ?? "medium"}
         />
@@ -173,6 +192,9 @@ export default function NeedsPanel({
   const [editOpen, setEditOpen] = useState(false);
   const [editingNeed, setEditingNeed] = useState(null);
 
+  // ✅ item need detail cache: { [needId]: detail|null }
+  const [itemNeedMap, setItemNeedMap] = useState({});
+
   function openEdit(need) {
     setEditingNeed(need);
     setEditOpen(true);
@@ -191,6 +213,50 @@ export default function NeedsPanel({
   const money = useMemo(() => sortNeeds(grouped.money), [grouped.money]);
   const time = useMemo(() => sortNeeds(grouped.time), [grouped.time]);
   const item = useMemo(() => sortNeeds(grouped.item), [grouped.item]);
+
+  // ✅ load item detail rows for item needs (so we can show Type: Loan/Donation/Either)
+  useEffect(() => {
+    let alive = true;
+
+    async function loadItemDetails() {
+      if (item.length === 0) return;
+
+      const ids = item.map((n) => n.id).filter(Boolean);
+      const missing = ids.filter((id) => !(id in itemNeedMap));
+      if (missing.length === 0) return;
+
+      try {
+        const pairs = await Promise.all(
+          missing.map(async (needId) => {
+            const detail = await getItemNeedByNeedId(needId);
+            return [needId, detail ?? null];
+          })
+        );
+
+        if (!alive) return;
+
+        setItemNeedMap((prev) => {
+          const next = { ...prev };
+          for (const [needId, detail] of pairs) next[needId] = detail;
+          return next;
+        });
+      } catch (err) {
+        if (!alive) return;
+        // if request fails, still mark missing as null so we don't refetch forever
+        setItemNeedMap((prev) => {
+          const next = { ...prev };
+          for (const needId of missing) next[needId] = null;
+          return next;
+        });
+        console.error("Failed to load item need details:", err);
+      }
+    }
+
+    loadItemDetails();
+    return () => {
+      alive = false;
+    };
+  }, [item, itemNeedMap]);
 
   function makeOrderMap(list) {
     const map = {};
@@ -261,6 +327,13 @@ export default function NeedsPanel({
           donation_reward_tier: null,
           loan_reward_tier: null,
         });
+
+        // ensure map refresh next render
+        setItemNeedMap((prev) => {
+          const next = { ...prev };
+          delete next[base.id];
+          return next;
+        });
       }
 
       if (data.need_type === "time") {
@@ -278,7 +351,6 @@ export default function NeedsPanel({
         });
       }
 
-      // 3) Let parent refresh/reload, or at least insert base row
       onAddNeed?.(base);
       setShowAdd(false);
     } catch (err) {
@@ -303,6 +375,14 @@ export default function NeedsPanel({
       await deleteNeed(need.id);
       onDeleteNeed?.(need);
 
+      if (need.need_type === "item") {
+        setItemNeedMap((prev) => {
+          const next = { ...prev };
+          delete next[need.id];
+          return next;
+        });
+      }
+
       if (editingNeed?.id === need.id) closeEdit();
     } catch (err) {
       console.error("Delete need failed:", err);
@@ -310,38 +390,44 @@ export default function NeedsPanel({
     }
   }
 
-  function renderList(list, typeLabel) {
-    if (list.length === 0) return <div className="needsEmpty">No {typeLabel} yet.</div>;
+  function renderList(list, emptyLabel) {
+    if (list.length === 0) return <div className="needsEmpty">No {emptyLabel} yet.</div>;
 
     return (
       <div className="needsList">
-        {list.map((n, i) => (
-          <div key={n.id}>
-            <NeedRow
-              need={n}
-              disabled={disabled}
-              onEdit={openEdit}
-              onDelete={handleDeleteNeed}
-              onMoveUp={(need) => move(list, need, -1)}
-              onMoveDown={(need) => move(list, need, +1)}
-              isFirst={i === 0}
-              isLast={i === list.length - 1}
-            />
+        {list.map((n, i) => {
+          const typeLabel =
+            n.need_type === "item" ? itemModeLabelFromDetail(itemNeedMap[n.id]) : null;
 
-            {editOpen && editingNeed?.id === n.id && (
-              <div className="needInlineEdit">
-                <EditNeedModal
-                  open
-                  variant="inline"
-                  need={editingNeed}
-                  disabled={disabled}
-                  onClose={closeEdit}
-                  onSaved={applyUpdatedBase}
-                />
-              </div>
-            )}
-          </div>
-        ))}
+          return (
+            <div key={n.id}>
+              <NeedRow
+                need={n}
+                typeLabel={typeLabel}
+                disabled={disabled}
+                onEdit={openEdit}
+                onDelete={handleDeleteNeed}
+                onMoveUp={(need) => move(list, need, -1)}
+                onMoveDown={(need) => move(list, need, +1)}
+                isFirst={i === 0}
+                isLast={i === list.length - 1}
+              />
+
+              {editOpen && editingNeed?.id === n.id && (
+                <div className="needInlineEdit">
+                  <EditNeedModal
+                    open
+                    variant="inline"
+                    need={editingNeed}
+                    disabled={disabled}
+                    onClose={closeEdit}
+                    onSaved={applyUpdatedBase}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     );
   }

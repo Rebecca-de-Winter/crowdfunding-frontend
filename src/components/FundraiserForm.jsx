@@ -10,7 +10,7 @@ import StatusDropdown from "./StatusDropdown";
  * - validates required fields (blank creation flow)
  * - calls `onSubmit(...)` with the long argument list
  */
-function FundraiserForm({ onSubmit, isSaving = false }) {
+function FundraiserForm({ onSubmit, isSaving = false, hideAdminFields = false }) {
   const [fundraiser, setFundraiser] = useState({
     title: "",
     description: "",
@@ -59,6 +59,10 @@ function FundraiserForm({ onSubmit, isSaving = false }) {
       return;
     }
 
+    // Force defaults when admin fields are hidden (create flow)
+    const statusToSend = hideAdminFields ? "draft" : fundraiser.status;
+    const sortOrderToSend = hideAdminFields ? 0 : Number(fundraiser.sort_order);
+
     if (typeof onSubmit === "function") {
       await onSubmit(
         fundraiser.title,
@@ -68,9 +72,9 @@ function FundraiserForm({ onSubmit, isSaving = false }) {
         fundraiser.location,
         fundraiser.start_date,
         fundraiser.end_date,
-        fundraiser.status,
+        statusToSend,
         fundraiser.enable_rewards,
-        Number(fundraiser.sort_order)
+        sortOrderToSend
       );
     } else {
       console.warn("FundraiserForm: onSubmit prop not provided");
@@ -197,45 +201,48 @@ function FundraiserForm({ onSubmit, isSaving = false }) {
             onChange={handleChange}
             disabled={isSaving}
           />
-          <div className="field__hint">
-            If left blank, we’ll show a nice default image.
-          </div>
+          <div className="field__hint">If left blank, we’ll show a nice default image.</div>
         </div>
 
-        {/* Status */}
-        <div className="field">
-          <label className="field__label" htmlFor="status">
-            Status
-          </label>
-          <StatusDropdown
-  value={fundraiser.status}
-  disabled={isSaving}
-  onChange={(val) =>
-    setFundraiser((prev) => ({
-      ...prev,
-      status: val,
-    }))
-  }
-/>
-        </div>
+        {/* Status + Sort Order (admin-ish fields) */}
+        {!hideAdminFields && (
+          <>
+            {/* Status */}
+            <div className="field">
+              <label className="field__label" htmlFor="status">
+                Status
+              </label>
+              <StatusDropdown
+                value={fundraiser.status}
+                disabled={isSaving}
+                onChange={(val) =>
+                  setFundraiser((prev) => ({
+                    ...prev,
+                    status: val,
+                  }))
+                }
+              />
+            </div>
 
-        {/* Sort Order */}
-        <div className="field">
-          <label className="field__label" htmlFor="sort_order">
-            Importance
-          </label>
-          <input
-            className="field__input"
-            type="number"
-            id="sort_order"
-            placeholder="0"
-            value={fundraiser.sort_order}
-            onChange={handleChange}
-            min="0"
-            disabled={isSaving}
-          />
-          <div className="field__hint">0 = highest priority.</div>
-        </div>
+            {/* Sort Order */}
+            <div className="field">
+              <label className="field__label" htmlFor="sort_order">
+                Importance
+              </label>
+              <input
+                className="field__input"
+                type="number"
+                id="sort_order"
+                placeholder="0"
+                value={fundraiser.sort_order}
+                onChange={handleChange}
+                min="0"
+                disabled={isSaving}
+              />
+              <div className="field__hint">0 = highest priority.</div>
+            </div>
+          </>
+        )}
 
         {/* Rewards toggle */}
         <div className="field field--full toggle">
