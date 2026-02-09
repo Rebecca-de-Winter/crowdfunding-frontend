@@ -8,13 +8,14 @@
   --accent2: #f6a551;
   --gap: 22px;
 
-  --panel: rgba(12, 18, 14, 0.55);
-  --panel2: rgba(0, 0, 0, 0.16);
-
   --font: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+
+  --panel: rgba(12, 18, 14, 0.55);
+  --trayGreen: rgba(7, 32, 22, 0.72);
+  --headerDark: rgba(0, 0, 0, 0.36);
+  --cardDark: rgba(0, 0, 0, 0.22);
 }
 
-/* Inherit Nunito everywhere on this page */
 .fundraiser,
 .fundraiser input,
 .fundraiser textarea,
@@ -22,10 +23,6 @@
 .fundraiser button {
   font-family: var(--font);
 }
-
-/* =========================
-   Page wrapper
-   ========================= */
 
 .fundraiser {
   max-width: 1100px;
@@ -52,13 +49,10 @@
 }
 
 .muted {
-  opacity: 0.75;
+  opacity: 0.78;
 }
 
-/* =========================
-   Panel (match EditFestival)
-   ========================= */
-
+/* Panels */
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -73,10 +67,7 @@
   font-size: 20px;
 }
 
-/* =========================
-   TOP GRID (Hero + Goal)
-   ========================= */
-
+/* Top grid (Hero + Goal) */
 .fundraiser__topGrid {
   display: grid;
   gap: var(--gap);
@@ -89,52 +80,50 @@
   }
 }
 
+/* Hero */
 .fundraiser__hero {
   border-radius: 22px;
   overflow: hidden;
   border: 1px solid var(--line);
-  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.3);
-  background: rgba(0, 0, 0, 0.2);
-  min-height: 260px;
+  background: rgba(0, 0, 0, 0.20);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.30);
+  min-height: 320px;
 }
 
 .fundraiser__heroImg {
   width: 100%;
   height: 100%;
-  min-height: 320px;
-  object-fit: cover;
   display: block;
+  object-fit: cover;
 }
 
 @media (min-width: 980px) {
-  .fundraiser__heroImg {
+  .fundraiser__hero {
     min-height: 380px;
   }
 }
 
-/* Make the right panel fill same height as hero */
+/* Make Goal panel match hero height */
 .fundraiser__sidebarTop {
   display: flex;
 }
 .fundraiser__sidebarTop .panel {
   flex: 1;
-}
-
-/* =========================
-   GOAL PANEL
-   ========================= */
-
-.goalPanel {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+}
+
+/* Goal panel */
+.goalPanel {
+  padding: 18px 18px 16px;
 }
 
 .goalPanel__head {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: baseline;
-  justify-content: space-between;
   gap: 12px;
+  padding-bottom: 10px;
 }
 
 .goalPanel__label {
@@ -145,13 +134,19 @@
 
 .goalPanel__value {
   font-weight: 900;
-  font-size: 24px;
+  font-size: 18px;
   letter-spacing: 0.2px;
+  text-align: left;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.20);
 }
 
 .goalPanel__divider {
   height: 1px;
   background: rgba(245, 232, 205, 0.14);
+  margin-bottom: 14px;
 }
 
 .goalPanel__progress {
@@ -159,52 +154,43 @@
   gap: 14px;
 }
 
-/* Progress rows */
-.progressRow {
-  display: grid;
-  gap: 8px;
-}
-
 .progressRow__top {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto;
   gap: 12px;
   align-items: baseline;
 }
 
 .progressRow__label {
   font-weight: 900;
-  opacity: 0.92;
+  opacity: 0.95;
 }
 
 .progressRow__value {
   font-weight: 900;
-  opacity: 0.95;
-}
-
-.progressRow__note {
-  margin-top: -2px;
+  opacity: 0.98;
 }
 
 .progressBar {
   height: 10px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(245, 232, 205, 0.10);
   overflow: hidden;
-  border: 1px solid rgba(245, 232, 205, 0.10);
+  margin-top: 6px;
 }
 
 .progressBar__fill {
   height: 100%;
-  width: 0%;
   border-radius: 999px;
   background: linear-gradient(180deg, var(--accent), var(--accent2));
+  width: 0%;
 }
 
-/* =========================
-   BELOW GRID (Left + Rewards)
-   ========================= */
+.progressRow__note {
+  margin-top: 6px;
+}
 
+/* Below grid (Left + Rewards) */
 .fundraiser__belowGrid {
   display: grid;
   gap: var(--gap);
@@ -225,42 +211,77 @@
   gap: var(--gap);
 }
 
-/* =========================
-   Header + meta merged panel
-   ========================= */
-
-.headerPanel {
-  padding: 18px;
+/* Header/meta */
+.headerMetaPanel {
+  display: grid;
+  gap: 14px;
 }
 
-.headerPanel__title {
+.fundraiser__title {
   margin: 0;
   font-size: 44px;
   line-height: 1.05;
   font-weight: 900;
 }
 
-.headerPanel__meta {
+.metaGrid {
   display: grid;
-  gap: 10px;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(245, 232, 205, 0.14);
+  grid-template-columns: 170px 1fr;
+  row-gap: 10px;
+  column-gap: 12px;
+  align-items: center;
 }
 
-/* Bottom-right action row */
-.headerPanel__actions {
+.metaGrid__label {
+  font-weight: 900;
+  opacity: 0.9;
+}
+
+.metaGrid__value {
+  font-weight: 800;
+  opacity: 0.98;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.20);
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.statusDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.statusPill--open {
+  box-shadow: 0 0 0 1px rgba(35, 255, 170, 0.12) inset;
+}
+.statusPill--closed {
+  box-shadow: 0 0 0 1px rgba(255, 115, 115, 0.12) inset;
+}
+
+.statusDot--open {
+  background: rgba(60, 255, 180, 0.95);
+}
+.statusDot--closed {
+  background: rgba(255, 120, 120, 0.95);
+}
+
+.headerMetaPanel__actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 6px;
-}
-
-
-.headerPanel__title {
-  margin: 0;
-  font-size: 44px;
-  line-height: 1.05;
-  font-weight: 900;
+  margin-top: 2px;
 }
 
 .fundraiser__editLink {
@@ -287,87 +308,15 @@
   border-color: rgba(245, 232, 205, 0.35);
 }
 
-.headerPanel__meta {
-  display: grid;
-  gap: 10px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(245, 232, 205, 0.14);
-}
-
-/* meta lines */
-.metaLine {
-  display: grid;
-  grid-template-columns: 160px 1fr;
-  align-items: center;
-  column-gap: 12px;
-  row-gap: 6px;
-}
-
-.metaLabel {
-  opacity: 0.9;
-  font-weight: 900;
-}
-
-.metaValue {
-  opacity: 0.95;
-  font-weight: 800;
-}
-
-/* Status row: keep pill baseline clean */
-.metaLine--status {
-  align-items: center;
-}
-
-
-/* status pill */
-.statusPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(245, 232, 205, 0.22);
-  background: rgba(0, 0, 0, 0.20);
-  font-weight: 900;
-}
-
-.statusPill--open {
-  box-shadow: 0 0 0 1px rgba(35, 255, 170, 0.12) inset;
-}
-
-.statusPill--closed {
-  box-shadow: 0 0 0 1px rgba(255, 115, 115, 0.12) inset;
-}
-
-.statusDot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-}
-
-.statusDot--open {
-  background: rgba(60, 255, 180, 0.95);
-}
-
-.statusDot--closed {
-  background: rgba(255, 120, 120, 0.95);
-}
-
-/* =========================
-   Story / description
-   ========================= */
-
+/* Story */
 .fundraiser__desc {
   margin: 0;
   opacity: 0.95;
   line-height: 1.6;
 }
 
-/* =========================
-   Buttons
-   ========================= */
-
-.btn {
+/* Buttons */
+.fundraiser .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -381,84 +330,70 @@
   transition: transform 0.12s ease, filter 0.15s ease, box-shadow 0.15s ease;
 }
 
-.btn:hover {
+.fundraiser .btn:hover {
   transform: translateY(-1px);
   filter: brightness(1.03);
   box-shadow: 0 14px 26px rgba(0, 0, 0, 0.28);
 }
 
-.btn--small {
+.fundraiser .btn--small {
   padding: 9px 14px;
 }
 
-/* =========================
-   Rewards: hide edit/delete
-   (view page should not show actions)
-   ========================= */
-
-.rewardsPanel button,
+/* Rewards: hide edit/delete on this page */
 .rewardsPanel .rewardTierCard__actions,
 .rewardsPanel .rewardCard__actions,
+.rewardsPanel button,
 .rewardsPanel .btn--danger,
-.rewardsPanel .btn--secondary,
-.rewardsPanel .btn--small {
+.rewardsPanel .btn--secondary {
   display: none !important;
 }
 
-/* =========================
-   NEEDS PANEL (FORCE EditFestival palette)
-   ========================= */
+/* FundraiserPage only: soften reward tier card darkness */
+.fundraiser .rewardsPanel .rewardTierCard,
+.fundraiser .rewardsPanel .rewardCard {
+  background: linear-gradient(
+      to bottom,
+      rgba(8, 110, 73, 0.10),
+      rgba(0, 0, 0, 0) 55%
+    ),
+    var(--cardDark);
+}
 
-.needsPanel {
+/* NEEDS PANEL */
+.panel.needsPanel {
   display: flex;
   flex-direction: column;
   gap: 12px;
   min-height: 0;
+  background: var(--panel);
 }
 
-.needsPanel__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.needsPanel__note {
-  margin: 0;
-}
-
-.needsPanel__groups {
-  display: grid;
-  gap: 10px;
-}
-
-/* Accordion wrapper */
-.needAcc {
+.fundraiser .panel.needsPanel .needAcc {
   border: 1px solid rgba(245, 232, 205, 0.14);
-  background: rgba(0, 0, 0, 0.10);
+  background: rgba(12, 18, 14, 0.40);
   border-radius: 16px;
   overflow: hidden;
 }
 
-/* Section headers */
-.needAcc__head {
+.fundraiser .panel.needsPanel .needAcc .needAcc__head {
   width: 100%;
   border: 0;
-  background: rgba(0, 0, 0, 0.18);
+  background: var(--headerDark);
   color: var(--text);
 
   display: flex;
   align-items: center;
   justify-content: space-between;
 
-  padding: 12px 12px;
-  padding-left: 18px;
+  padding: 14px 16px 14px 20px;
 
   cursor: pointer;
   position: relative;
+  border-bottom: 1px solid rgba(245, 232, 205, 0.08);
 }
 
-.needAcc__head::before {
+.fundraiser .panel.needsPanel .needAcc .needAcc__head::before {
   content: "";
   position: absolute;
   left: 0;
@@ -506,7 +441,7 @@
 .needAcc__body {
   padding: 10px 12px 12px;
   border-top: 1px solid rgba(245, 232, 205, 0.12);
-  background: transparent;
+  background: rgba(0, 0, 0, 0.08);
 }
 
 .needsEmpty {
@@ -519,94 +454,9 @@
   gap: 10px;
   padding: 6px;
   border-radius: 14px;
-  background: transparent;
-  border: 0;
 }
 
-/* Need rows */
-.needRow {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 12px;
-
-  padding: 12px;
-  border-radius: 14px;
-
-  background:
-    linear-gradient(to bottom, rgba(8, 110, 73, 0.12), rgba(0, 0, 0, 0.0) 55%),
-    rgba(0, 0, 0, 0.16);
-
-  box-shadow:
-    0 0 0 1px rgba(160, 240, 210, 0.14),
-    0 10px 24px rgba(0, 0, 0, 0.35);
-
-  position: relative;
-  align-items: start;
-}
-
-.needRow::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 14px;
-  pointer-events: none;
-  box-shadow:
-    inset 0 1px 0 rgba(140, 230, 190, 0.22),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.25);
-}
-
-.needRow__title {
-  font-weight: 900;
-  font-size: 0.98rem;
-}
-
-.needRow__desc {
-  opacity: 0.9;
-  margin-top: 4px;
-  line-height: 1.35;
-}
-
-.needRow__meta {
-  margin-top: 8px;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  align-items: center;
-  text-align: left;
-}
-
-.needPill {
-  border: 1px solid rgba(245, 232, 205, 0.18);
-  background: rgba(0, 0, 0, 0.22);
-  border-radius: 999px;
-  padding: 4px 10px;
-  font-weight: 900;
-  font-size: 0.82rem;
-  text-transform: capitalize;
-  opacity: 0.95;
-}
-
-.needPill--status.is-open { border-color: rgba(127, 211, 166, 0.5); }
-.needPill--status.is-filled { border-color: rgba(250, 187, 76, 0.55); }
-.needPill--status.is-closed { border-color: rgba(220, 140, 140, 0.5); }
-.needPill--status.is-cancelled { border-color: rgba(180, 180, 180, 0.35); }
-
-.needPill--priority.is-high { border-color: rgba(250, 187, 76, 0.55); }
-.needPill--priority.is-medium { border-color: rgba(245, 232, 205, 0.28); }
-.needPill--priority.is-low { border-color: rgba(143, 179, 255, 0.45); }
-
-.needRow__actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-/* =========================
-   Pledges list (clean)
-   ========================= */
-
+/* Pledges */
 .pledgeList {
   list-style: none;
   padding: 0;
@@ -642,33 +492,32 @@
   margin-top: 6px;
   opacity: 0.9;
 }
-/* =========================
-   HARD OVERRIDES: make accordion match EditFestival dark green
-   Put this at the VERY BOTTOM
-   ========================= */
 
-.fundraiser .needsPanel {
-  background: rgba(12, 18, 14, 0.55) !important;
+/* FORCE Needs outer box to match Story exactly */
+.fundraiser .panel.needsPanel {
+  background: var(--panel) !important;
 }
 
-/* darker accordion containers */
-.fundraiser .needAcc {
-  background: rgba(4, 40, 26, 0.55) !important;
-  border: 1px solid rgba(245, 232, 205, 0.16) !important;
+/* Rewards card title bar styling */
+.fundraiser .rewardsPanel .rewardTierCard h3:first-of-type,
+.fundraiser .rewardsPanel .rewardTierCard h4:first-of-type,
+.fundraiser .rewardsPanel .rewardCard h3:first-of-type,
+.fundraiser .rewardsPanel .rewardCard h4:first-of-type {
+  background: rgba(12, 18, 14, 0.40);
+  border-bottom: 1px solid rgba(245, 232, 205, 0.12);
+  padding: 12px 14px;
+  margin: -16px -16px 12px;
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
 }
 
-/* darker headers */
-.fundraiser .needAcc__head {
-  background: rgba(3, 34, 22, 0.70) !important;
-  border-bottom: 1px solid rgba(245, 232, 205, 0.10) !important;
+/* NEW: stack item action buttons nicely */
+.needRow__actions--stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
 }
-
-/* body matches tray */
-.fundraiser .needAcc__body {
-  background: rgba(4, 40, 26, 0.25) !important;
-}
-
-/* optional: make the green stripe feel more “EditFestival” */
-.fundraiser .needAcc__head::before {
-  background: rgba(73, 179, 125, 0.95) !important;
+.needRow__actions--stack .btn {
+  width: 100%;
 }

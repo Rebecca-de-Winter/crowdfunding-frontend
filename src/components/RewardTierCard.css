@@ -360,3 +360,13 @@
   justify-content: flex-end;
   padding-top: 6px;
 }
+/* =========================
+   FundraiserPage look: header bar for the tier name row
+   ========================= */
+
+.rtCard__header {
+  background: var(--trayGreen);
+  border: 1px solid rgba(245, 232, 205, 0.12);
+  border-radius: 14px;
+  padding: 10px 12px;
+}

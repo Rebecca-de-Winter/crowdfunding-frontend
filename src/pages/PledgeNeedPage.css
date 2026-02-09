@@ -144,3 +144,143 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+/* =========================
+   Pledge form readability upgrades
+   ========================= */
+
+.pledgeField label {
+  font-weight: 800;
+  opacity: 0.95;
+  display: inline-block;
+}
+
+/* Stronger, clearer input styling */
+.pledgeInput,
+.pledgeSelect,
+.pledgeTextarea {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(245, 232, 205, 0.25);
+  background: rgba(0, 0, 0, 0.15);
+  color: inherit;
+  font-weight: 650;
+  font-size: 0.95rem;
+}
+
+/* Placeholder: brighter + more legible */
+.pledgeInput::placeholder,
+.pledgeTextarea::placeholder {
+  color: rgba(253, 244, 225, 0.65);
+  opacity: 1; /* important for some browsers */
+  font-weight: 700;
+}
+
+/* Focus states */
+.pledgeInput:focus,
+.pledgeTextarea:focus,
+.pledgeSelect:focus {
+  outline: none;
+  border-color: rgba(250, 187, 76, 0.65);
+  box-shadow:
+    0 0 0 3px rgba(250, 187, 76, 0.18),
+    0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* Disabled field clarity */
+.pledgeInput:disabled,
+.pledgeTextarea:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+/* Make textarea feel less "thin" */
+.pledgeTextarea {
+  min-height: 120px;
+  line-height: 1.35;
+}
+
+/* Checkbox row: better alignment and readability */
+.pledgeToggleRow {
+  margin-top: 10px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(245, 232, 205, 0.10);
+  font-weight: 700;
+}
+
+.pledgeToggleRow input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+/* Primary submit button on pledge pages */
+.pledgeForm .btn {
+  width: 100%;
+  min-height: 44px;
+  padding: 12px 16px;
+  font-weight: 900;
+  font-size: 1rem;
+  border-radius: 14px;
+}
+
+/* Make submit feel "locked in" when disabled */
+.pledgeForm .btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+.pledgeToggleRow span {
+  font-weight: 700;
+}
+/* Make the custom dropdown sit + space like other inputs */
+.pledgeSelectWrap {
+  margin-top: 8px;             /* matches .pledgeInput margin-top */
+}
+
+/* Make the dropdown button match input sizing + font */
+.pledgeSelectButton {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(245, 232, 205, 0.25);
+  background: rgba(0, 0, 0, 0.15);
+  color: inherit;
+
+  font-family: inherit;
+  font-weight: 700;            /* slightly thicker like you want */
+}
+
+/* Optional: make the dropdown items match too */
+.rtdrop__item {
+  font-family: inherit;
+  font-weight: 700;
+}
+/* Make all form labels consistent */
+.pledgeField label {
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.2;
+}
+
+/* Make all input values consistent */
+.pledgeInput,
+.pledgeTextarea,
+.pledgeSelectButton {
+  font-weight: 600;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+/* Placeholder consistency */
+.pledgeInput::placeholder,
+.pledgeTextarea::placeholder {
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+/* Anonymous alignment */
+.pledgeToggleRow span {
+  font-weight: 700;
+  font-size: 0.95rem;
+}

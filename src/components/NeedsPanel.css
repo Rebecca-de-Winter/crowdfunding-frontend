@@ -220,17 +220,68 @@
   font-size: 0.82rem;
   text-transform: capitalize;
   opacity: 0.95;
+  letter-spacing: 0.3px; /* subtle refinement */
+}
+/* --------------------------
+   TYPE (Loan / Donation / Either)
+--------------------------- */
+.needPill--type {
+  font-weight: 900;
+  
 }
 
-/* status / priority colouring */
-.needPill--status.is-open { border-color: rgba(127, 211, 166, 0.5); }
-.needPill--status.is-filled { border-color: rgba(250, 187, 76, 0.55); }
-.needPill--status.is-closed { border-color: rgba(220, 140, 140, 0.5); }
-.needPill--status.is-cancelled { border-color: rgba(180, 180, 180, 0.35); }
+.needPill--type.is-loan {
+  border-color: rgba(143, 179, 255, 0.55);
+  background: rgba(143, 179, 255, 0.24);
+}
 
-.needPill--priority.is-high { border-color: rgba(250, 187, 76, 0.55); }
-.needPill--priority.is-medium { border-color: rgba(245, 232, 205, 0.28); }
-.needPill--priority.is-low { border-color: rgba(143, 179, 255, 0.45); }
+.needPill--type.is-donation {
+  border-color: rgba(200, 120, 255, 0.55);
+  background: rgba(200, 120, 255, 0.24);
+}
+
+.needPill--type.is-either {
+  border-color: rgba(127, 211, 166, 0.55);
+  background: rgba(127, 211, 166, 0.24);
+}
+
+/* status colouring */
+.needPill--status.is-open {
+  border-color: rgba(127, 211, 166, 0.55);
+  background: rgba(127, 211, 166, 0.22);
+}
+
+.needPill--status.is-filled {
+  border-color: rgba(250, 187, 76, 0.60);
+  background: rgba(250, 187, 76, 0.24);
+}
+
+.needPill--status.is-closed {
+  border-color: rgba(220, 140, 140, 0.55);
+  background: rgba(220, 140, 140, 0.22);
+}
+
+.needPill--status.is-cancelled {
+  border-color: rgba(180, 180, 180, 0.40);
+  background: rgba(180, 180, 180, 0.20);
+}
+
+/* priority colouring */
+.needPill--priority.is-high {
+  border-color: rgba(250, 187, 76, 0.60);
+  background: rgba(250, 187, 76, 0.24);
+}
+
+.needPill--priority.is-medium {
+  border-color: rgba(245, 232, 205, 0.40);
+  background: rgba(245, 232, 205, 0.20);
+}
+
+.needPill--priority.is-low {
+  border-color: rgba(143, 179, 255, 0.55);
+  background: rgba(143, 179, 255, 0.22);
+}
+
 
 .needRow__actions {
   display: inline-flex;

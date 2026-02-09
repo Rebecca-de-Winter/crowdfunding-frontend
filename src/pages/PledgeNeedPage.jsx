@@ -446,56 +446,64 @@ export default function PledgeNeedPage() {
 
       <form className="panel pledgeForm" onSubmit={handleSubmit}>
         {/* TIME inputs FIRST (as requested) */}
-        {needType === "time" && (
-          <>
-            <div className="pledgeField">
-              <label className="muted">Start date</label>
-              <input
-                className="pledgeInput"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-            </div>
+{needType === "time" && (
+  <>
+    <div className="dtGrid">
+      <div className="pledgeField">
+        <label className="muted">Start date</label>
+        <input
+          className="pledgeInput"
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+        />
+      </div>
 
-            <div className="pledgeField">
-              <label className="muted">Start time</label>
-              <input
-                className="pledgeInput"
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-              />
-            </div>
+      <div className="pledgeField">
+        <label className="muted">Start time</label>
+        <input
+          className="pledgeInput"
+          type="time"
+          value={startTime}
+          onChange={(e) => setStartTime(e.target.value)}
+        />
+      </div>
 
-            <div className="pledgeField">
-              <label className="muted">End date</label>
-              <input
-                className="pledgeInput"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </div>
+      <div className="pledgeField">
+        <label className="muted">End date</label>
+        <input
+          className="pledgeInput"
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+        />
+      </div>
 
-            <div className="pledgeField">
-              <label className="muted">End time</label>
-              <input
-                className="pledgeInput"
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-              />
-            </div>
+      <div className="pledgeField">
+        <label className="muted">End time</label>
+        <input
+          className="pledgeInput"
+          type="time"
+          value={endTime}
+          onChange={(e) => setEndTime(e.target.value)}
+        />
+      </div>
+    </div>
 
-            <div className="pledgeField">
-              <label className="muted">Hours committed (auto)</label>
-              <input className="pledgeInput pledgeHours" value={hoursCommitted} disabled placeholder="—" />
-            </div>
+    <div className="pledgeField">
+      <label className="muted">Hours committed (auto)</label>
+      <input
+        className="pledgeInput pledgeHours"
+        value={hoursCommitted}
+        disabled
+        placeholder="—"
+      />
+    </div>
 
-            <div className="pledgeDivider" />
-          </>
-        )}
+    <div className="pledgeDivider" />
+  </>
+)}
+
 
         {/* MONEY */}
         {needType === "money" && (

@@ -1,9 +1,11 @@
+// src/components/ItemModeDropdown.jsx
 import { useEffect, useRef, useState } from "react";
 import "./RewardTypeDropdown.css"; // reuse the same styles (rtdrop...)
 
 const OPTIONS = [
   { value: "donation", label: "Donation" },
   { value: "loan", label: "Loan" },
+  { value: "either", label: "Either" },
 ];
 
 export default function ItemModeDropdown({ value, onChange, disabled = false }) {
@@ -32,10 +34,10 @@ export default function ItemModeDropdown({ value, onChange, disabled = false }) 
   };
 
   return (
-    <div className={`rtdrop ${disabled ? "is-disabled" : ""}`} ref={wrapRef}>
+    <div className={`rtdrop pledgeSelectWrap ${disabled ? "is-disabled" : ""}`} ref={wrapRef}>
       <button
         type="button"
-        className="rtdrop__button"
+        className="rtdrop__button pledgeSelectButton"
         onClick={toggle}
         aria-haspopup="listbox"
         aria-expanded={open}

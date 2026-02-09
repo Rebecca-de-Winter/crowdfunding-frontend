@@ -13,6 +13,7 @@ import deleteMoneyNeed from "../api/delete-money-need";
 import deleteTimeNeed from "../api/delete-time-need";
 import updateNeed from "../api/update-need";
 import EditNeedModal from "./EditNeedModal";
+import NeedPills from "./NeedPills";
 
 function groupByType(needs = []) {
   const money = [];
@@ -64,14 +65,12 @@ function NeedRow({
         <div className="needRow__title">{need.title}</div>
         {need.description ? <div className="needRow__desc">{need.description}</div> : null}
 
-        <div className="needRow__meta">
-          <span className={`needPill needPill--status is-${need.status || "open"}`}>
-            {need.status || "open"}
-          </span>
-          <span className={`needPill needPill--priority is-${need.priority || "medium"}`}>
-            {need.priority || "medium"}
-          </span>
-        </div>
+        {/* ✅ unified pills (Type/Status/Priority) */}
+        <NeedPills
+          typeLabel={null}                 // edit page doesn’t have item detail loaded here
+          status={need.status ?? "open"}
+          priority={need.priority ?? "medium"}
+        />
       </div>
 
       <div className="needRow__actions">
@@ -268,17 +267,16 @@ export default function NeedsPanel({
         const startLocal = `${data.start_date}T${data.start_time}`;
         const endLocal = `${data.end_date}T${data.end_time}`;
 
-      await createTimeNeed({
-        need: base.id,
-        start_datetime: new Date(startLocal).toISOString(),
-        end_datetime: new Date(endLocal).toISOString(),
-        volunteers_needed: Number(data.volunteers_needed),
-        role_title: data.role_title,
-        location: data.location ?? "",
-        reward_tier: null,
-  });
-}
-
+        await createTimeNeed({
+          need: base.id,
+          start_datetime: new Date(startLocal).toISOString(),
+          end_datetime: new Date(endLocal).toISOString(),
+          volunteers_needed: Number(data.volunteers_needed),
+          role_title: data.role_title,
+          location: data.location ?? "",
+          reward_tier: null,
+        });
+      }
 
       // 3) Let parent refresh/reload, or at least insert base row
       onAddNeed?.(base);
