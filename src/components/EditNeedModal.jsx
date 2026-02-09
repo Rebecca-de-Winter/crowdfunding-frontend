@@ -9,7 +9,9 @@ import updateNeedDetail from "../api/update-need-detail";
 
 const STATUS_OPTS = [
   { value: "open", label: "Open" },
+  { value: "filled", label: "Filled" },
   { value: "closed", label: "Closed" },
+  { value: "cancelled", label: "Cancelled" },
 ];
 
 const PRIORITY_OPTS = [
@@ -24,15 +26,30 @@ const ITEM_MODE_OPTS = [
   { value: "either", label: "Either" },
 ];
 
-function isoToLocalInput(iso) {
-  if (!iso) return "";
-  return String(iso).slice(0, 16);
+// ---------- time helpers (LOCAL display, ISO save) ----------
+function isoToLocalParts(iso) {
+  if (!iso) return { date: "", time: "" };
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return { date: "", time: "" };
+
+  const yyyy = String(d.getFullYear());
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+
+  const hh = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+
+  return { date: `${yyyy}-${mm}-${dd}`, time: `${hh}:${min}` };
 }
 
-function localInputToIso(val) {
-  if (!val) return null;
-  return new Date(val).toISOString();
+function localDateTimeToIso(dateStr, timeStr) {
+  if (!dateStr || !timeStr) return null;
+  // Date("YYYY-MM-DDTHH:mm") is interpreted as local time
+  const d = new Date(`${dateStr}T${timeStr}`);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString();
 }
+// -----------------------------------------------------------
 
 function prettyType(t) {
   if (t === "money") return "Money";
@@ -52,15 +69,19 @@ export default function EditNeedModal({
   const [err, setErr] = useState(null);
   const [detailId, setDetailId] = useState(null);
 
-  const baseInitial = useMemo(
-    () => ({
-      title: need?.title ?? "",
-      description: need?.description ?? "",
-      status: need?.status ?? "open",
-      priority: need?.priority ?? "medium",
-    }),
-    [need]
-  );
+  const safeNeedStatus = (s) =>
+  ["open", "filled", "closed", "cancelled"].includes(s) ? s : "open";
+
+const baseInitial = useMemo(
+  () => ({
+    title: need?.title ?? "",
+    description: need?.description ?? "",
+    status: safeNeedStatus(need?.status ?? "open"),
+    priority: need?.priority ?? "medium",
+  }),
+  [need]
+);
+
 
   const [base, setBase] = useState(baseInitial);
 
@@ -79,8 +100,10 @@ export default function EditNeedModal({
     role_title: "",
     location: "",
     volunteers_needed: 1,
-    start_datetime: "",
-    end_datetime: "",
+    start_date: "",
+    start_time: "",
+    end_date: "",
+    end_time: "",
     reward_tier: null,
   });
 
@@ -98,6 +121,8 @@ export default function EditNeedModal({
   useEffect(() => {
     if (!open || !need) return;
 
+    let cancelled = false;
+
     setErr(null);
     setBusy(false);
     setDetailId(null);
@@ -106,10 +131,13 @@ export default function EditNeedModal({
     (async () => {
       try {
         const id = await findNeedDetailId(need.need_type, need.id);
+        if (cancelled) return;
+
         setDetailId(id ?? null);
         if (!id) return;
 
         const d = await getNeedDetail(need.need_type, id);
+        if (cancelled) return;
 
         if (need.need_type === "money") {
           setMoney({
@@ -126,19 +154,28 @@ export default function EditNeedModal({
             loan_reward_tier: d?.loan_reward_tier ?? null,
           });
         } else if (need.need_type === "time") {
+          const start = isoToLocalParts(d?.start_datetime);
+          const end = isoToLocalParts(d?.end_datetime);
+
           setTime({
             role_title: d?.role_title ?? "",
             location: d?.location ?? "",
             volunteers_needed: d?.volunteers_needed ?? 1,
-            start_datetime: isoToLocalInput(d?.start_datetime),
-            end_datetime: isoToLocalInput(d?.end_datetime),
+            start_date: start.date,
+            start_time: start.time,
+            end_date: end.date,
+            end_time: end.time,
             reward_tier: d?.reward_tier ?? null,
           });
         }
       } catch (e) {
-        setErr(e?.message ?? "Could not load need detail.");
+        if (!cancelled) setErr(e?.message ?? "Could not load need detail.");
       }
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [open, need, baseInitial]);
 
   if (!open || !need) return null;
@@ -168,9 +205,15 @@ export default function EditNeedModal({
 
     if (type === "time") {
       if (!time.role_title.trim()) return setErr("Role title is required.");
-      if (!time.start_datetime || !time.end_datetime) {
-        return setErr("Start and End are required.");
+      if (!time.start_date || !time.start_time || !time.end_date || !time.end_time) {
+        return setErr("Start and End date/time are required.");
       }
+
+      const startIso = localDateTimeToIso(time.start_date, time.start_time);
+      const endIso = localDateTimeToIso(time.end_date, time.end_time);
+
+      if (!startIso || !endIso) return setErr("Please enter valid start/end values.");
+      if (new Date(endIso) <= new Date(startIso)) return setErr("End must be after start.");
     }
 
     setBusy(true);
@@ -185,7 +228,6 @@ export default function EditNeedModal({
         sort_order: need.sort_order ?? 0,
       });
 
-      // Detail PUT (don’t send `need` key to avoid uniqueness issues)
       if (detailId) {
         if (type === "money") {
           await updateNeedDetail("money", detailId, {
@@ -202,12 +244,15 @@ export default function EditNeedModal({
             loan_reward_tier: item.loan_reward_tier ?? null,
           });
         } else if (type === "time") {
+          const startIso = localDateTimeToIso(time.start_date, time.start_time);
+          const endIso = localDateTimeToIso(time.end_date, time.end_time);
+
           await updateNeedDetail("time", detailId, {
             role_title: time.role_title.trim(),
             location: time.location ?? "",
             volunteers_needed: Number(time.volunteers_needed),
-            start_datetime: localInputToIso(time.start_datetime),
-            end_datetime: localInputToIso(time.end_datetime),
+            start_datetime: startIso,
+            end_datetime: endIso,
             reward_tier: time.reward_tier ?? null,
           });
         }
@@ -226,7 +271,6 @@ export default function EditNeedModal({
     <div className={`modal modal--need ${variant === "inline" ? "modal--inline" : ""}`}>
       <div className="modal__head">
         <h3 className="modal__title">Edit {prettyType(type)} need</h3>
-        {/* No X button — only Cancel */}
       </div>
 
       {err && <div className="modal__error">{err}</div>}
@@ -381,23 +425,45 @@ export default function EditNeedModal({
             </div>
 
             <div className="field">
-              <label className="field__label">Start</label>
+              <label className="field__label">Start date</label>
               <input
                 className="field__input"
-                type="datetime-local"
-                value={time.start_datetime}
-                onChange={(e) => setTime((p) => ({ ...p, start_datetime: e.target.value }))}
+                type="date"
+                value={time.start_date}
+                onChange={(e) => setTime((p) => ({ ...p, start_date: e.target.value }))}
                 disabled={isDisabled}
               />
             </div>
 
             <div className="field">
-              <label className="field__label">End</label>
+              <label className="field__label">Start time</label>
               <input
                 className="field__input"
-                type="datetime-local"
-                value={time.end_datetime}
-                onChange={(e) => setTime((p) => ({ ...p, end_datetime: e.target.value }))}
+                type="time"
+                value={time.start_time}
+                onChange={(e) => setTime((p) => ({ ...p, start_time: e.target.value }))}
+                disabled={isDisabled}
+              />
+            </div>
+
+            <div className="field">
+              <label className="field__label">End date</label>
+              <input
+                className="field__input"
+                type="date"
+                value={time.end_date}
+                onChange={(e) => setTime((p) => ({ ...p, end_date: e.target.value }))}
+                disabled={isDisabled}
+              />
+            </div>
+
+            <div className="field">
+              <label className="field__label">End time</label>
+              <input
+                className="field__input"
+                type="time"
+                value={time.end_time}
+                onChange={(e) => setTime((p) => ({ ...p, end_time: e.target.value }))}
                 disabled={isDisabled}
               />
             </div>
@@ -433,12 +499,8 @@ export default function EditNeedModal({
     </div>
   );
 
-  // Inline editor (no backdrop)
-  if (variant === "inline") {
-    return <div className="inlineEditor">{modalInner}</div>;
-  }
+  if (variant === "inline") return <div className="inlineEditor">{modalInner}</div>;
 
-  // Overlay editor (optional)
   return (
     <div
       className="modal__backdrop"

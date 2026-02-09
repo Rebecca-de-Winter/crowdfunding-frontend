@@ -2,18 +2,15 @@ import { useMemo, useState } from "react";
 import "./NeedsPanel.css";
 
 import AddNeedForm from "./AddNeedForm";
-
 import createNeed from "../api/create-need";
 import createMoneyNeed from "../api/create-money-need";
 import createItemNeed from "../api/create-item-need";
 import createTimeNeed from "../api/create-time-need";
-
 import deleteNeed from "../api/delete-need";
 import findNeedDetailId from "../api/find-need-detail-id";
 import deleteItemNeed from "../api/delete-item-need";
 import deleteMoneyNeed from "../api/delete-money-need";
 import deleteTimeNeed from "../api/delete-time-need";
-
 import updateNeed from "../api/update-need";
 import EditNeedModal from "./EditNeedModal";
 
@@ -65,9 +62,7 @@ function NeedRow({
     <div className="needRow">
       <div className="needRow__main">
         <div className="needRow__title">{need.title}</div>
-        {need.description ? (
-          <div className="needRow__desc">{need.description}</div>
-        ) : null}
+        {need.description ? <div className="needRow__desc">{need.description}</div> : null}
 
         <div className="needRow__meta">
           <span className={`needPill needPill--status is-${need.status || "open"}`}>
@@ -206,7 +201,6 @@ export default function NeedsPanel({
     return map;
   }
 
-  // ✅ Only ONE move function (no duplicates)
   async function move(arr, need, dir) {
     const idx = arr.findIndex((n) => n.id === need.id);
     if (idx < 0) return;
@@ -214,11 +208,9 @@ export default function NeedsPanel({
     const nextIdx = idx + dir;
     if (nextIdx < 0 || nextIdx >= arr.length) return;
 
-    // swap by position
     const swapped = [...arr];
     [swapped[idx], swapped[nextIdx]] = [swapped[nextIdx], swapped[idx]];
 
-    // compute fresh sort_order for the whole group
     const orderMap = makeOrderMap(swapped);
 
     // optimistic update
@@ -241,48 +233,60 @@ export default function NeedsPanel({
   }
 
   async function handleCreateNeed(data) {
-    const base = await createNeed(fundraiserId, {
-      need_type: data.need_type,
-      title: data.title,
-      description: data.description,
-      status: data.status,
-      priority: data.priority,
-    });
-
-    if (data.need_type === "money") {
-      await createMoneyNeed({
-        need: base.id,
-        target_amount: data.target_amount,
-        comment: "",
+    try {
+      // 1) Create base need
+      const base = await createNeed(fundraiserId, {
+        need_type: data.need_type,
+        title: data.title,
+        description: data.description,
+        status: data.status,
+        priority: data.priority,
       });
-    }
 
-    if (data.need_type === "item") {
-      await createItemNeed({
-        need: base.id,
-        item_name: data.item_name,
-        quantity_needed: Number(data.quantity_needed),
-        mode: data.mode,
-        notes: data.notes ?? "",
-        donation_reward_tier: null,
-        loan_reward_tier: null,
-      });
-    }
+      // 2) Create detail record (type-specific)
+      if (data.need_type === "money") {
+        await createMoneyNeed({
+          need: base.id,
+          target_amount: data.target_amount,
+          comment: "",
+        });
+      }
 
-    if (data.need_type === "time") {
+      if (data.need_type === "item") {
+        await createItemNeed({
+          need: base.id,
+          item_name: data.item_name,
+          quantity_needed: Number(data.quantity_needed),
+          mode: data.mode,
+          notes: data.notes ?? "",
+          donation_reward_tier: null,
+          loan_reward_tier: null,
+        });
+      }
+
+      if (data.need_type === "time") {
+        const startLocal = `${data.start_date}T${data.start_time}`;
+        const endLocal = `${data.end_date}T${data.end_time}`;
+
       await createTimeNeed({
         need: base.id,
-        start_datetime: new Date(data.start_datetime).toISOString(),
-        end_datetime: new Date(data.end_datetime).toISOString(),
+        start_datetime: new Date(startLocal).toISOString(),
+        end_datetime: new Date(endLocal).toISOString(),
         volunteers_needed: Number(data.volunteers_needed),
         role_title: data.role_title,
         location: data.location ?? "",
         reward_tier: null,
-      });
-    }
+  });
+}
 
-    onAddNeed?.(base);
-    setShowAdd(false);
+
+      // 3) Let parent refresh/reload, or at least insert base row
+      onAddNeed?.(base);
+      setShowAdd(false);
+    } catch (err) {
+      console.error("Create need failed:", err);
+      alert(err?.message ?? "Failed to create need");
+    }
   }
 
   async function handleDeleteNeed(need) {
@@ -301,7 +305,6 @@ export default function NeedsPanel({
       await deleteNeed(need.id);
       onDeleteNeed?.(need);
 
-      // if you deleted the one currently open in the editor, close it
       if (editingNeed?.id === need.id) closeEdit();
     } catch (err) {
       console.error("Delete need failed:", err);
@@ -327,17 +330,16 @@ export default function NeedsPanel({
               isLast={i === list.length - 1}
             />
 
-            {/* ✅ Inline editor appears directly under the clicked row */}
             {editOpen && editingNeed?.id === n.id && (
-               <div className="needInlineEdit">
-              <EditNeedModal
-                open
-                variant="inline"
-                need={editingNeed}
-                disabled={disabled}
-                onClose={closeEdit}
-                onSaved={applyUpdatedBase}
-              />
+              <div className="needInlineEdit">
+                <EditNeedModal
+                  open
+                  variant="inline"
+                  need={editingNeed}
+                  disabled={disabled}
+                  onClose={closeEdit}
+                  onSaved={applyUpdatedBase}
+                />
               </div>
             )}
           </div>
@@ -386,11 +388,6 @@ export default function NeedsPanel({
           {renderList(item, "item needs")}
         </NeedAccordion>
       </div>
-
-      {/* ✅ IMPORTANT:
-          We removed the old global modal at the bottom.
-          (That was why it appeared “down the bottom”.)
-      */}
     </div>
   );
 }

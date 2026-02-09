@@ -1,0 +1,146 @@
+/* src/pages/PledgeNeedPage.css */
+
+.pledgePage {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 18px 16px 60px;
+}
+
+.pledgePage__back {
+  display: inline-block;
+  margin-bottom: 10px;
+  text-decoration: none;
+  opacity: 0.9;
+}
+
+.pledgePage__titleRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 6px 0 6px;
+}
+
+.pledgePage__title {
+  margin: 0;
+}
+
+.pledgePage__typePill {
+  border: 1px solid rgba(245, 232, 205, 0.25);
+  background: rgba(0, 0, 0, 0.16);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 12px;
+  opacity: 0.95;
+}
+
+.pledgePage__desc {
+  margin: 0 0 14px;
+}
+
+.shiftPanel {
+  margin: 14px 0 16px;
+}
+
+.shiftPanel__title {
+  margin: 0 0 12px;
+}
+
+.shiftGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.shiftRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: start;
+}
+
+.shiftLabel {
+  font-weight: 700;
+}
+
+.shiftValue {
+  text-align: right;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.shiftSubtle {
+  opacity: 0.9;
+  font-weight: 600;
+}
+
+.notice {
+  border-radius: 14px;
+  padding: 12px 12px;
+  border: 1px solid rgba(250, 187, 76, 0.35);
+  background: rgba(250, 187, 76, 0.10);
+  margin-bottom: 14px;
+}
+
+.notice__title {
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.notice__text {
+  opacity: 0.95;
+}
+
+.pledgeForm {
+  margin-top: 0;
+}
+
+.pledgeField {
+  margin: 10px 0 12px;
+}
+
+.pledgeInput,
+.pledgeSelect,
+.pledgeTextarea {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(245, 232, 205, 0.25);
+  background: rgba(0, 0, 0, 0.15);
+  color: inherit;
+}
+
+.pledgeTextarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.pledgeToggleRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 8px 0 2px;
+}
+
+.pledgeDivider {
+  height: 10px;
+}
+
+.pledgeHours {
+  opacity: 0.85;
+}
+
+/* Split date/time grid */
+.dtGrid {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 680px) {
+  .dtGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

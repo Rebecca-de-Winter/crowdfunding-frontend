@@ -1,6 +1,11 @@
+// src/api/get-need-detail.js
 import { authFetch } from "./auth-fetch";
 
 const API_URL = import.meta.env.VITE_API_URL;
+
+function baseUrl() {
+  return API_URL.endsWith("/") ? API_URL : `${API_URL}/`;
+}
 
 function endpointForType(type) {
   if (type === "money") return "money-needs/";
@@ -10,14 +15,14 @@ function endpointForType(type) {
 }
 
 export default async function getNeedDetail(type, detailId) {
-  const res = await authFetch(`${API_URL}${endpointForType(type)}${detailId}/`, {
-    method: "GET",
-  });
+  const url = `${baseUrl()}${endpointForType(type)}${detailId}/`;
 
+  const res = await authFetch(url, { method: "GET" });
+
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
     throw new Error(data?.detail || "Could not load need detail.");
   }
 
-  return await res.json();
+  return data;
 }

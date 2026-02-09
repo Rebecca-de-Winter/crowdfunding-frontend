@@ -1,14 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import "./StatusDropdown.css";
+import "./RewardTypeDropdown.css"; // reuse the same styles (rtdrop...)
 
 const OPTIONS = [
-  { value: "draft", label: "Draft (unpublished)" },
-  { value: "active", label: "Active (published)" },
-  { value: "closed", label: "Closed" },
-  { value: "cancelled", label: "Cancelled" },
+  { value: "donation", label: "Donation" },
+  { value: "loan", label: "Loan" },
 ];
 
-function StatusDropdown({ value, onChange, disabled = false }) {
+export default function ItemModeDropdown({ value, onChange, disabled = false }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
 
@@ -34,26 +32,26 @@ function StatusDropdown({ value, onChange, disabled = false }) {
   };
 
   return (
-    <div className={`statusdd ${disabled ? "is-disabled" : ""}`} ref={wrapRef}>
+    <div className={`rtdrop ${disabled ? "is-disabled" : ""}`} ref={wrapRef}>
       <button
         type="button"
-        className="statusdd__button"
+        className="rtdrop__button"
         onClick={toggle}
         aria-haspopup="listbox"
         aria-expanded={open}
         disabled={disabled}
       >
-        <span className="statusdd__label">{current.label}</span>
-        <span className="statusdd__chev" aria-hidden="true" />
+        <span className="rtdrop__label">{current.label}</span>
+        <span className="rtdrop__chev" aria-hidden="true" />
       </button>
 
       {open && (
-        <div className="statusdd__menu" role="listbox">
+        <div className="rtdrop__menu" role="listbox">
           {OPTIONS.map((opt) => (
             <button
               type="button"
               key={opt.value}
-              className={`statusdd__item ${opt.value === value ? "is-selected" : ""}`}
+              className={`rtdrop__item ${opt.value === value ? "is-selected" : ""}`}
               onClick={() => pick(opt.value)}
               role="option"
               aria-selected={opt.value === value}
@@ -66,5 +64,3 @@ function StatusDropdown({ value, onChange, disabled = false }) {
     </div>
   );
 }
-
-export default StatusDropdown;

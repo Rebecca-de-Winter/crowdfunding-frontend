@@ -6,12 +6,27 @@
   --accent2: #f6a551;
 }
 
-.needsPanel {
+/* =========================
+   Needs Panel (match Story box)
+   IMPORTANT: override `.panel`
+   ========================= */
+
+.panel.needsPanel {
   display: flex;
   flex-direction: column;
   gap: 12px;
   min-height: 0;
+
+  /* ✅ match your Story/Description box look */
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 18px;
 }
+
+/* =========================
+   Header row
+   ========================= */
 
 .needsPanel__head {
   display: flex;
@@ -29,6 +44,10 @@
   gap: 10px;
 }
 
+/* =========================
+   Accordion wrapper
+   ========================= */
+
 .needAcc {
   border: 1px solid rgba(245, 232, 205, 0.14);
   background: rgba(0, 0, 0, 0.10);
@@ -36,16 +55,39 @@
   overflow: hidden;
 }
 
+/* =========================
+   Leafy section headers (Money/Time/Item bars)
+   ========================= */
+
 .needAcc__head {
   width: 100%;
   border: 0;
-  background: transparent;
+
+  background: rgba(0, 0, 0, 0.18);
   color: var(--text);
+
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   padding: 12px 12px;
+  padding-left: 18px;
+
   cursor: pointer;
+  position: relative;
+}
+
+/* Leaf green accent stripe */
+.needAcc__head::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 4px;
+  border-radius: 8px;
+  background: #49b37d;
+  opacity: 0.95;
 }
 
 .needAcc__left {
@@ -84,8 +126,12 @@
 .needAcc__body {
   padding: 10px 12px 12px;
   border-top: 1px solid rgba(245, 232, 205, 0.12);
-  background: transparent/* VERY subtle */
+  background: transparent;
 }
+
+/* =========================
+   Empty state / list tray
+   ========================= */
 
 .needsEmpty {
   opacity: 0.75;
@@ -99,11 +145,13 @@
   padding: 6px;
   border-radius: 14px;
 
-  /* tray effect (no muddy fill) */
   background: transparent;
   border: 0;
-  
 }
+
+/* =========================
+   Need rows
+   ========================= */
 
 .needRow {
   display: grid;
@@ -112,7 +160,7 @@
 
   padding: 12px;
   border-radius: 14px;
-  /* border:  1.5px solid rgba(255, 255, 255, 0.06);  */
+
   background:
     linear-gradient(
       to bottom,
@@ -135,9 +183,8 @@
   pointer-events: none;
 
   box-shadow:
-  inset 0 1px 0 rgba(140, 230, 190, 0.22),
-  inset 0 -1px 0 rgba(0, 0, 0, 0.25);
- /* accent glow */
+    inset 0 1px 0 rgba(140, 230, 190, 0.22),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25);
 }
 
 .needRow.is-active {
@@ -175,8 +222,11 @@
   opacity: 0.95;
 }
 
+/* status / priority colouring */
 .needPill--status.is-open { border-color: rgba(127, 211, 166, 0.5); }
+.needPill--status.is-filled { border-color: rgba(250, 187, 76, 0.55); }
 .needPill--status.is-closed { border-color: rgba(220, 140, 140, 0.5); }
+.needPill--status.is-cancelled { border-color: rgba(180, 180, 180, 0.35); }
 
 .needPill--priority.is-high { border-color: rgba(250, 187, 76, 0.55); }
 .needPill--priority.is-medium { border-color: rgba(245, 232, 205, 0.28); }
@@ -204,7 +254,7 @@
 .needIconBtn:hover {
   transform: translateY(-1px);
   filter: brightness(1.05);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.35);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
 }
 
 .needIconBtn:disabled {
@@ -213,21 +263,18 @@
   transform: none;
   box-shadow: none;
 }
+
 /* =========================
    Inline Edit panel styling
    ========================= */
 
-/* If you're rendering the editor inside the needs list, it should span full width */
 .inlineEditor {
   width: 100%;
-  padding: 0;
-
-  border-radius: 18px;
   padding: 12px;
   margin: 12px 0 16px;
+  border-radius: 18px;
 }
 
-/* Kill any previous "indent" rules */
 .needInlineEdit {
   margin: 10px 0 14px;
   padding: 0;
@@ -235,15 +282,15 @@
   background: transparent;
 }
 
-/* IMPORTANT: remove the old 34px indent completely */
 @media (min-width: 680px) {
   .needInlineEdit {
     margin-left: 0;
   }
 }
+
 .modal--inline {
   background: rgba(0, 0, 0, 0.28);
-  border: 1px solid rgba(250, 187, 76, 0.25); /* warm accent edge */
+  border: 1px solid rgba(250, 187, 76, 0.25);
   box-shadow:
     0 10px 28px rgba(0, 0, 0, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);

@@ -1,19 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-
 import useFundraiser from "../hooks/use-fundraiser";
 import updateFundraiser from "../api/update-fundraiser";
-
 import RewardTierList from "../components/RewardTierList";
 import createRewardTier from "../api/create-reward-tier";
 import updateRewardTier from "../api/update-reward-tier";
 import deleteRewardTier from "../api/delete-reward-tier";
 import RewardTypeDropdown from "../components/RewardTypeDropdown";
-
 import NeedsPanel from "../components/NeedsPanel";
-
 import getCurrentUser from "../api/get-current-user";
 import getFundraiser from "../api/get-fundraiser";
+import StatusDropdown from "../components/StatusDropdown";
 
 import "./EditFestivalPage.css";
 
@@ -106,7 +103,7 @@ export default function EditFestivalPage() {
      ========================= */
   useEffect(() => {
     if (!fundraiser) return;
-
+    
     setForm({
       title: fundraiser.title ?? "",
       description: fundraiser.description ?? "",
@@ -122,6 +119,16 @@ export default function EditFestivalPage() {
     setTiers(fundraiser.reward_tiers ?? []);
     setNeeds(fundraiser.needs ?? []);
   }, [fundraiser]);
+
+    async function refreshFundraiserBits() {
+    try {
+      const fr = await getFundraiser(id);
+      setTiers(fr.reward_tiers ?? []);
+      setNeeds(fr.needs ?? []);
+    } catch (err) {
+    console.error("Failed to refresh fundraiser:", err);
+  }
+}
 
   const tierCount = useMemo(() => tiers.length, [tiers]);
 
@@ -373,6 +380,12 @@ export default function EditFestivalPage() {
                 value={form.end_date}
                 onChange={handleChange}
               />
+              <label className="sidebarLabel">Status</label>
+              <StatusDropdown
+              value={form.status}
+              onChange={(v) => setForm((cur) => ({ ...cur, status: v }))}
+              disabled={isSaving}
+              />
             </div>
           </aside>
         </div>
@@ -391,16 +404,43 @@ export default function EditFestivalPage() {
                 onChange={handleChange}
               />
 
-              <NeedsPanel
-                fundraiserId={id}
-                needs={needs}
-                disabled={isSaving || tierBusy}
-                onAddNeed={(created) => setNeeds((cur) => [created, ...cur])}
-                onEditNeed={(updated) =>
-                  setNeeds((cur) => cur.map((n) => (n.id === updated.id ? updated : n)))
-                }
-                onDeleteNeed={(deleted) => setNeeds((cur) => cur.filter((n) => n.id !== deleted.id))}
-              />
+          <NeedsPanel
+  fundraiserId={id}
+  needs={needs}
+  disabled={isSaving || tierBusy}
+  onAddNeed={async (created) => {
+    // optimistic insert (fast UI)
+    setNeeds((cur) => {
+      if (cur.some((n) => n.id === created.id)) return cur;
+
+      const sameType = cur.filter((n) => n.need_type === created.need_type);
+      const maxSort = sameType.reduce((max, n) => {
+        const so = Number(n.sort_order);
+        return Number.isFinite(so) && so > max ? so : max;
+      }, 0);
+
+      const withSort =
+        Number(created.sort_order) > 0
+          ? created
+          : { ...created, sort_order: maxSort + 10 };
+
+      return [...cur, withSort];
+    });
+
+    // then sync from server so detail rows are correct
+    await refreshFundraiserBits();
+  }}
+  onEditNeed={async (updated) => {
+    setNeeds((cur) => cur.map((n) => (n.id === updated.id ? updated : n)));
+    await refreshFundraiserBits();
+  }}
+  onDeleteNeed={async (deleted) => {
+    setNeeds((cur) => cur.filter((n) => n.id !== deleted.id));
+    await refreshFundraiserBits();
+  }}
+/>
+
+
 
               {saveError && <div className="form-alert">{saveError}</div>}
 

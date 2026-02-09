@@ -493,3 +493,16 @@
   justify-content: flex-end;
   padding-top: 8px;
 }
+/* Make StatusDropdown round ONLY in EditFestivalPage sidebar */
+.editfundraiser__sidebarTop .statusdd__button {
+  border-radius: 22px; /* match your date input */
+  padding: 12px 44px 12px 16px; /* optional: align with other sidebar inputs */
+   font-size: 0.95rem;   /* match your other sidebar inputs */
+  font-weight: 700;     /* consistent with other fields */
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.editfundraiser__sidebarTop .statusdd__menu {
+  border-radius: 22px;
+}
