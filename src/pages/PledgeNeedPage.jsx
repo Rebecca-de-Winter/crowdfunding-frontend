@@ -10,14 +10,17 @@ import ItemModeDropdown from "../components/ItemModeDropdown";
 import "./PledgeNeedPage.css";
 
 /**
- * Convert a local date+time into ISO string (UTC) like "2026-02-06T09:30:00.000Z"
+ * API expects LOCAL naive datetime:
+ * "YYYY-MM-DDTHH:MM:SS" (NO Z, NO milliseconds)
  */
-function localDateTimeToIso(dateStr, timeStr) {
+function localPartsToApiDateTime(dateStr, timeStr) {
   if (!dateStr || !timeStr) return null;
-  const local = `${dateStr}T${timeStr}`; // interpreted as local time by Date()
-  const d = new Date(local);
-  if (Number.isNaN(d.getTime())) return null;
-  return d.toISOString();
+
+  const t = String(timeStr).trim();
+  const timeWithSeconds = /^\d{2}:\d{2}$/.test(t) ? `${t}:00` : t;
+
+  // Must be local-naive datetime string
+  return `${dateStr}T${timeWithSeconds}`;
 }
 
 /**
@@ -143,7 +146,7 @@ export default function PledgeNeedPage() {
   const [need, setNeed] = useState(null);
   const [timeDetail, setTimeDetail] = useState(null);
 
-  // --- bottom-of-form fields (as requested)
+  // bottom-of-form fields
   const [comment, setComment] = useState("");
   const [anonymous, setAnonymous] = useState(false);
 
@@ -162,7 +165,7 @@ export default function PledgeNeedPage() {
   const [endTime, setEndTime] = useState("");
   const [hoursCommitted, setHoursCommitted] = useState("");
 
-  // required shift (split date/time too)
+  // required shift
   const [reqStartDate, setReqStartDate] = useState("");
   const [reqStartTime, setReqStartTime] = useState("");
   const [reqEndDate, setReqEndDate] = useState("");
@@ -201,7 +204,11 @@ export default function PledgeNeedPage() {
 
         // reset type fields
         if (data.need_type === "money") setAmount("");
-        if (data.need_type === "item") setItemName(data.title ?? "");
+        if (data.need_type === "item") {
+          setItemName(data.title ?? "");
+          setQuantity(1);
+          setMode("donation");
+        }
         if (data.need_type === "time") {
           setStartDate("");
           setStartTime("");
@@ -277,6 +284,7 @@ export default function PledgeNeedPage() {
       setSubmitLoading(true);
       setError(null);
 
+      // --- VALIDATION ---
       if (needType === "money") {
         const amt = normaliseMoney(amount);
         if (!amt) throw new Error("Please enter a valid amount (e.g. 60.00).");
@@ -293,10 +301,14 @@ export default function PledgeNeedPage() {
           throw new Error("Please choose a start and end date/time.");
         }
 
-        const startIso = localDateTimeToIso(startDate, startTime);
-        const endIso = localDateTimeToIso(endDate, endTime);
-        if (!startIso || !endIso) throw new Error("Please enter valid start/end values.");
-        if (new Date(endIso) <= new Date(startIso)) throw new Error("End must be after start.");
+        const startDT = localPartsToApiDateTime(startDate, startTime);
+        const endDT = localPartsToApiDateTime(endDate, endTime);
+        if (!startDT || !endDT) throw new Error("Please enter valid start/end values.");
+
+        // Compare using local datetimes
+        const start = new Date(`${startDate}T${startTime}`);
+        const end = new Date(`${endDate}T${endTime}`);
+        if (!(end > start)) throw new Error("End must be after start.");
 
         const hrs = normaliseHours(hoursCommitted);
         if (!hrs) throw new Error("End must be after start (hours must be > 0).");
@@ -351,14 +363,14 @@ export default function PledgeNeedPage() {
       }
 
       if (needType === "time") {
-        const startIso = localDateTimeToIso(startDate, startTime);
-        const endIso = localDateTimeToIso(endDate, endTime);
+        const startDT = localPartsToApiDateTime(startDate, startTime);
+        const endDT = localPartsToApiDateTime(endDate, endTime);
         const hrs = normaliseHours(hoursCommitted);
 
         const timePayload = {
           pledge: pledgeId,
-          start_datetime: startIso,
-          end_datetime: endIso,
+          start_datetime: startDT,
+          end_datetime: endDT,
           hours_committed: hrs,
           comment,
         };
@@ -372,8 +384,8 @@ export default function PledgeNeedPage() {
       }
 
       navigate(`/fundraisers/${id}`);
-    } catch (e) {
-      setError(e);
+    } catch (e2) {
+      setError(e2);
     } finally {
       setSubmitLoading(false);
     }
@@ -445,65 +457,59 @@ export default function PledgeNeedPage() {
       )}
 
       <form className="panel pledgeForm" onSubmit={handleSubmit}>
-        {/* TIME inputs FIRST (as requested) */}
-{needType === "time" && (
-  <>
-    <div className="dtGrid">
-      <div className="pledgeField">
-        <label className="muted">Start date</label>
-        <input
-          className="pledgeInput"
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-        />
-      </div>
+        {/* TIME inputs FIRST */}
+        {needType === "time" && (
+          <>
+            <div className="dtGrid">
+              <div className="pledgeField">
+                <label className="muted">Start date</label>
+                <input
+                  className="pledgeInput"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
 
-      <div className="pledgeField">
-        <label className="muted">Start time</label>
-        <input
-          className="pledgeInput"
-          type="time"
-          value={startTime}
-          onChange={(e) => setStartTime(e.target.value)}
-        />
-      </div>
+              <div className="pledgeField">
+                <label className="muted">Start time</label>
+                <input
+                  className="pledgeInput"
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                />
+              </div>
 
-      <div className="pledgeField">
-        <label className="muted">End date</label>
-        <input
-          className="pledgeInput"
-          type="date"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-        />
-      </div>
+              <div className="pledgeField">
+                <label className="muted">End date</label>
+                <input
+                  className="pledgeInput"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
 
-      <div className="pledgeField">
-        <label className="muted">End time</label>
-        <input
-          className="pledgeInput"
-          type="time"
-          value={endTime}
-          onChange={(e) => setEndTime(e.target.value)}
-        />
-      </div>
-    </div>
+              <div className="pledgeField">
+                <label className="muted">End time</label>
+                <input
+                  className="pledgeInput"
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                />
+              </div>
+            </div>
 
-    <div className="pledgeField">
-      <label className="muted">Hours committed (auto)</label>
-      <input
-        className="pledgeInput pledgeHours"
-        value={hoursCommitted}
-        disabled
-        placeholder="—"
-      />
-    </div>
+            <div className="pledgeField">
+              <label className="muted">Hours committed (auto)</label>
+              <input className="pledgeInput pledgeHours" value={hoursCommitted} disabled placeholder="—" />
+            </div>
 
-    <div className="pledgeDivider" />
-  </>
-)}
-
+            <div className="pledgeDivider" />
+          </>
+        )}
 
         {/* MONEY */}
         {needType === "money" && (
@@ -552,7 +558,7 @@ export default function PledgeNeedPage() {
           </>
         )}
 
-        {/* COMMENT + ANON LAST (as requested) */}
+        {/* COMMENT + ANON LAST */}
         <div className="pledgeField">
           <label className="muted">Comment</label>
           <textarea

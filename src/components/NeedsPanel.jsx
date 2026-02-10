@@ -337,19 +337,17 @@ export default function NeedsPanel({
       }
 
       if (data.need_type === "time") {
-        const startLocal = `${data.start_date}T${data.start_time}`;
-        const endLocal = `${data.end_date}T${data.end_time}`;
+  await createTimeNeed({
+    need: base.id,
+    start_datetime: data.start_datetime, // ✅ already "YYYY-MM-DDTHH:MM"
+    end_datetime: data.end_datetime,     // ✅ already "YYYY-MM-DDTHH:MM"
+    volunteers_needed: Number(data.volunteers_needed),
+    role_title: data.role_title,
+    location: data.location ?? "",
+    reward_tier: null,
+  });
+}
 
-        await createTimeNeed({
-          need: base.id,
-          start_datetime: new Date(startLocal).toISOString(),
-          end_datetime: new Date(endLocal).toISOString(),
-          volunteers_needed: Number(data.volunteers_needed),
-          role_title: data.role_title,
-          location: data.location ?? "",
-          reward_tier: null,
-        });
-      }
 
       onAddNeed?.(base);
       setShowAdd(false);

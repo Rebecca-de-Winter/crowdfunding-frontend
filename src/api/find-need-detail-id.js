@@ -14,30 +14,56 @@ function endpointForType(type) {
   throw new Error(`Unknown need type: ${type}`);
 }
 
+function extractRows(data) {
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data.results)) return data.results;
+  return [];
+}
+
+function matchNeedFk(row, needId) {
+  // some APIs return need as number, some as string, some as need_id
+  const fk = row?.need ?? row?.need_id;
+  return String(fk) === String(needId);
+}
+
+async function fetchJson(url) {
+  const res = await authFetch(url, { method: "GET" });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.detail || "Could not find need detail.");
+  return data;
+}
+
 /**
  * Returns the detail row ID for a given base need id, or null if not found.
- * Handles both:
- *  - plain list responses: [{...}]
- *  - paginated responses: { results: [{...}] }
+ * Works even if the backend does NOT support filtering by ?need=
  */
 export default async function findNeedDetailId(type, needId) {
-  const url = `${baseUrl()}${endpointForType(type)}?need=${encodeURIComponent(needId)}`;
+  const base = baseUrl();
+  const endpoint = endpointForType(type);
 
-  const res = await authFetch(url, { method: "GET" });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data?.detail || "Could not find need detail.");
+  // 1) Try filter first (fast path if backend supports it)
+  try {
+    const filtered = await fetchJson(
+      `${base}${endpoint}?need=${encodeURIComponent(needId)}`
+    );
+    const rows = extractRows(filtered);
+    const match = rows.find((r) => matchNeedFk(r, needId));
+    if (match?.id) return match.id;
+  } catch {
+    // ignore and fallback
   }
 
-  const rows = Array.isArray(data)
-    ? data
-    : Array.isArray(data?.results)
-      ? data.results
-      : [];
+  // 2) Fallback: scan list pages and find the matching FK
+  // Bounded so it won’t loop forever.
+  let nextUrl = `${base}${endpoint}`;
+  for (let page = 0; page < 10 && nextUrl; page++) {
+    const data = await fetchJson(nextUrl);
+    const rows = extractRows(data);
+    const match = rows.find((r) => matchNeedFk(r, needId));
+    if (match?.id) return match.id;
 
-  // Only accept a row whose FK exactly matches this needId
-  const match = rows.find((r) => String(r.need) === String(needId));
+    nextUrl = data?.next || null; // DRF pagination
+  }
 
-  return match?.id ?? null;
+  return null;
 }

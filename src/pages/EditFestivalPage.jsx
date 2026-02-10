@@ -1,18 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+
 import useFundraiser from "../hooks/use-fundraiser";
 import updateFundraiser from "../api/update-fundraiser";
+import deleteFundraiser from "../api/delete-fundraiser";
+
 import RewardTierList from "../components/RewardTierList";
 import createRewardTier from "../api/create-reward-tier";
 import updateRewardTier from "../api/update-reward-tier";
 import deleteRewardTier from "../api/delete-reward-tier";
 import RewardTypeDropdown from "../components/RewardTypeDropdown";
+
 import NeedsPanel from "../components/NeedsPanel";
+
 import getCurrentUser from "../api/get-current-user";
 import getFundraiser from "../api/get-fundraiser";
 import StatusDropdown from "../components/StatusDropdown";
-
-
 
 import "./EditFestivalPage.css";
 
@@ -50,62 +53,61 @@ export default function EditFestivalPage() {
 
   const isAuthed = Boolean(window.localStorage.getItem("token"));
 
-  // Owner gate: logged-in users still shouldn't edit other people's fundraisers
+  // Delete (two-step confirm) state
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Owner gate
   const [canEdit, setCanEdit] = useState(false);
   const [checkingOwner, setCheckingOwner] = useState(true);
 
   useEffect(() => {
-  let cancelled = false;
+    let cancelled = false;
 
-  async function checkOwner() {
-    try {
-      if (!isAuthed) {
-        if (!cancelled) {
-          setCanEdit(false);
-          setCheckingOwner(false);
+    async function checkOwner() {
+      try {
+        if (!isAuthed) {
+          if (!cancelled) {
+            setCanEdit(false);
+            setCheckingOwner(false);
+          }
+          return;
         }
-        return;
-      }
 
-      const me = await getCurrentUser();
-      const fr = await getFundraiser(id);
+        const me = await getCurrentUser();
+        const fr = await getFundraiser(id);
 
-      if (cancelled) return;
+        if (cancelled) return;
 
-      if (me.id !== fr.owner) {
-        navigate(`/fundraisers/${id}`, {
-          replace: true,
-          state: { flash: "You don’t have permission to edit this fundraiser." },
-        });
-        return;
-      }
+        if (me.id !== fr.owner) {
+          navigate(`/fundraisers/${id}`, {
+            replace: true,
+            state: { flash: "You don’t have permission to edit this fundraiser." },
+          });
+          return;
+        }
 
-      setCanEdit(true);
-    } catch {
-      if (!cancelled) {
-        navigate("/login", { replace: true });
-      }
-    } finally {
-      if (!cancelled) {
-        setCheckingOwner(false);
+        setCanEdit(true);
+      } catch {
+        if (!cancelled) navigate("/login", { replace: true });
+      } finally {
+        if (!cancelled) setCheckingOwner(false);
       }
     }
-  }
 
-  checkOwner();
-
-  return () => {
-    cancelled = true;
-  };
-}, [id, isAuthed, navigate]);
-
+    checkOwner();
+    return () => {
+      cancelled = true;
+    };
+  }, [id, isAuthed, navigate]);
 
   /* =========================
      Initialise form from API
      ========================= */
   useEffect(() => {
     if (!fundraiser) return;
-    
+
     setForm({
       title: fundraiser.title ?? "",
       description: fundraiser.description ?? "",
@@ -122,22 +124,25 @@ export default function EditFestivalPage() {
     setNeeds(fundraiser.needs ?? []);
   }, [fundraiser]);
 
-    async function refreshFundraiserBits() {
+  // If status changes away from draft, close the confirm UI
+  useEffect(() => {
+    if (form?.status !== "draft") setShowDeleteConfirm(false);
+  }, [form?.status]);
+
+  async function refreshFundraiserBits() {
     try {
       const fr = await getFundraiser(id);
       setTiers(fr.reward_tiers ?? []);
       setNeeds(fr.needs ?? []);
     } catch (err) {
-    console.error("Failed to refresh fundraiser:", err);
+      console.error("Failed to refresh fundraiser:", err);
+    }
   }
-}
 
   const tierCount = useMemo(() => tiers.length, [tiers]);
 
-  //  While we verify ownership, don't render the edit UI
+  // While we verify ownership, don't render the edit UI
   if (checkingOwner) return <p>Checking permissions…</p>;
-
-  //  If not allowed (should already have redirected), show a safe fallback
   if (!canEdit) return <p>You don’t have permission to edit this fundraiser.</p>;
 
   if (isLoading) return <p>Loading…</p>;
@@ -186,12 +191,51 @@ export default function EditFestivalPage() {
 
       navigate(`/fundraisers/${updated.id}`);
     } catch (err) {
-      // Friendly permission message if backend blocks
       const msg = err?.message || "Could not save changes.";
-      setSaveError(msg.includes("permission") ? "You don’t have permission to edit this fundraiser." : msg);
+      setSaveError(
+        msg.toLowerCase().includes("permission")
+          ? "You don’t have permission to edit this fundraiser."
+          : msg
+      );
     } finally {
       setIsSaving(false);
     }
+  }
+
+  async function handleDeleteFestival() {
+    setDeleteError(null);
+
+    if (!isAuthed) {
+      setDeleteError("You must be logged in to delete a festival.");
+      return;
+    }
+
+    if (form.status !== "draft") {
+      setDeleteError("You can only delete a festival while it’s in Draft.");
+      return;
+    }
+
+    // First click opens confirm UI
+    if (!showDeleteConfirm) {
+      setShowDeleteConfirm(true);
+      return;
+    }
+
+    // Second click actually deletes
+    setDeleteBusy(true);
+    try {
+      await deleteFundraiser(id);
+      navigate("/");
+    } catch (err) {
+      setDeleteError(err?.message || "Failed to delete festival.");
+    } finally {
+      setDeleteBusy(false);
+    }
+  }
+
+  function cancelDelete() {
+    setDeleteError(null);
+    setShowDeleteConfirm(false);
   }
 
   /* =========================
@@ -382,21 +426,28 @@ export default function EditFestivalPage() {
                 value={form.end_date}
                 onChange={handleChange}
               />
+
               <label className="sidebarLabel">Status</label>
               <StatusDropdown
-              value={form.status}
-              onChange={(v) => setForm((cur) => ({ ...cur, status: v }))}
-              disabled={isSaving}
+                value={form.status}
+                onChange={(v) => setForm((cur) => ({ ...cur, status: v }))}
+                disabled={isSaving}
               />
             </div>
           </aside>
         </div>
 
         <div className="editfundraiser__belowGrid">
+          {/* LEFT COLUMN */}
           <div className="storyCol">
             <div className="panel storyPanel">
               <label className="field__label field__label--title">Title</label>
-              <input className="field__input" id="title" value={form.title} onChange={handleChange} />
+              <input
+                className="field__input"
+                id="title"
+                value={form.title}
+                onChange={handleChange}
+              />
 
               <label className="field__label">Story / Description</label>
               <textarea
@@ -406,43 +457,39 @@ export default function EditFestivalPage() {
                 onChange={handleChange}
               />
 
-          <NeedsPanel
-  fundraiserId={id}
-  needs={needs}
-  disabled={isSaving || tierBusy}
-  onAddNeed={async (created) => {
-    // optimistic insert (fast UI)
-    setNeeds((cur) => {
-      if (cur.some((n) => n.id === created.id)) return cur;
+              <NeedsPanel
+                fundraiserId={id}
+                needs={needs}
+                disabled={isSaving || tierBusy}
+                onAddNeed={async (created) => {
+                  setNeeds((cur) => {
+                    if (cur.some((n) => n.id === created.id)) return cur;
 
-      const sameType = cur.filter((n) => n.need_type === created.need_type);
-      const maxSort = sameType.reduce((max, n) => {
-        const so = Number(n.sort_order);
-        return Number.isFinite(so) && so > max ? so : max;
-      }, 0);
+                    const sameType = cur.filter((n) => n.need_type === created.need_type);
+                    const maxSort = sameType.reduce((max, n) => {
+                      const so = Number(n.sort_order);
+                      return Number.isFinite(so) && so > max ? so : max;
+                    }, 0);
 
-      const withSort =
-        Number(created.sort_order) > 0
-          ? created
-          : { ...created, sort_order: maxSort + 10 };
+                    const withSort =
+                      Number(created.sort_order) > 0
+                        ? created
+                        : { ...created, sort_order: maxSort + 10 };
 
-      return [...cur, withSort];
-    });
+                    return [...cur, withSort];
+                  });
 
-    // then sync from server so detail rows are correct
-    await refreshFundraiserBits();
-  }}
-  onEditNeed={async (updated) => {
-    setNeeds((cur) => cur.map((n) => (n.id === updated.id ? updated : n)));
-    await refreshFundraiserBits();
-  }}
-  onDeleteNeed={async (deleted) => {
-    setNeeds((cur) => cur.filter((n) => n.id !== deleted.id));
-    await refreshFundraiserBits();
-  }}
-/>
-
-
+                  await refreshFundraiserBits();
+                }}
+                onEditNeed={async (updated) => {
+                  setNeeds((cur) => cur.map((n) => (n.id === updated.id ? updated : n)));
+                  await refreshFundraiserBits();
+                }}
+                onDeleteNeed={async (deleted) => {
+                  setNeeds((cur) => cur.filter((n) => n.id !== deleted.id));
+                  await refreshFundraiserBits();
+                }}
+              />
 
               {saveError && <div className="form-alert">{saveError}</div>}
 
@@ -456,9 +503,65 @@ export default function EditFestivalPage() {
                   {isSaving ? "Saving…" : "Save changes"}
                 </button>
               </div>
+
+              {/* DELETE (two-step confirm) */}
+              <div className="dangerInline">
+                <p className="dangerInline__hint">
+                  {form.status !== "draft" ? (
+                    <>
+                      Delete is only available while this festival is <strong>Draft</strong>.
+                    </>
+                  ) : (
+                    <>Deleting is permanent. This cannot be undone.</>
+                  )}
+                </p>
+
+                {deleteError && <div className="form-alert">{deleteError}</div>}
+
+                {!showDeleteConfirm ? (
+                  <button
+                    type="button"
+                    className="rtBtn rtBtn--danger"
+                    onClick={handleDeleteFestival}
+                    disabled={
+                      deleteBusy || isSaving || tierBusy || !isAuthed || form.status !== "draft"
+                    }
+                  >
+                    Delete festival
+                  </button>
+                ) : (
+                  <div className="dangerConfirm">
+                    <span className="dangerConfirm__text">
+                      Are you sure? This will permanently delete{" "}
+                      <strong>{form.title || "this festival"}</strong>.
+                    </span>
+
+                    <div className="dangerConfirm__actions">
+                      <button
+                        type="button"
+                        className="rtBtn rtBtn--danger"
+                        onClick={handleDeleteFestival}
+                        disabled={deleteBusy}
+                      >
+                        {deleteBusy ? "Deleting…" : "Yes, delete"}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="rtBtn rtBtn--secondary"
+                        onClick={cancelDelete}
+                        disabled={deleteBusy}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
+          {/* RIGHT COLUMN */}
           <aside className="rightRewardsCol">
             <div className="panel enablePanel">
               <div className="enablePanel__head">
@@ -520,7 +623,8 @@ export default function EditFestivalPage() {
 
                         <div className="tierAdd__field">
                           <label className="tierAdd__label">
-                            Quantity available <span className="tierAdd__optional">(optional)</span>
+                            Quantity available{" "}
+                            <span className="tierAdd__optional">(optional)</span>
                           </label>
                           <input
                             className="tierAdd__input"

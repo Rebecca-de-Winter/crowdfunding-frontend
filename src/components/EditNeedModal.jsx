@@ -2,6 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import "./EditNeedModal.css";
 
 import NeedsDropdown from "./NeedsDropdown";
+
+import createTimeNeed from "../api/create-time-need";
+import getTimeNeedByNeedId from "../api/get-time-need-by-need-id";
+import getItemNeedByNeedId from "../api/get-item-need-by-need-id";
+
 import findNeedDetailId from "../api/find-need-detail-id";
 import getNeedDetail from "../api/get-need-detail";
 import updateNeed from "../api/update-need";
@@ -26,10 +31,10 @@ const ITEM_MODE_OPTS = [
   { value: "either", label: "Either" },
 ];
 
-// ---------- time helpers (LOCAL display, ISO save) ----------
+// ---------- time helpers (LOCAL display, UTC save) ----------
 function isoToLocalParts(iso) {
   if (!iso) return { date: "", time: "" };
-  const d = new Date(iso);
+  const d = new Date(iso); // ISO Z -> local Date
   if (Number.isNaN(d.getTime())) return { date: "", time: "" };
 
   const yyyy = String(d.getFullYear());
@@ -42,12 +47,28 @@ function isoToLocalParts(iso) {
   return { date: `${yyyy}-${mm}-${dd}`, time: `${hh}:${min}` };
 }
 
-function localDateTimeToIso(dateStr, timeStr) {
+// LOCAL date + time -> UTC ISO with Z
+function localPartsToUtcIso(dateStr, timeStr) {
   if (!dateStr || !timeStr) return null;
-  // Date("YYYY-MM-DDTHH:mm") is interpreted as local time
-  const d = new Date(`${dateStr}T${timeStr}`);
+
+  const t = String(timeStr).trim();
+  const timeWithSeconds = /^\d{2}:\d{2}$/.test(t) ? `${t}:00` : t;
+
+  // build local-naive string, Date() interprets it as LOCAL
+  const d = new Date(`${dateStr}T${timeWithSeconds}`);
   if (Number.isNaN(d.getTime())) return null;
-  return d.toISOString();
+
+  return d.toISOString(); // ✅ UTC Z
+}
+
+function isEndAfterStartUtc(startIso, endIso) {
+  const start = new Date(startIso);
+  const end = new Date(endIso);
+  return (
+    Number.isFinite(start.getTime()) &&
+    Number.isFinite(end.getTime()) &&
+    end > start
+  );
 }
 // -----------------------------------------------------------
 
@@ -70,18 +91,17 @@ export default function EditNeedModal({
   const [detailId, setDetailId] = useState(null);
 
   const safeNeedStatus = (s) =>
-  ["open", "filled", "closed", "cancelled"].includes(s) ? s : "open";
+    ["open", "filled", "closed", "cancelled"].includes(s) ? s : "open";
 
-const baseInitial = useMemo(
-  () => ({
-    title: need?.title ?? "",
-    description: need?.description ?? "",
-    status: safeNeedStatus(need?.status ?? "open"),
-    priority: need?.priority ?? "medium",
-  }),
-  [need]
-);
-
+  const baseInitial = useMemo(
+    () => ({
+      title: need?.title ?? "",
+      description: need?.description ?? "",
+      status: safeNeedStatus(need?.status ?? "open"),
+      priority: need?.priority ?? "medium",
+    }),
+    [need]
+  );
 
   const [base, setBase] = useState(baseInitial);
 
@@ -130,15 +150,60 @@ const baseInitial = useMemo(
 
     (async () => {
       try {
-        const id = await findNeedDetailId(need.need_type, need.id);
-        if (cancelled) return;
+        let d = null;
 
-        setDetailId(id ?? null);
-        if (!id) return;
+        if (need.need_type === "time") {
+          // 1) Try direct fetch by base need id
+          d = await getTimeNeedByNeedId(need.id);
+          if (cancelled) return;
 
-        const d = await getNeedDetail(need.need_type, id);
-        if (cancelled) return;
+          // 2) Fallback: find detail id then fetch by detail id
+          if (!d) {
+            const id = await findNeedDetailId("time", need.id);
+            if (cancelled) return;
 
+            setDetailId(id ?? null);
+            if (!id) return;
+
+            d = await getNeedDetail("time", id);
+            if (cancelled) return;
+          } else {
+            setDetailId(d?.id ?? null);
+          }
+
+          if (!d) return;
+        } else if (need.need_type === "item") {
+          d = await getItemNeedByNeedId(need.id);
+          if (cancelled) return;
+
+          if (!d) {
+            const id = await findNeedDetailId("item", need.id);
+            if (cancelled) return;
+
+            setDetailId(id ?? null);
+            if (!id) return;
+
+            d = await getNeedDetail("item", id);
+            if (cancelled) return;
+          } else {
+            setDetailId(d?.id ?? null);
+          }
+
+          if (!d) return;
+        } else {
+          // money
+          const id = await findNeedDetailId("money", need.id);
+          if (cancelled) return;
+
+          setDetailId(id ?? null);
+          if (!id) return;
+
+          d = await getNeedDetail("money", id);
+          if (cancelled) return;
+          if (!d) return;
+        }
+
+        // Hydrate type-specific state
         if (need.need_type === "money") {
           setMoney({
             target_amount: d?.target_amount ?? "",
@@ -190,6 +255,7 @@ const baseInitial = useMemo(
   async function handleSave() {
     setErr(null);
 
+    // Basic validation
     if (!base.title.trim()) return setErr("Title is required.");
 
     if (type === "money") {
@@ -204,20 +270,21 @@ const baseInitial = useMemo(
     }
 
     if (type === "time") {
-      if (!time.role_title.trim()) return setErr("Role title is required.");
-      if (!time.start_date || !time.start_time || !time.end_date || !time.end_time) {
-        return setErr("Start and End date/time are required.");
-      }
+  if (!time.role_title.trim()) return setErr("Role title is required.");
+  if (!time.start_date || !time.start_time || !time.end_date || !time.end_time) {
+    return setErr("Start and End date/time are required.");
+  }
 
-      const startIso = localDateTimeToIso(time.start_date, time.start_time);
-      const endIso = localDateTimeToIso(time.end_date, time.end_time);
+  const startIso = localPartsToUtcIso(time.start_date, time.start_time);
+  const endIso = localPartsToUtcIso(time.end_date, time.end_time);
 
-      if (!startIso || !endIso) return setErr("Please enter valid start/end values.");
-      if (new Date(endIso) <= new Date(startIso)) return setErr("End must be after start.");
-    }
+  if (!startIso || !endIso) return setErr("Please enter valid start/end values.");
+  if (!isEndAfterStartUtc(startIso, endIso)) return setErr("End must be after start.");
+}
 
     setBusy(true);
     try {
+      // 1) Update base need
       const updatedBase = await updateNeed(need.id, {
         fundraiser: need.fundraiser ?? need.fundraiser_id,
         need_type: need.need_type,
@@ -228,35 +295,49 @@ const baseInitial = useMemo(
         sort_order: need.sort_order ?? 0,
       });
 
-      if (detailId) {
-        if (type === "money") {
-          await updateNeedDetail("money", detailId, {
-            target_amount: String(money.target_amount),
-            comment: money.comment ?? "",
-          });
-        } else if (type === "item") {
-          await updateNeedDetail("item", detailId, {
-            item_name: item.item_name.trim(),
-            quantity_needed: Number(item.quantity_needed),
-            mode: item.mode,
-            notes: item.notes ?? "",
-            donation_reward_tier: item.donation_reward_tier ?? null,
-            loan_reward_tier: item.loan_reward_tier ?? null,
-          });
-        } else if (type === "time") {
-          const startIso = localDateTimeToIso(time.start_date, time.start_time);
-          const endIso = localDateTimeToIso(time.end_date, time.end_time);
-
-          await updateNeedDetail("time", detailId, {
-            role_title: time.role_title.trim(),
-            location: time.location ?? "",
-            volunteers_needed: Number(time.volunteers_needed),
-            start_datetime: startIso,
-            end_datetime: endIso,
-            reward_tier: time.reward_tier ?? null,
-          });
-        }
+      // 2) Save detail
+      if (type === "money" && detailId) {
+        await updateNeedDetail("money", detailId, {
+          target_amount: String(money.target_amount),
+          comment: money.comment ?? "",
+        });
       }
+
+      if (type === "item" && detailId) {
+        await updateNeedDetail("item", detailId, {
+          item_name: item.item_name.trim(),
+          quantity_needed: Number(item.quantity_needed),
+          mode: item.mode,
+          notes: item.notes ?? "",
+          donation_reward_tier: item.donation_reward_tier ?? null,
+          loan_reward_tier: item.loan_reward_tier ?? null,
+        });
+      }
+
+      if (type === "time") {
+  const startIso = localPartsToUtcIso(time.start_date, time.start_time);
+  const endIso = localPartsToUtcIso(time.end_date, time.end_time);
+
+  if (!startIso || !endIso) throw new Error("Please enter valid start/end values.");
+
+  const createPayload = {
+    need: need.id,
+    role_title: time.role_title.trim(),
+    location: time.location ?? "",
+    volunteers_needed: Number(time.volunteers_needed),
+    start_datetime: startIso, // ✅ UTC Z
+    end_datetime: endIso,     // ✅ UTC Z
+    reward_tier: time.reward_tier ?? null,
+  };
+
+  if (detailId) {
+    const { need: _need, ...updatePayload } = createPayload;
+    await updateNeedDetail("time", detailId, updatePayload);
+  } else {
+    const created = await createTimeNeed(createPayload);
+    setDetailId(created?.id ?? null);
+  }
+}
 
       onSaved?.(updatedBase);
       onClose?.();
@@ -327,7 +408,9 @@ const baseInitial = useMemo(
                 min="0"
                 step="0.01"
                 value={money.target_amount}
-                onChange={(e) => setMoney((m) => ({ ...m, target_amount: e.target.value }))}
+                onChange={(e) =>
+                  setMoney((m) => ({ ...m, target_amount: e.target.value }))
+                }
                 disabled={isDisabled}
               />
             </div>
@@ -363,7 +446,9 @@ const baseInitial = useMemo(
                 type="number"
                 min="1"
                 value={item.quantity_needed}
-                onChange={(e) => setItem((p) => ({ ...p, quantity_needed: e.target.value }))}
+                onChange={(e) =>
+                  setItem((p) => ({ ...p, quantity_needed: e.target.value }))
+                }
                 disabled={isDisabled}
               />
             </div>
@@ -409,7 +494,9 @@ const baseInitial = useMemo(
                 type="number"
                 min="1"
                 value={time.volunteers_needed}
-                onChange={(e) => setTime((p) => ({ ...p, volunteers_needed: e.target.value }))}
+                onChange={(e) =>
+                  setTime((p) => ({ ...p, volunteers_needed: e.target.value }))
+                }
                 disabled={isDisabled}
               />
             </div>
@@ -430,7 +517,9 @@ const baseInitial = useMemo(
                 className="field__input"
                 type="date"
                 value={time.start_date}
-                onChange={(e) => setTime((p) => ({ ...p, start_date: e.target.value }))}
+                onChange={(e) =>
+                  setTime((p) => ({ ...p, start_date: e.target.value }))
+                }
                 disabled={isDisabled}
               />
             </div>
@@ -441,7 +530,9 @@ const baseInitial = useMemo(
                 className="field__input"
                 type="time"
                 value={time.start_time}
-                onChange={(e) => setTime((p) => ({ ...p, start_time: e.target.value }))}
+                onChange={(e) =>
+                  setTime((p) => ({ ...p, start_time: e.target.value }))
+                }
                 disabled={isDisabled}
               />
             </div>

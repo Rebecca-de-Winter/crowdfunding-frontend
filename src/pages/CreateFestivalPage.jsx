@@ -51,7 +51,10 @@ function CreateFestivalPage() {
     location,
     start_date,
     end_date,
-    enable_rewards,
+    status,           // ✅ correct position
+    enable_rewards,   // ✅ correct position
+    sort_order    
+
   ) {
     setError(null);
     setIsSaving(true);
@@ -65,9 +68,9 @@ function CreateFestivalPage() {
         location,
         start_date,
         end_date,
-        "draft",
+        status,
         enable_rewards,
-        0
+        sort_order
       );
 
       navigate(`/fundraisers/${created.id}/edit`);
