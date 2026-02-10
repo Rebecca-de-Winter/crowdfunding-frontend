@@ -1,3 +1,6 @@
+// src/components/NeedsPanel.jsx
+// top of NeedsPanel.jsx (all imports)
+
 import { useEffect, useMemo, useState } from "react";
 import "./NeedsPanel.css";
 
@@ -14,12 +17,22 @@ import deleteTimeNeed from "../api/delete-time-need";
 import updateNeed from "../api/update-need";
 import EditNeedModal from "./EditNeedModal";
 import NeedPills from "./NeedPills";
-
-// ✅ Item detail fetcher (returns the item-need detail row for a base need id)
 import getItemNeedByNeedId from "../api/get-item-need-by-need-id";
+import getMoneyNeedByNeedId from "../api/get-money-need-by-need-id";
+
 
 function safeLower(v) {
   return String(v ?? "").trim().toLowerCase();
+}
+
+function formatAUD(value) {
+  const n = Number(value);
+  return new Intl.NumberFormat("en-AU", {
+    style: "currency",
+    currency: "AUD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number.isFinite(n) ? n : 0);
 }
 
 function itemModeLabelFromDetail(detail) {
@@ -71,6 +84,7 @@ function NeedRow({
   need,
   disabled,
   typeLabel = null,
+  moneyTargetLabel = null, // ✅ show "Target: $500.00" for money needs
   onEdit,
   onDelete,
   onMoveUp,
@@ -82,7 +96,11 @@ function NeedRow({
     <div className="needRow">
       <div className="needRow__main">
         <div className="needRow__title">{need.title}</div>
+
         {need.description ? <div className="needRow__desc">{need.description}</div> : null}
+
+        {/* ✅ money target line (safe, optional) */}
+        {moneyTargetLabel ? <div className="needRow__meta">{moneyTargetLabel}</div> : null}
 
         {/* ✅ unified pills (Type/Status/Priority) */}
         <NeedPills
@@ -192,8 +210,9 @@ export default function NeedsPanel({
   const [editOpen, setEditOpen] = useState(false);
   const [editingNeed, setEditingNeed] = useState(null);
 
-  // ✅ item need detail cache: { [needId]: detail|null }
-  const [itemNeedMap, setItemNeedMap] = useState({});
+  // ✅ detail caches
+  const [itemNeedMap, setItemNeedMap] = useState({});  // { [needId]: itemDetail|null }
+  const [moneyNeedMap, setMoneyNeedMap] = useState({}); // { [needId]: moneyDetail|null }
 
   function openEdit(need) {
     setEditingNeed(need);
@@ -206,15 +225,32 @@ export default function NeedsPanel({
   }
 
   function applyUpdatedBase(updated) {
-    onEditNeed?.(updated);
+  onEditNeed?.(updated);
+
+  if (updated?.need_type === "money") {
+    setMoneyNeedMap((prev) => {
+      const next = { ...prev };
+      delete next[updated.id];
+      return next;
+    });
   }
+
+  if (updated?.need_type === "item") {
+    setItemNeedMap((prev) => {
+      const next = { ...prev };
+      delete next[updated.id];
+      return next;
+    });
+  }
+}
+
 
   const grouped = useMemo(() => groupByType(needs), [needs]);
   const money = useMemo(() => sortNeeds(grouped.money), [grouped.money]);
   const time = useMemo(() => sortNeeds(grouped.time), [grouped.time]);
   const item = useMemo(() => sortNeeds(grouped.item), [grouped.item]);
 
-  // ✅ load item detail rows for item needs (so we can show Type: Loan/Donation/Either)
+  // ✅ load item detail rows (Loan/Donation/Either pill)
   useEffect(() => {
     let alive = true;
 
@@ -242,12 +278,13 @@ export default function NeedsPanel({
         });
       } catch (err) {
         if (!alive) return;
-        // if request fails, still mark missing as null so we don't refetch forever
+
         setItemNeedMap((prev) => {
           const next = { ...prev };
           for (const needId of missing) next[needId] = null;
           return next;
         });
+
         console.error("Failed to load item need details:", err);
       }
     }
@@ -257,6 +294,56 @@ export default function NeedsPanel({
       alive = false;
     };
   }, [item, itemNeedMap]);
+
+  // ✅ load money detail rows (so we can show Target amount)
+
+// ✅ load money detail rows (by base need id)
+useEffect(() => {
+  let alive = true;
+
+  async function loadMoneyDetails() {
+    if (money.length === 0) return;
+
+    const ids = money.map((n) => n.id).filter(Boolean);
+    const missing = ids.filter((id) => !(id in moneyNeedMap));
+    if (missing.length === 0) return;
+
+    try {
+      const pairs = await Promise.all(
+        missing.map(async (needId) => {
+          const detail = await getMoneyNeedByNeedId(needId);
+          return [needId, detail ?? null];
+        })
+      );
+
+      if (!alive) return;
+
+      setMoneyNeedMap((prev) => {
+        const next = { ...prev };
+        for (const [needId, detail] of pairs) next[needId] = detail;
+        return next;
+      });
+    } catch (err) {
+      if (!alive) return;
+
+      setMoneyNeedMap((prev) => {
+        const next = { ...prev };
+        for (const needId of missing) next[needId] = null;
+        return next;
+      });
+
+      console.error("Failed to load money need details:", err);
+    }
+  }
+
+  loadMoneyDetails();
+  return () => {
+    alive = false;
+  };
+}, [money, moneyNeedMap]);
+
+
+
 
   function makeOrderMap(list) {
     const map = {};
@@ -315,6 +402,13 @@ export default function NeedsPanel({
           target_amount: data.target_amount,
           comment: "",
         });
+
+        // ensure money map refresh next render
+        setMoneyNeedMap((prev) => {
+          const next = { ...prev };
+          delete next[base.id];
+          return next;
+        });
       }
 
       if (data.need_type === "item") {
@@ -328,7 +422,7 @@ export default function NeedsPanel({
           loan_reward_tier: null,
         });
 
-        // ensure map refresh next render
+        // ensure item map refresh next render
         setItemNeedMap((prev) => {
           const next = { ...prev };
           delete next[base.id];
@@ -337,17 +431,16 @@ export default function NeedsPanel({
       }
 
       if (data.need_type === "time") {
-  await createTimeNeed({
-    need: base.id,
-    start_datetime: data.start_datetime, // ✅ already "YYYY-MM-DDTHH:MM"
-    end_datetime: data.end_datetime,     // ✅ already "YYYY-MM-DDTHH:MM"
-    volunteers_needed: Number(data.volunteers_needed),
-    role_title: data.role_title,
-    location: data.location ?? "",
-    reward_tier: null,
-  });
-}
-
+        await createTimeNeed({
+          need: base.id,
+          start_datetime: data.start_datetime, // "YYYY-MM-DDTHH:MM"
+          end_datetime: data.end_datetime,     // "YYYY-MM-DDTHH:MM"
+          volunteers_needed: Number(data.volunteers_needed),
+          role_title: data.role_title,
+          location: data.location ?? "",
+          reward_tier: null,
+        });
+      }
 
       onAddNeed?.(base);
       setShowAdd(false);
@@ -381,6 +474,14 @@ export default function NeedsPanel({
         });
       }
 
+      if (need.need_type === "money") {
+        setMoneyNeedMap((prev) => {
+          const next = { ...prev };
+          delete next[need.id];
+          return next;
+        });
+      }
+
       if (editingNeed?.id === need.id) closeEdit();
     } catch (err) {
       console.error("Delete need failed:", err);
@@ -397,11 +498,17 @@ export default function NeedsPanel({
           const typeLabel =
             n.need_type === "item" ? itemModeLabelFromDetail(itemNeedMap[n.id]) : null;
 
+          const moneyTargetLabel =
+            n.need_type === "money" && moneyNeedMap[n.id]?.target_amount != null
+              ? `Target: ${formatAUD(moneyNeedMap[n.id].target_amount)}`
+              : null;
+
           return (
             <div key={n.id}>
               <NeedRow
                 need={n}
                 typeLabel={typeLabel}
+                moneyTargetLabel={moneyTargetLabel}
                 disabled={disabled}
                 onEdit={openEdit}
                 onDelete={handleDeleteNeed}
