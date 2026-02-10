@@ -1,5 +1,4 @@
 // src/components/NeedsPanel.jsx
-
 import { useEffect, useMemo, useState } from "react";
 import "./NeedsPanel.css";
 
@@ -134,9 +133,7 @@ function NeedRow({
       <div className="needRow__main">
         <div className="needRow__title">{need.title}</div>
 
-        {need.description ? (
-          <div className="needRow__desc">{need.description}</div>
-        ) : null}
+        {need.description ? <div className="needRow__desc">{need.description}</div> : null}
 
         {metaLines.length > 0
           ? metaLines.map((line, i) => (
@@ -303,25 +300,24 @@ export default function NeedsPanel({
   const time = useMemo(() => sortNeeds(grouped.time), [grouped.time]);
   const item = useMemo(() => sortNeeds(grouped.item), [grouped.item]);
 
+  // Helper: compute missing IDs based on current map
+  function missingIdsFor(list, map) {
+    const ids = list.map((n) => n.id).filter(Boolean);
+    return ids.filter((id) => map[id] === undefined);
+  }
+
   // Item detail cache
   useEffect(() => {
     let alive = true;
 
-    async function loadItemDetails() {
-      if (item.length === 0) return;
-
-      const ids = item.map((n) => n.id).filter(Boolean);
-      const missing = ids.filter((id) => !(id in itemNeedMap));
+    async function load() {
+      const missing = missingIdsFor(item, itemNeedMap);
       if (missing.length === 0) return;
 
       try {
         const pairs = await Promise.all(
-          missing.map(async (needId) => {
-            const detail = await getItemNeedByNeedId(needId);
-            return [needId, detail ?? null];
-          })
+          missing.map(async (needId) => [needId, (await getItemNeedByNeedId(needId)) ?? null])
         );
-
         if (!alive) return;
 
         setItemNeedMap((prev) => {
@@ -342,31 +338,24 @@ export default function NeedsPanel({
       }
     }
 
-    loadItemDetails();
+    load();
     return () => {
       alive = false;
     };
   }, [item, itemNeedMap]);
 
-  // Money detail cache (Target amount)
+  // Money detail cache
   useEffect(() => {
     let alive = true;
 
-    async function loadMoneyDetails() {
-      if (money.length === 0) return;
-
-      const ids = money.map((n) => n.id).filter(Boolean);
-      const missing = ids.filter((id) => !(id in moneyNeedMap));
+    async function load() {
+      const missing = missingIdsFor(money, moneyNeedMap);
       if (missing.length === 0) return;
 
       try {
         const pairs = await Promise.all(
-          missing.map(async (needId) => {
-            const detail = await getMoneyNeedByNeedId(needId);
-            return [needId, detail ?? null];
-          })
+          missing.map(async (needId) => [needId, (await getMoneyNeedByNeedId(needId)) ?? null])
         );
-
         if (!alive) return;
 
         setMoneyNeedMap((prev) => {
@@ -387,31 +376,24 @@ export default function NeedsPanel({
       }
     }
 
-    loadMoneyDetails();
+    load();
     return () => {
       alive = false;
     };
   }, [money, moneyNeedMap]);
 
-  // ✅ Time detail cache (start/end datetime etc.)
+  // Time detail cache
   useEffect(() => {
     let alive = true;
 
-    async function loadTimeDetails() {
-      if (time.length === 0) return;
-
-      const ids = time.map((n) => n.id).filter(Boolean);
-      const missing = ids.filter((id) => !(id in timeNeedMap));
+    async function load() {
+      const missing = missingIdsFor(time, timeNeedMap);
       if (missing.length === 0) return;
 
       try {
         const pairs = await Promise.all(
-          missing.map(async (needId) => {
-            const detail = await getTimeNeedByNeedId(needId);
-            return [needId, detail ?? null];
-          })
+          missing.map(async (needId) => [needId, (await getTimeNeedByNeedId(needId)) ?? null])
         );
-
         if (!alive) return;
 
         setTimeNeedMap((prev) => {
@@ -432,7 +414,7 @@ export default function NeedsPanel({
       }
     }
 
-    loadTimeDetails();
+    load();
     return () => {
       alive = false;
     };
@@ -467,10 +449,7 @@ export default function NeedsPanel({
     try {
       const updated = await Promise.all(
         swapped.map((n) =>
-          updateNeed(
-            n.id,
-            buildNeedPutPayload(n, fundraiserId, { sort_order: orderMap[n.id] })
-          )
+          updateNeed(n.id, buildNeedPutPayload(n, fundraiserId, { sort_order: orderMap[n.id] }))
         )
       );
 
@@ -534,7 +513,6 @@ export default function NeedsPanel({
           reward_tier: null,
         });
 
-        // ✅ ensure it fetches fresh detail next render
         setTimeNeedMap((prev) => {
           const next = { ...prev };
           delete next[base.id];
@@ -610,18 +588,13 @@ export default function NeedsPanel({
 
           const metaLines = [];
 
-          // ✅ Money target line (already working)
           if (n.need_type === "money" && moneyNeedMap[n.id]?.target_amount != null) {
             metaLines.push(`Target: ${formatAUD(moneyNeedMap[n.id].target_amount)}`);
           }
 
-          // ✅ Time line (NEW)
           if (n.need_type === "time") {
             const td = timeNeedMap[n.id] ?? null;
-            const whenLabel = td
-              ? formatShiftLineAU(td.start_datetime, td.end_datetime)
-              : null;
-
+            const whenLabel = td ? formatShiftLineAU(td.start_datetime, td.end_datetime) : null;
             metaLines.push(whenLabel ? `Time: ${whenLabel}` : "Time: TBA");
           }
 
@@ -678,7 +651,8 @@ export default function NeedsPanel({
       </div>
 
       <p className="muted needsPanel__note">
-        Add your Money/Time/Item needs. Keep them open while you work; collapse when you want a cleaner view.
+        Add your Money/Time/Item needs. Keep them open while you work; collapse when you want a
+        cleaner view.
       </p>
 
       {!readOnly && showAdd && (

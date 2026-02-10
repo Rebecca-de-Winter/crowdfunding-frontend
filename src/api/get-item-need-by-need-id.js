@@ -4,21 +4,29 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 export default async function getItemNeedByNeedId(needId) {
   const base = API_URL.endsWith("/") ? API_URL : `${API_URL}/`;
-
-  // Adjust this path if your endpoint differs:
-  // Common patterns:
-  // 1) item-needs/by-need/<id>/
-  // 2) item-needs/?need=<id>
   const url = `${base}item-needs/?need=${needId}`;
 
-  const res = await authFetch(url);
-  const data = await res.json().catch(() => null);
+  const res = await authFetch(url, { method: "GET" });
 
+  // If authFetch throws on network issues, let it bubble.
+  const data = await res.json().catch(() => null);
   if (!res.ok) return null;
 
-  // If your API returns a list for the filter endpoint:
-  if (Array.isArray(data)) return data[0] ?? null;
+  // ✅ Handle common DRF pagination: { count, next, previous, results: [...] }
+  const list = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.results)
+      ? data.results
+      : [];
 
-  // If it returns a single object:
-  return data ?? null;
+  if (list.length === 0) return null;
+
+  const targetId = Number(needId);
+
+  // ✅ Only return the row that matches this need id
+  const exact = list.find((row) => Number(row?.need) === targetId);
+  if (exact) return exact;
+
+  // Fallback (better than "data[0]" but still safe)
+  return null;
 }

@@ -4,6 +4,9 @@ import "./EditNeedModal.css";
 import NeedsDropdown from "./NeedsDropdown";
 
 import createTimeNeed from "../api/create-time-need";
+import createItemNeed from "../api/create-item-need";
+import createMoneyNeed from "../api/create-money-need";
+
 import getTimeNeedByNeedId from "../api/get-time-need-by-need-id";
 import getItemNeedByNeedId from "../api/get-item-need-by-need-id";
 
@@ -31,6 +34,14 @@ const ITEM_MODE_OPTS = [
   { value: "either", label: "Either" },
 ];
 
+function normaliseItemMode(raw) {
+  const s = String(raw ?? "").trim().toLowerCase();
+  if (s === "donation" || s === "donate") return "donation";
+  if (s === "loan") return "loan";
+  if (s === "either") return "either";
+  return "either";
+}
+
 // ---------- time helpers (LOCAL display, UTC save) ----------
 function isoToLocalParts(iso) {
   if (!iso) return { date: "", time: "" };
@@ -54,8 +65,7 @@ function localPartsToUtcIso(dateStr, timeStr) {
   const t = String(timeStr).trim();
   const timeWithSeconds = /^\d{2}:\d{2}$/.test(t) ? `${t}:00` : t;
 
-  // build local-naive string, Date() interprets it as LOCAL
-  const d = new Date(`${dateStr}T${timeWithSeconds}`);
+  const d = new Date(`${dateStr}T${timeWithSeconds}`); // interpreted as LOCAL
   if (Number.isNaN(d.getTime())) return null;
 
   return d.toISOString(); // ✅ UTC Z
@@ -151,15 +161,14 @@ export default function EditNeedModal({
     (async () => {
       try {
         let d = null;
+        let id = null;
 
         if (need.need_type === "time") {
-          // 1) Try direct fetch by base need id
           d = await getTimeNeedByNeedId(need.id);
           if (cancelled) return;
 
-          // 2) Fallback: find detail id then fetch by detail id
           if (!d) {
-            const id = await findNeedDetailId("time", need.id);
+            id = await findNeedDetailId("time", need.id);
             if (cancelled) return;
 
             setDetailId(id ?? null);
@@ -172,12 +181,30 @@ export default function EditNeedModal({
           }
 
           if (!d) return;
-        } else if (need.need_type === "item") {
+
+          const start = isoToLocalParts(d?.start_datetime);
+          const end = isoToLocalParts(d?.end_datetime);
+
+          setTime({
+            role_title: d?.role_title ?? "",
+            location: d?.location ?? "",
+            volunteers_needed: Number(d?.volunteers_needed ?? 1),
+            start_date: start.date,
+            start_time: start.time,
+            end_date: end.date,
+            end_time: end.time,
+            reward_tier: d?.reward_tier ?? null,
+          });
+
+          return;
+        }
+
+        if (need.need_type === "item") {
           d = await getItemNeedByNeedId(need.id);
           if (cancelled) return;
 
           if (!d) {
-            const id = await findNeedDetailId("item", need.id);
+            id = await findNeedDetailId("item", need.id);
             if (cancelled) return;
 
             setDetailId(id ?? null);
@@ -190,49 +217,34 @@ export default function EditNeedModal({
           }
 
           if (!d) return;
-        } else {
-          // money
-          const id = await findNeedDetailId("money", need.id);
-          if (cancelled) return;
 
-          setDetailId(id ?? null);
-          if (!id) return;
-
-          d = await getNeedDetail("money", id);
-          if (cancelled) return;
-          if (!d) return;
-        }
-
-        // Hydrate type-specific state
-        if (need.need_type === "money") {
-          setMoney({
-            target_amount: d?.target_amount ?? "",
-            comment: d?.comment ?? "",
-          });
-        } else if (need.need_type === "item") {
           setItem({
             item_name: d?.item_name ?? "",
-            quantity_needed: d?.quantity_needed ?? 1,
-            mode: d?.mode ?? "either",
+            quantity_needed: Number(d?.quantity_needed ?? 1),
+            mode: normaliseItemMode(d?.mode),
             notes: d?.notes ?? "",
             donation_reward_tier: d?.donation_reward_tier ?? null,
             loan_reward_tier: d?.loan_reward_tier ?? null,
           });
-        } else if (need.need_type === "time") {
-          const start = isoToLocalParts(d?.start_datetime);
-          const end = isoToLocalParts(d?.end_datetime);
 
-          setTime({
-            role_title: d?.role_title ?? "",
-            location: d?.location ?? "",
-            volunteers_needed: d?.volunteers_needed ?? 1,
-            start_date: start.date,
-            start_time: start.time,
-            end_date: end.date,
-            end_time: end.time,
-            reward_tier: d?.reward_tier ?? null,
-          });
+          return;
         }
+
+        // money
+        id = await findNeedDetailId("money", need.id);
+        if (cancelled) return;
+
+        setDetailId(id ?? null);
+        if (!id) return;
+
+        d = await getNeedDetail("money", id);
+        if (cancelled) return;
+        if (!d) return;
+
+        setMoney({
+          target_amount: d?.target_amount ?? "",
+          comment: d?.comment ?? "",
+        });
       } catch (e) {
         if (!cancelled) setErr(e?.message ?? "Could not load need detail.");
       }
@@ -255,32 +267,30 @@ export default function EditNeedModal({
   async function handleSave() {
     setErr(null);
 
-    // Basic validation
     if (!base.title.trim()) return setErr("Title is required.");
 
     if (type === "money") {
-      if (money.target_amount === "" || Number(money.target_amount) <= 0) {
-        return setErr("Target amount must be greater than zero.");
-      }
+      const n = Number(money.target_amount);
+      if (!Number.isFinite(n) || n <= 0) return setErr("Target amount must be greater than zero.");
     }
 
     if (type === "item") {
       if (!item.item_name.trim()) return setErr("Item name is required.");
-      if (Number(item.quantity_needed) < 1) return setErr("Quantity must be 1+.");
+      const q = Number(item.quantity_needed);
+      if (!Number.isFinite(q) || q < 1) return setErr("Quantity must be 1+.");
     }
 
     if (type === "time") {
-  if (!time.role_title.trim()) return setErr("Role title is required.");
-  if (!time.start_date || !time.start_time || !time.end_date || !time.end_time) {
-    return setErr("Start and End date/time are required.");
-  }
+      if (!time.role_title.trim()) return setErr("Role title is required.");
+      if (!time.start_date || !time.start_time || !time.end_date || !time.end_time) {
+        return setErr("Start and End date/time are required.");
+      }
 
-  const startIso = localPartsToUtcIso(time.start_date, time.start_time);
-  const endIso = localPartsToUtcIso(time.end_date, time.end_time);
-
-  if (!startIso || !endIso) return setErr("Please enter valid start/end values.");
-  if (!isEndAfterStartUtc(startIso, endIso)) return setErr("End must be after start.");
-}
+      const startIso = localPartsToUtcIso(time.start_date, time.start_time);
+      const endIso = localPartsToUtcIso(time.end_date, time.end_time);
+      if (!startIso || !endIso) return setErr("Please enter valid start/end values.");
+      if (!isEndAfterStartUtc(startIso, endIso)) return setErr("End must be after start.");
+    }
 
     setBusy(true);
     try {
@@ -295,49 +305,66 @@ export default function EditNeedModal({
         sort_order: need.sort_order ?? 0,
       });
 
-      // 2) Save detail
-      if (type === "money" && detailId) {
-        await updateNeedDetail("money", detailId, {
+      // 2) Save / create detail
+      if (type === "money") {
+        const payload = {
+          need: need.id,
           target_amount: String(money.target_amount),
           comment: money.comment ?? "",
-        });
+        };
+
+        if (detailId) {
+          const { need: _need, ...updatePayload } = payload;
+          await updateNeedDetail("money", detailId, updatePayload);
+        } else {
+          const created = await createMoneyNeed(payload);
+          setDetailId(created?.id ?? null);
+        }
       }
 
-      if (type === "item" && detailId) {
-        await updateNeedDetail("item", detailId, {
+      if (type === "item") {
+        const payload = {
+          need: need.id,
           item_name: item.item_name.trim(),
           quantity_needed: Number(item.quantity_needed),
-          mode: item.mode,
+          mode: normaliseItemMode(item.mode),
           notes: item.notes ?? "",
           donation_reward_tier: item.donation_reward_tier ?? null,
           loan_reward_tier: item.loan_reward_tier ?? null,
-        });
+        };
+
+        if (detailId) {
+          const { need: _need, ...updatePayload } = payload;
+          await updateNeedDetail("item", detailId, updatePayload);
+        } else {
+          const created = await createItemNeed(payload);
+          setDetailId(created?.id ?? null);
+        }
       }
 
       if (type === "time") {
-  const startIso = localPartsToUtcIso(time.start_date, time.start_time);
-  const endIso = localPartsToUtcIso(time.end_date, time.end_time);
+        const startIso = localPartsToUtcIso(time.start_date, time.start_time);
+        const endIso = localPartsToUtcIso(time.end_date, time.end_time);
+        if (!startIso || !endIso) throw new Error("Please enter valid start/end values.");
 
-  if (!startIso || !endIso) throw new Error("Please enter valid start/end values.");
+        const payload = {
+          need: need.id,
+          role_title: time.role_title.trim(),
+          location: time.location ?? "",
+          volunteers_needed: Number(time.volunteers_needed),
+          start_datetime: startIso,
+          end_datetime: endIso,
+          reward_tier: time.reward_tier ?? null,
+        };
 
-  const createPayload = {
-    need: need.id,
-    role_title: time.role_title.trim(),
-    location: time.location ?? "",
-    volunteers_needed: Number(time.volunteers_needed),
-    start_datetime: startIso, // ✅ UTC Z
-    end_datetime: endIso,     // ✅ UTC Z
-    reward_tier: time.reward_tier ?? null,
-  };
-
-  if (detailId) {
-    const { need: _need, ...updatePayload } = createPayload;
-    await updateNeedDetail("time", detailId, updatePayload);
-  } else {
-    const created = await createTimeNeed(createPayload);
-    setDetailId(created?.id ?? null);
-  }
-}
+        if (detailId) {
+          const { need: _need, ...updatePayload } = payload;
+          await updateNeedDetail("time", detailId, updatePayload);
+        } else {
+          const created = await createTimeNeed(payload);
+          setDetailId(created?.id ?? null);
+        }
+      }
 
       onSaved?.(updatedBase);
       onClose?.();
@@ -408,9 +435,7 @@ export default function EditNeedModal({
                 min="0"
                 step="0.01"
                 value={money.target_amount}
-                onChange={(e) =>
-                  setMoney((m) => ({ ...m, target_amount: e.target.value }))
-                }
+                onChange={(e) => setMoney((m) => ({ ...m, target_amount: e.target.value }))}
                 disabled={isDisabled}
               />
             </div>
@@ -447,7 +472,7 @@ export default function EditNeedModal({
                 min="1"
                 value={item.quantity_needed}
                 onChange={(e) =>
-                  setItem((p) => ({ ...p, quantity_needed: e.target.value }))
+                  setItem((p) => ({ ...p, quantity_needed: Number(e.target.value) }))
                 }
                 disabled={isDisabled}
               />
@@ -457,7 +482,7 @@ export default function EditNeedModal({
               <label className="field__label">Mode</label>
               <NeedsDropdown
                 value={item.mode}
-                onChange={(v) => setItem((p) => ({ ...p, mode: v }))}
+                onChange={(v) => setItem((p) => ({ ...p, mode: normaliseItemMode(v) }))}
                 options={ITEM_MODE_OPTS}
                 disabled={isDisabled}
               />
@@ -495,7 +520,7 @@ export default function EditNeedModal({
                 min="1"
                 value={time.volunteers_needed}
                 onChange={(e) =>
-                  setTime((p) => ({ ...p, volunteers_needed: e.target.value }))
+                  setTime((p) => ({ ...p, volunteers_needed: Number(e.target.value) }))
                 }
                 disabled={isDisabled}
               />
@@ -517,9 +542,7 @@ export default function EditNeedModal({
                 className="field__input"
                 type="date"
                 value={time.start_date}
-                onChange={(e) =>
-                  setTime((p) => ({ ...p, start_date: e.target.value }))
-                }
+                onChange={(e) => setTime((p) => ({ ...p, start_date: e.target.value }))}
                 disabled={isDisabled}
               />
             </div>
@@ -530,9 +553,7 @@ export default function EditNeedModal({
                 className="field__input"
                 type="time"
                 value={time.start_time}
-                onChange={(e) =>
-                  setTime((p) => ({ ...p, start_time: e.target.value }))
-                }
+                onChange={(e) => setTime((p) => ({ ...p, start_time: e.target.value }))}
                 disabled={isDisabled}
               />
             </div>
@@ -560,30 +581,14 @@ export default function EditNeedModal({
             </div>
           </>
         )}
-
-        {!detailId && (
-          <div className="modal__hint field--full">
-            Heads up: I couldn’t find the detail row for this need yet (so only base fields will save).
-          </div>
-        )}
       </div>
 
       <div className="modal__foot">
-        <button
-          type="button"
-          className="rtBtn rtBtn--secondary"
-          onClick={onClose}
-          disabled={isDisabled}
-        >
+        <button type="button" className="rtBtn rtBtn--secondary" onClick={onClose} disabled={isDisabled}>
           Cancel
         </button>
 
-        <button
-          type="button"
-          className="rtBtn rtBtn--primary"
-          onClick={handleSave}
-          disabled={isDisabled}
-        >
+        <button type="button" className="rtBtn rtBtn--primary" onClick={handleSave} disabled={isDisabled}>
           {busy ? "Saving…" : "Save changes"}
         </button>
       </div>

@@ -101,8 +101,17 @@
   margin: 10px 0 12px;
 }
 
+/* Labels (single source of truth) */
+.pledgeField label {
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.2;
+  opacity: 0.95;
+  display: inline-block;
+}
+
+/* Inputs + textarea base */
 .pledgeInput,
-.pledgeSelect,
 .pledgeTextarea {
   width: 100%;
   margin-top: 8px;
@@ -111,10 +120,40 @@
   border: 1px solid rgba(245, 232, 205, 0.25);
   background: rgba(0, 0, 0, 0.15);
   color: inherit;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* Placeholder (single source of truth) */
+.pledgeInput::placeholder,
+.pledgeTextarea::placeholder {
+  color: rgba(253, 244, 225, 0.65);
+  opacity: 1;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+/* Focus states */
+.pledgeInput:focus,
+.pledgeTextarea:focus {
+  outline: none;
+  border-color: rgba(250, 187, 76, 0.65);
+  box-shadow:
+    0 0 0 3px rgba(250, 187, 76, 0.18),
+    0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* Disabled clarity */
+.pledgeInput:disabled,
+.pledgeTextarea:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
 }
 
 .pledgeTextarea {
-  min-height: 90px;
+  min-height: 120px;
+  line-height: 1.35;
   resize: vertical;
 }
 
@@ -122,7 +161,21 @@
   display: flex;
   gap: 10px;
   align-items: center;
-  margin: 8px 0 2px;
+  margin-top: 10px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(245, 232, 205, 0.10);
+  font-weight: 700;
+}
+
+.pledgeToggleRow input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.pledgeToggleRow span {
+  font-weight: 700;
+  font-size: 0.95rem;
 }
 
 .pledgeDivider {
@@ -144,78 +197,8 @@
     grid-template-columns: 1fr 1fr;
   }
 }
-/* =========================
-   Pledge form readability upgrades
-   ========================= */
 
-.pledgeField label {
-  font-weight: 800;
-  opacity: 0.95;
-  display: inline-block;
-}
-
-/* Stronger, clearer input styling */
-.pledgeInput,
-.pledgeSelect,
-.pledgeTextarea {
-  width: 100%;
-  margin-top: 8px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(245, 232, 205, 0.25);
-  background: rgba(0, 0, 0, 0.15);
-  color: inherit;
-  font-weight: 650;
-  font-size: 0.95rem;
-}
-
-/* Placeholder: brighter + more legible */
-.pledgeInput::placeholder,
-.pledgeTextarea::placeholder {
-  color: rgba(253, 244, 225, 0.65);
-  opacity: 1; /* important for some browsers */
-  font-weight: 700;
-}
-
-/* Focus states */
-.pledgeInput:focus,
-.pledgeTextarea:focus,
-.pledgeSelect:focus {
-  outline: none;
-  border-color: rgba(250, 187, 76, 0.65);
-  box-shadow:
-    0 0 0 3px rgba(250, 187, 76, 0.18),
-    0 10px 24px rgba(0, 0, 0, 0.35);
-}
-
-/* Disabled field clarity */
-.pledgeInput:disabled,
-.pledgeTextarea:disabled {
-  opacity: 0.75;
-  cursor: not-allowed;
-}
-
-/* Make textarea feel less "thin" */
-.pledgeTextarea {
-  min-height: 120px;
-  line-height: 1.35;
-}
-
-/* Checkbox row: better alignment and readability */
-.pledgeToggleRow {
-  margin-top: 10px;
-  padding-top: 6px;
-  border-top: 1px solid rgba(245, 232, 205, 0.10);
-  font-weight: 700;
-}
-
-.pledgeToggleRow input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--accent);
-}
-
-/* Primary submit button on pledge pages */
+/* Submit button */
 .pledgeForm .btn {
   width: 100%;
   min-height: 44px;
@@ -225,20 +208,19 @@
   border-radius: 14px;
 }
 
-/* Make submit feel "locked in" when disabled */
 .pledgeForm .btn:disabled {
   opacity: 0.65;
   cursor: not-allowed;
 }
-.pledgeToggleRow span {
-  font-weight: 700;
-}
-/* Make the custom dropdown sit + space like other inputs */
+
+/* =========
+   Dropdown styling (ItemModeDropdown)
+   ========= */
+
 .pledgeSelectWrap {
-  margin-top: 8px;             /* matches .pledgeInput margin-top */
+  margin-top: 8px;
 }
 
-/* Make the dropdown button match input sizing + font */
 .pledgeSelectButton {
   width: 100%;
   padding: 10px 12px;
@@ -246,41 +228,28 @@
   border: 1px solid rgba(245, 232, 205, 0.25);
   background: rgba(0, 0, 0, 0.15);
   color: inherit;
-
   font-family: inherit;
-  font-weight: 700;            /* slightly thicker like you want */
+  font-weight: 600;
+  font-size: 0.95rem;
 }
 
-/* Optional: make the dropdown items match too */
+.pledgeSelectButton:focus {
+  outline: none;
+  border-color: rgba(250, 187, 76, 0.65);
+  box-shadow:
+    0 0 0 3px rgba(250, 187, 76, 0.18),
+    0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
 .rtdrop__item {
   font-family: inherit;
   font-weight: 700;
 }
-/* Make all form labels consistent */
-.pledgeField label {
-  font-weight: 700;
-  font-size: 0.95rem;
-  line-height: 1.2;
+/* Header panel tweaks */
+.pledgeHeader {
+  margin: 10px 0 14px;
 }
 
-/* Make all input values consistent */
-.pledgeInput,
-.pledgeTextarea,
-.pledgeSelectButton {
-  font-weight: 600;
-  font-size: 0.95rem;
-  font-family: inherit;
-}
-
-/* Placeholder consistency */
-.pledgeInput::placeholder,
-.pledgeTextarea::placeholder {
-  font-weight: 500;
-  font-size: 0.95rem;
-}
-
-/* Anonymous alignment */
-.pledgeToggleRow span {
-  font-weight: 700;
-  font-size: 0.95rem;
+.pledgePrefMode {
+  margin-top: 8px;
 }

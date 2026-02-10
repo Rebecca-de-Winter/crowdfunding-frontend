@@ -1,6 +1,6 @@
 // src/pages/PledgeNeedPage.jsx
-import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { authFetch } from "../api/auth-fetch";
 
 import findNeedDetailId from "../api/find-need-detail-id";
@@ -15,53 +15,32 @@ import "./PledgeNeedPage.css";
  */
 function localPartsToApiDateTime(dateStr, timeStr) {
   if (!dateStr || !timeStr) return null;
-
   const t = String(timeStr).trim();
   const timeWithSeconds = /^\d{2}:\d{2}$/.test(t) ? `${t}:00` : t;
-
-  // Must be local-naive datetime string
   return `${dateStr}T${timeWithSeconds}`;
 }
 
-/**
- * Build a datetime-local string from date+time.
- * Used for hour calcs and comparisons.
- */
 function toDatetimeLocal(dateStr, timeStr) {
   if (!dateStr || !timeStr) return "";
   return `${dateStr}T${timeStr}`;
 }
 
-/**
- * ISO -> local date string "YYYY-MM-DD"
- */
 function isoToLocalDate(isoString) {
   if (!isoString) return "";
   const d = new Date(isoString);
   if (Number.isNaN(d.getTime())) return "";
   const pad = (n) => String(n).padStart(2, "0");
-  const yyyy = d.getFullYear();
-  const mm = pad(d.getMonth() + 1);
-  const dd = pad(d.getDate());
-  return `${yyyy}-${mm}-${dd}`;
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-/**
- * ISO -> local time string "HH:mm"
- */
 function isoToLocalTime(isoString) {
   if (!isoString) return "";
   const d = new Date(isoString);
   if (Number.isNaN(d.getTime())) return "";
   const pad = (n) => String(n).padStart(2, "0");
-  const hh = pad(d.getHours());
-  const mm = pad(d.getMinutes());
-  return `${hh}:${mm}`;
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-/**
- * Friendly AU date like: "Saturday 20 Dec 2025"
- */
 function formatAuDate(isoString) {
   if (!isoString) return "";
   const d = new Date(isoString);
@@ -74,9 +53,6 @@ function formatAuDate(isoString) {
   }).format(d);
 }
 
-/**
- * Friendly AU time like: "8:00 pm"
- */
 function formatAuTime(isoString) {
   if (!isoString) return "";
   const d = new Date(isoString);
@@ -99,9 +75,6 @@ function formatShiftLines(startIso, endIso) {
   return { dateLine, timeLine };
 }
 
-/**
- * Convert "$60" / " 60 " / "60.5" into "60.50"
- */
 function normaliseMoney(value) {
   if (value == null) return null;
   const cleaned = String(value).replace(/[^0-9.]/g, "").trim();
@@ -111,9 +84,6 @@ function normaliseMoney(value) {
   return n.toFixed(2);
 }
 
-/**
- * Convert hours to "2.00"
- */
 function normaliseHours(value) {
   if (value == null) return null;
   const cleaned = String(value).replace(/[^0-9.]/g, "").trim();
@@ -139,12 +109,37 @@ function sameMinuteDateTimeParts(aDate, aTime, bDate, bTime) {
   return aDate === bDate && aTime === bTime && Boolean(aDate && aTime && bDate && bTime);
 }
 
+function normaliseItemMode(raw) {
+  const s = String(raw ?? "").toLowerCase().trim();
+  if (s === "loan") return "loan";
+  if (s === "donation" || s === "donate") return "donation";
+  if (s === "either") return "either";
+  return null;
+}
+
+function labelCaseMode(mode) {
+  const m = normaliseItemMode(mode);
+  if (m === "loan") return "Loan";
+  if (m === "donation") return "Donation";
+  if (m === "either") return "Either";
+  return "";
+}
+
+function prettyNeedType(type) {
+  if (type === "money") return "Money";
+  if (type === "time") return "Time";
+  if (type === "item") return "Item";
+  return "";
+}
+
 export default function PledgeNeedPage() {
   const { id, needId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [need, setNeed] = useState(null);
   const [timeDetail, setTimeDetail] = useState(null);
+  const [itemDetail, setItemDetail] = useState(null);
 
   // bottom-of-form fields
   const [comment, setComment] = useState("");
@@ -157,6 +152,7 @@ export default function PledgeNeedPage() {
   const [itemName, setItemName] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [mode, setMode] = useState("donation");
+  const modeTouchedRef = useRef(false); // ✅ no lint + no rerender needed
 
   // time (split date/time)
   const [startDate, setStartDate] = useState("");
@@ -177,7 +173,14 @@ export default function PledgeNeedPage() {
 
   const needType = useMemo(() => need?.need_type ?? null, [need]);
 
-  // Load need + time detail and prefill
+  const modeFromUrl = useMemo(() => {
+    const m = normaliseItemMode(searchParams.get("mode"));
+    // only allow donation/loan to preselect (either means user chooses)
+    if (m === "donation" || m === "loan") return m;
+    return null;
+  }, [searchParams]);
+
+  // Load need + detail and prefill
   useEffect(() => {
     let alive = true;
 
@@ -186,6 +189,7 @@ export default function PledgeNeedPage() {
         setIsLoading(true);
         setError(null);
         setTimeDetail(null);
+        setItemDetail(null);
 
         // reset required
         setReqStartDate("");
@@ -204,21 +208,47 @@ export default function PledgeNeedPage() {
 
         // reset type fields
         if (data.need_type === "money") setAmount("");
+
         if (data.need_type === "item") {
           setItemName(data.title ?? "");
           setQuantity(1);
-          setMode("donation");
+
+          // If user clicked a specific button from Fundraiser page, respect it:
+          if (modeFromUrl) {
+            setMode(modeFromUrl);
+            modeTouchedRef.current = true;
+          } else if (!modeTouchedRef.current) {
+            setMode("donation");
+          }
+
+          // fetch item detail so mode defaults to what was set in Edit Need
+          const detailId = await findNeedDetailId("item", needId);
+          if (!alive) return;
+
+          if (detailId) {
+            const detail = await getNeedDetail("item", detailId);
+            if (!alive) return;
+
+            setItemDetail(detail);
+
+            // If no URL mode and user hasn't touched, seed from backend mode
+            const backendMode = normaliseItemMode(detail?.mode);
+            if (!modeFromUrl && !modeTouchedRef.current) {
+              if (backendMode === "loan") setMode("loan");
+              else if (backendMode === "either") setMode("either");
+              else setMode("donation");
+            }
+          }
         }
+
         if (data.need_type === "time") {
           setStartDate("");
           setStartTime("");
           setEndDate("");
           setEndTime("");
           setHoursCommitted("");
-        }
 
-        // time detail fetch
-        if (data.need_type === "time") {
+          // time detail fetch
           const detailId = await findNeedDetailId("time", needId);
           if (!alive) return;
 
@@ -258,7 +288,7 @@ export default function PledgeNeedPage() {
     return () => {
       alive = false;
     };
-  }, [needId]);
+  }, [needId, modeFromUrl]);
 
   // Auto-calc hours whenever time inputs change
   useEffect(() => {
@@ -305,7 +335,6 @@ export default function PledgeNeedPage() {
         const endDT = localPartsToApiDateTime(endDate, endTime);
         if (!startDT || !endDT) throw new Error("Please enter valid start/end values.");
 
-        // Compare using local datetimes
         const start = new Date(`${startDate}T${startTime}`);
         const end = new Date(`${endDate}T${endTime}`);
         if (!(end > start)) throw new Error("End must be after start.");
@@ -400,18 +429,33 @@ export default function PledgeNeedPage() {
     timeDetail?.end_datetime
   );
 
+  const prettyType = prettyNeedType(needType);
+
+  // Preferred mode label (capitalised)
+  const preferredModeLabel =
+    needType === "item" && itemDetail?.mode ? labelCaseMode(itemDetail.mode) : null;
+
   return (
     <div className="fundraiser pledgePage">
       <Link className="fundraiser__back pledgePage__back" to={`/fundraisers/${id}`}>
         ← Back to fundraiser
       </Link>
 
-      <div className="pledgePage__titleRow">
-        <h1 className="pledgePage__title">Pledge: {need.title}</h1>
-        {needType ? <span className="pledgePage__typePill">{needType}</span> : null}
-      </div>
+      {/* Header panel so title/desc don't float */}
+      <div className="panel pledgeHeader">
+        <div className="pledgePage__titleRow">
+          <h1 className="pledgePage__title">Pledge: {need.title}</h1>
+          {prettyType ? <span className="pledgePage__typePill">{prettyType}</span> : null}
+        </div>
 
-      {need.description ? <p className="muted pledgePage__desc">{need.description}</p> : null}
+        {need.description ? <p className="muted pledgePage__desc">{need.description}</p> : null}
+
+        {preferredModeLabel ? (
+          <div className="pledgePrefMode muted">
+            Preferred mode: <strong>{preferredModeLabel}</strong>
+          </div>
+        ) : null}
+      </div>
 
       {needType === "time" && timeDetail && (
         <div className="panel shiftPanel">
@@ -551,7 +595,14 @@ export default function PledgeNeedPage() {
 
             <div className="pledgeField">
               <label className="muted">Mode</label>
-              <ItemModeDropdown value={mode} onChange={setMode} disabled={submitLoading} />
+              <ItemModeDropdown
+                value={mode}
+                onChange={(next) => {
+                  modeTouchedRef.current = true;
+                  setMode(next);
+                }}
+                disabled={submitLoading}
+              />
             </div>
 
             <div className="pledgeDivider" />
