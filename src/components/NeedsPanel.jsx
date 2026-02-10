@@ -1,5 +1,4 @@
 // src/components/NeedsPanel.jsx
-// top of NeedsPanel.jsx (all imports)
 
 import { useEffect, useMemo, useState } from "react";
 import "./NeedsPanel.css";
@@ -17,9 +16,10 @@ import deleteTimeNeed from "../api/delete-time-need";
 import updateNeed from "../api/update-need";
 import EditNeedModal from "./EditNeedModal";
 import NeedPills from "./NeedPills";
+
 import getItemNeedByNeedId from "../api/get-item-need-by-need-id";
 import getMoneyNeedByNeedId from "../api/get-money-need-by-need-id";
-
+import getTimeNeedByNeedId from "../api/get-time-need-by-need-id";
 
 function safeLower(v) {
   return String(v ?? "").trim().toLowerCase();
@@ -33,6 +33,42 @@ function formatAUD(value) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(Number.isFinite(n) ? n : 0);
+}
+
+// Time formatting (same vibe as your FundraiserPage)
+function formatShiftLineAU(startIso, endIso) {
+  if (!startIso && !endIso) return null;
+
+  const d = new Date(startIso || endIso);
+  if (Number.isNaN(d.getTime())) return null;
+
+  const day = new Intl.DateTimeFormat("en-AU", { weekday: "long" }).format(d);
+  const datePart = d.toLocaleDateString("en-AU", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+
+  const fmtTime = (iso) => {
+    if (!iso) return null;
+    const t = new Date(iso);
+    if (Number.isNaN(t.getTime())) return null;
+
+    const raw = new Intl.DateTimeFormat("en-AU", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    }).format(t);
+
+    return raw.replace(":", ".").replace(" am", "am").replace(" pm", "pm");
+  };
+
+  const startT = fmtTime(startIso);
+  const endT = fmtTime(endIso);
+
+  if (startT && endT) return `${day} ${datePart} — ${startT} - ${endT}`;
+  if (startT) return `${day} ${datePart} ${startT}`;
+  return `${day} ${datePart}`;
 }
 
 function itemModeLabelFromDetail(detail) {
@@ -84,25 +120,32 @@ function NeedRow({
   need,
   disabled,
   typeLabel = null,
-  moneyTargetLabel = null, // ✅ show "Target: $500.00" for money needs
+  metaLines = [],
   onEdit,
   onDelete,
   onMoveUp,
   onMoveDown,
   isFirst,
   isLast,
+  readOnly = false,
 }) {
   return (
     <div className="needRow">
       <div className="needRow__main">
         <div className="needRow__title">{need.title}</div>
 
-        {need.description ? <div className="needRow__desc">{need.description}</div> : null}
+        {need.description ? (
+          <div className="needRow__desc">{need.description}</div>
+        ) : null}
 
-        {/* ✅ money target line (safe, optional) */}
-        {moneyTargetLabel ? <div className="needRow__meta">{moneyTargetLabel}</div> : null}
+        {metaLines.length > 0
+          ? metaLines.map((line, i) => (
+              <div className="needRow__meta" key={`${need.id}-meta-${i}`}>
+                {line}
+              </div>
+            ))
+          : null}
 
-        {/* ✅ unified pills (Type/Status/Priority) */}
         <NeedPills
           typeLabel={typeLabel}
           status={need.status ?? "open"}
@@ -110,47 +153,49 @@ function NeedRow({
         />
       </div>
 
-      <div className="needRow__actions">
-        <button
-          type="button"
-          className="needIconBtn"
-          onClick={() => onMoveUp?.(need)}
-          disabled={disabled || isFirst}
-          aria-label="Move up"
-          title="Move up"
-        >
-          ▲
-        </button>
+      {!readOnly && (
+        <div className="needRow__actions">
+          <button
+            type="button"
+            className="needIconBtn"
+            onClick={() => onMoveUp?.(need)}
+            disabled={disabled || isFirst}
+            aria-label="Move up"
+            title="Move up"
+          >
+            ▲
+          </button>
 
-        <button
-          type="button"
-          className="needIconBtn"
-          onClick={() => onMoveDown?.(need)}
-          disabled={disabled || isLast}
-          aria-label="Move down"
-          title="Move down"
-        >
-          ▼
-        </button>
+          <button
+            type="button"
+            className="needIconBtn"
+            onClick={() => onMoveDown?.(need)}
+            disabled={disabled || isLast}
+            aria-label="Move down"
+            title="Move down"
+          >
+            ▼
+          </button>
 
-        <button
-          type="button"
-          className="rtBtn rtBtn--ghost"
-          onClick={() => onEdit?.(need)}
-          disabled={disabled}
-        >
-          Edit
-        </button>
+          <button
+            type="button"
+            className="rtBtn rtBtn--ghost"
+            onClick={() => onEdit?.(need)}
+            disabled={disabled}
+          >
+            Edit
+          </button>
 
-        <button
-          type="button"
-          className="rtBtn rtBtn--danger"
-          onClick={() => onDelete?.(need)}
-          disabled={disabled}
-        >
-          Delete
-        </button>
-      </div>
+          <button
+            type="button"
+            className="rtBtn rtBtn--danger"
+            onClick={() => onDelete?.(need)}
+            disabled={disabled}
+          >
+            Delete
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -203,18 +248,19 @@ export default function NeedsPanel({
   onAddNeed,
   onEditNeed,
   onDeleteNeed,
+  readOnly = false,
 }) {
   const [showAdd, setShowAdd] = useState(false);
 
-  // Inline editor state (single open at a time)
   const [editOpen, setEditOpen] = useState(false);
   const [editingNeed, setEditingNeed] = useState(null);
 
-  // ✅ detail caches
-  const [itemNeedMap, setItemNeedMap] = useState({});  // { [needId]: itemDetail|null }
-  const [moneyNeedMap, setMoneyNeedMap] = useState({}); // { [needId]: moneyDetail|null }
+  const [itemNeedMap, setItemNeedMap] = useState({});
+  const [moneyNeedMap, setMoneyNeedMap] = useState({});
+  const [timeNeedMap, setTimeNeedMap] = useState({});
 
   function openEdit(need) {
+    if (readOnly) return;
     setEditingNeed(need);
     setEditOpen(true);
   }
@@ -225,32 +271,39 @@ export default function NeedsPanel({
   }
 
   function applyUpdatedBase(updated) {
-  onEditNeed?.(updated);
+    onEditNeed?.(updated);
 
-  if (updated?.need_type === "money") {
-    setMoneyNeedMap((prev) => {
-      const next = { ...prev };
-      delete next[updated.id];
-      return next;
-    });
+    if (updated?.need_type === "money") {
+      setMoneyNeedMap((prev) => {
+        const next = { ...prev };
+        delete next[updated.id];
+        return next;
+      });
+    }
+
+    if (updated?.need_type === "item") {
+      setItemNeedMap((prev) => {
+        const next = { ...prev };
+        delete next[updated.id];
+        return next;
+      });
+    }
+
+    if (updated?.need_type === "time") {
+      setTimeNeedMap((prev) => {
+        const next = { ...prev };
+        delete next[updated.id];
+        return next;
+      });
+    }
   }
-
-  if (updated?.need_type === "item") {
-    setItemNeedMap((prev) => {
-      const next = { ...prev };
-      delete next[updated.id];
-      return next;
-    });
-  }
-}
-
 
   const grouped = useMemo(() => groupByType(needs), [needs]);
   const money = useMemo(() => sortNeeds(grouped.money), [grouped.money]);
   const time = useMemo(() => sortNeeds(grouped.time), [grouped.time]);
   const item = useMemo(() => sortNeeds(grouped.item), [grouped.item]);
 
-  // ✅ load item detail rows (Loan/Donation/Either pill)
+  // Item detail cache
   useEffect(() => {
     let alive = true;
 
@@ -295,65 +348,107 @@ export default function NeedsPanel({
     };
   }, [item, itemNeedMap]);
 
-  // ✅ load money detail rows (so we can show Target amount)
+  // Money detail cache (Target amount)
+  useEffect(() => {
+    let alive = true;
 
-// ✅ load money detail rows (by base need id)
-useEffect(() => {
-  let alive = true;
+    async function loadMoneyDetails() {
+      if (money.length === 0) return;
 
-  async function loadMoneyDetails() {
-    if (money.length === 0) return;
+      const ids = money.map((n) => n.id).filter(Boolean);
+      const missing = ids.filter((id) => !(id in moneyNeedMap));
+      if (missing.length === 0) return;
 
-    const ids = money.map((n) => n.id).filter(Boolean);
-    const missing = ids.filter((id) => !(id in moneyNeedMap));
-    if (missing.length === 0) return;
+      try {
+        const pairs = await Promise.all(
+          missing.map(async (needId) => {
+            const detail = await getMoneyNeedByNeedId(needId);
+            return [needId, detail ?? null];
+          })
+        );
 
-    try {
-      const pairs = await Promise.all(
-        missing.map(async (needId) => {
-          const detail = await getMoneyNeedByNeedId(needId);
-          return [needId, detail ?? null];
-        })
-      );
+        if (!alive) return;
 
-      if (!alive) return;
+        setMoneyNeedMap((prev) => {
+          const next = { ...prev };
+          for (const [needId, detail] of pairs) next[needId] = detail;
+          return next;
+        });
+      } catch (err) {
+        if (!alive) return;
 
-      setMoneyNeedMap((prev) => {
-        const next = { ...prev };
-        for (const [needId, detail] of pairs) next[needId] = detail;
-        return next;
-      });
-    } catch (err) {
-      if (!alive) return;
+        setMoneyNeedMap((prev) => {
+          const next = { ...prev };
+          for (const needId of missing) next[needId] = null;
+          return next;
+        });
 
-      setMoneyNeedMap((prev) => {
-        const next = { ...prev };
-        for (const needId of missing) next[needId] = null;
-        return next;
-      });
-
-      console.error("Failed to load money need details:", err);
+        console.error("Failed to load money need details:", err);
+      }
     }
-  }
 
-  loadMoneyDetails();
-  return () => {
-    alive = false;
-  };
-}, [money, moneyNeedMap]);
+    loadMoneyDetails();
+    return () => {
+      alive = false;
+    };
+  }, [money, moneyNeedMap]);
 
+  // ✅ Time detail cache (start/end datetime etc.)
+  useEffect(() => {
+    let alive = true;
 
+    async function loadTimeDetails() {
+      if (time.length === 0) return;
 
+      const ids = time.map((n) => n.id).filter(Boolean);
+      const missing = ids.filter((id) => !(id in timeNeedMap));
+      if (missing.length === 0) return;
+
+      try {
+        const pairs = await Promise.all(
+          missing.map(async (needId) => {
+            const detail = await getTimeNeedByNeedId(needId);
+            return [needId, detail ?? null];
+          })
+        );
+
+        if (!alive) return;
+
+        setTimeNeedMap((prev) => {
+          const next = { ...prev };
+          for (const [needId, detail] of pairs) next[needId] = detail;
+          return next;
+        });
+      } catch (err) {
+        if (!alive) return;
+
+        setTimeNeedMap((prev) => {
+          const next = { ...prev };
+          for (const needId of missing) next[needId] = null;
+          return next;
+        });
+
+        console.error("Failed to load time need details:", err);
+      }
+    }
+
+    loadTimeDetails();
+    return () => {
+      alive = false;
+    };
+  }, [time, timeNeedMap]);
 
   function makeOrderMap(list) {
     const map = {};
     list.forEach((n, i) => {
-      map[n.id] = (i + 1) * 10; // 10,20,30...
+      map[n.id] = (i + 1) * 10;
     });
     return map;
   }
 
   async function move(arr, need, dir) {
+    if (readOnly) return;
+
     const idx = arr.findIndex((n) => n.id === need.id);
     if (idx < 0) return;
 
@@ -365,7 +460,6 @@ useEffect(() => {
 
     const orderMap = makeOrderMap(swapped);
 
-    // optimistic update
     swapped.forEach((n) => {
       onEditNeed?.({ ...n, sort_order: orderMap[n.id] });
     });
@@ -373,7 +467,10 @@ useEffect(() => {
     try {
       const updated = await Promise.all(
         swapped.map((n) =>
-          updateNeed(n.id, buildNeedPutPayload(n, fundraiserId, { sort_order: orderMap[n.id] }))
+          updateNeed(
+            n.id,
+            buildNeedPutPayload(n, fundraiserId, { sort_order: orderMap[n.id] })
+          )
         )
       );
 
@@ -386,7 +483,6 @@ useEffect(() => {
 
   async function handleCreateNeed(data) {
     try {
-      // 1) Create base need
       const base = await createNeed(fundraiserId, {
         need_type: data.need_type,
         title: data.title,
@@ -395,7 +491,6 @@ useEffect(() => {
         priority: data.priority,
       });
 
-      // 2) Create detail record (type-specific)
       if (data.need_type === "money") {
         await createMoneyNeed({
           need: base.id,
@@ -403,7 +498,6 @@ useEffect(() => {
           comment: "",
         });
 
-        // ensure money map refresh next render
         setMoneyNeedMap((prev) => {
           const next = { ...prev };
           delete next[base.id];
@@ -422,7 +516,6 @@ useEffect(() => {
           loan_reward_tier: null,
         });
 
-        // ensure item map refresh next render
         setItemNeedMap((prev) => {
           const next = { ...prev };
           delete next[base.id];
@@ -433,12 +526,19 @@ useEffect(() => {
       if (data.need_type === "time") {
         await createTimeNeed({
           need: base.id,
-          start_datetime: data.start_datetime, // "YYYY-MM-DDTHH:MM"
-          end_datetime: data.end_datetime,     // "YYYY-MM-DDTHH:MM"
+          start_datetime: data.start_datetime,
+          end_datetime: data.end_datetime,
           volunteers_needed: Number(data.volunteers_needed),
           role_title: data.role_title,
           location: data.location ?? "",
           reward_tier: null,
+        });
+
+        // ✅ ensure it fetches fresh detail next render
+        setTimeNeedMap((prev) => {
+          const next = { ...prev };
+          delete next[base.id];
+          return next;
         });
       }
 
@@ -451,6 +551,8 @@ useEffect(() => {
   }
 
   async function handleDeleteNeed(need) {
+    if (readOnly) return;
+
     const ok = window.confirm("Delete this need?");
     if (!ok) return;
 
@@ -482,6 +584,14 @@ useEffect(() => {
         });
       }
 
+      if (need.need_type === "time") {
+        setTimeNeedMap((prev) => {
+          const next = { ...prev };
+          delete next[need.id];
+          return next;
+        });
+      }
+
       if (editingNeed?.id === need.id) closeEdit();
     } catch (err) {
       console.error("Delete need failed:", err);
@@ -498,18 +608,31 @@ useEffect(() => {
           const typeLabel =
             n.need_type === "item" ? itemModeLabelFromDetail(itemNeedMap[n.id]) : null;
 
-          const moneyTargetLabel =
-            n.need_type === "money" && moneyNeedMap[n.id]?.target_amount != null
-              ? `Target: ${formatAUD(moneyNeedMap[n.id].target_amount)}`
+          const metaLines = [];
+
+          // ✅ Money target line (already working)
+          if (n.need_type === "money" && moneyNeedMap[n.id]?.target_amount != null) {
+            metaLines.push(`Target: ${formatAUD(moneyNeedMap[n.id].target_amount)}`);
+          }
+
+          // ✅ Time line (NEW)
+          if (n.need_type === "time") {
+            const td = timeNeedMap[n.id] ?? null;
+            const whenLabel = td
+              ? formatShiftLineAU(td.start_datetime, td.end_datetime)
               : null;
+
+            metaLines.push(whenLabel ? `Time: ${whenLabel}` : "Time: TBA");
+          }
 
           return (
             <div key={n.id}>
               <NeedRow
                 need={n}
                 typeLabel={typeLabel}
-                moneyTargetLabel={moneyTargetLabel}
+                metaLines={metaLines}
                 disabled={disabled}
+                readOnly={readOnly}
                 onEdit={openEdit}
                 onDelete={handleDeleteNeed}
                 onMoveUp={(need) => move(list, need, -1)}
@@ -518,7 +641,7 @@ useEffect(() => {
                 isLast={i === list.length - 1}
               />
 
-              {editOpen && editingNeed?.id === n.id && (
+              {!readOnly && editOpen && editingNeed?.id === n.id && (
                 <div className="needInlineEdit">
                   <EditNeedModal
                     open
@@ -542,21 +665,23 @@ useEffect(() => {
       <div className="needsPanel__head">
         <h3 className="panel__title needsPanel__title">Needs</h3>
 
-        <button
-          type="button"
-          className="miniBtn miniBtn--primary"
-          onClick={() => setShowAdd(true)}
-          disabled={disabled}
-        >
-          + Add need
-        </button>
+        {!readOnly && (
+          <button
+            type="button"
+            className="miniBtn miniBtn--primary"
+            onClick={() => setShowAdd(true)}
+            disabled={disabled}
+          >
+            + Add need
+          </button>
+        )}
       </div>
 
       <p className="muted needsPanel__note">
         Add your Money/Time/Item needs. Keep them open while you work; collapse when you want a cleaner view.
       </p>
 
-      {showAdd && (
+      {!readOnly && showAdd && (
         <AddNeedForm
           disabled={disabled}
           onCancel={() => setShowAdd(false)}
