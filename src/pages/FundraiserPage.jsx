@@ -132,6 +132,50 @@ function hoursBetween(startIso, endIso) {
 }
 
 /* =========================
+   Fundraiser status helpers
+   ========================= */
+
+function normaliseFundraiserStatus(raw) {
+  const s = String(raw ?? "").toLowerCase().trim();
+  if (!s) return "draft";
+
+  // allow mild synonyms if they pop up
+  if (s === "unpublished") return "draft";
+  if (s === "published") return "active";
+
+  return s;
+}
+
+function statusLabel(raw) {
+  const s = normaliseFundraiserStatus(raw);
+  if (s === "draft") return "Draft";
+  if (s === "active") return "Active";
+  if (s === "closed") return "Closed";
+  if (s === "cancelled") return "Cancelled";
+  // fallback: Title Case-ish
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/**
+ * Optional “accepting pledges” line.
+ * Use is_open if backend provides it; otherwise infer from status + dates.
+ */
+function isAcceptingPledges(fundraiser) {
+  if (typeof fundraiser?.is_open === "boolean") return fundraiser.is_open;
+
+  const s = normaliseFundraiserStatus(fundraiser?.status);
+  if (s === "draft" || s === "closed" || s === "cancelled") return false;
+
+  const now = new Date();
+  const start = fundraiser?.start_date ? new Date(fundraiser.start_date) : null;
+  const end = fundraiser?.end_date ? new Date(fundraiser.end_date) : null;
+
+  if (start && Number.isFinite(start.getTime()) && now < start) return false;
+  if (end && Number.isFinite(end.getTime()) && now > end) return false;
+  return true;
+}
+
+/* =========================
    Tiny UI helper
    ========================= */
 
@@ -343,9 +387,9 @@ export default function FundraiserPage() {
     location,
     start_date,
     end_date,
-    is_open,
     enable_rewards,
     owner,
+    status,
   } = fundraiser;
 
   const isOwner = currentUser?.id === owner;
@@ -409,6 +453,9 @@ export default function FundraiserPage() {
       ? `${formatDateAU(start_date)}${end_date ? ` → ${formatDateAU(end_date)}` : ""}`
       : "TBA";
 
+  const lifecycle = normaliseFundraiserStatus(status);
+  const accepting = isAcceptingPledges(fundraiser);
+
   return (
     <div className="fundraiser">
       <Link className="fundraiser__back" to="/fundraisers">
@@ -446,20 +493,14 @@ export default function FundraiserPage() {
                     label="Time pledged"
                     valueText={`${formatHours(timeHoursPledged)} hrs`}
                     percent={timePercent}
-                    note={
-                      timeTarget
-                        ? `Target: ${formatHours(timeTarget)} hrs`
-                        : "No time targets set on needs yet."
-                    }
+                    note={timeTarget ? `Target: ${formatHours(timeTarget)} hrs` : "No time targets set on needs yet."}
                   />
 
                   <ProgressRow
                     label="Items pledged"
                     valueText={`${Number(itemQtyPledged) || 0}`}
                     percent={itemPercent}
-                    note={
-                      itemTarget ? `Target: ${Number(itemTarget)}` : "No item targets set on needs yet."
-                    }
+                    note={itemTarget ? `Target: ${Number(itemTarget)}` : "No item targets set on needs yet."}
                   />
                 </>
               )}
@@ -469,40 +510,47 @@ export default function FundraiserPage() {
       </div>
 
       {/* BELOW GRID (Left + Rewards) */}
-      <div className="fundraiser__belowGrid">
-        {/* LEFT */}
-        <div className="fundraiser__leftCol">
-          <div className="panel headerMetaPanel">
-            <h1 className="fundraiser__title">{title}</h1>
+<div className="fundraiser__belowGrid">
+  {/* LEFT */}
+  <div className="fundraiser__leftCol">
+    <div className="panel headerMetaPanel">
+      <h1 className="fundraiser__title">{title}</h1>
 
-            <div className="metaGrid">
-              <div className="metaGrid__label">Location</div>
-              <div className="metaGrid__value">{location || "—"}</div>
+      <div className="metaGrid">
+        <div className="metaGrid__label">Location</div>
+        <div className="metaGrid__value">{location || "—"}</div>
 
-              <div className="metaGrid__label">Backyard Dates</div>
-              <div className="metaGrid__value">{dateRangeLabel}</div>
+        <div className="metaGrid__label">Backyard Dates</div>
+        <div className="metaGrid__value">{dateRangeLabel}</div>
 
-              <div className="metaGrid__label">Fundraiser status</div>
-              <div className="metaGrid__value">
-                <span
-                  className={`statusPill ${is_open ? "statusPill--open" : "statusPill--closed"}`}
-                >
-                  <span
-                    className={`statusDot ${is_open ? "statusDot--open" : "statusDot--closed"}`}
-                  />
-                  {is_open ? "Open" : "Closed"}
-                </span>
-              </div>
-            </div>
+        <div className="metaGrid__label metaGrid__label--top">Fundraiser status</div>
 
-            {isOwner ? (
-              <div className="headerMetaPanel__actions">
-                <Link className="fundraiser__editLink" to={`/fundraisers/${id}/edit`}>
-                  Edit fundraiser
-                </Link>
-              </div>
-            ) : null}
+        <div className="metaGrid__value metaGrid__value--status">
+          <div className="statusRow">
+            <span className="statusPill statusPill--lifecycle">
+              <span
+                className={`statusDot statusDot--lifecycle is-${safeLower(lifecycle)}`}
+                aria-hidden="true"
+              />
+              <span className="statusPill__text">{statusLabel(lifecycle)}</span>
+            </span>
           </div>
+
+          <p className="statusSub muted">
+            Accepting pledges: <strong>{accepting ? "Yes" : "No"}</strong>
+          </p>
+        </div>
+      </div>
+
+      {isOwner ? (
+        <div className="headerMetaPanel__actions">
+          <Link className="fundraiser__editLink" to={`/fundraisers/${id}/edit`}>
+            Edit fundraiser
+          </Link>
+        </div>
+      ) : null}
+    </div>
+
 
           {/* STORY */}
           <div className="panel storyPanel">
@@ -783,7 +831,12 @@ export default function FundraiserPage() {
             {!enable_rewards ? (
               <p className="muted">Rewards are disabled for this fundraiser.</p>
             ) : reward_tiers.length > 0 ? (
-              <RewardTierList tiers={reward_tiers} disabled={true} onDeleteTier={null} onUpdateTier={null} />
+              <RewardTierList
+                tiers={reward_tiers}
+                disabled={true}
+                onDeleteTier={null}
+                onUpdateTier={null}
+              />
             ) : (
               <p className="muted">No reward tiers yet.</p>
             )}

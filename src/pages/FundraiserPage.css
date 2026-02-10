@@ -229,7 +229,7 @@
   grid-template-columns: 170px 1fr;
   row-gap: 10px;
   column-gap: 12px;
-  align-items: center;
+  align-items: start;
 }
 
 .metaGrid__label {
@@ -237,15 +237,15 @@
   opacity: 0.9;
 }
 
+/* ✅ FIX: do NOT center value cells with flex (breaks multi-line values) */
 .metaGrid__value {
   font-weight: 800;
   opacity: 0.98;
-  display: flex;
-  align-items: center;
-  gap: 10px;
   min-height: 28px;
+  display: block; /* was flex */
 }
 
+/* Base status pill (used for Open/Closed etc.) */
 .statusPill {
   display: inline-flex;
   align-items: center;
@@ -520,4 +520,82 @@
 }
 .needRow__actions--stack .btn {
   width: 100%;
+}
+
+/* =========================
+   Fundraiser status (lifecycle)
+   ========================= */
+
+.metaGrid__label--top {
+  align-self: flex-start;
+  padding-top: 2px;
+}
+
+.metaGrid__value--status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+}
+
+.statusSub {
+  margin: 0;
+  line-height: 1.25;
+  width: 100%;
+  text-align: left;
+}
+
+.statusPill--lifecycle {
+  padding: 6px 12px;
+  gap: 8px;
+  border: 1px solid rgba(245, 232, 205, 0.25);
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.statusPill__text {
+  line-height: 1;
+}
+
+.statusDot--lifecycle {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.statusDot--lifecycle.is-draft {
+  background: rgba(250, 187, 76, 0.85);
+}
+.statusDot--lifecycle.is-active {
+  background: rgba(60, 255, 180, 0.95);
+}
+.statusDot--lifecycle.is-closed {
+  background: rgba(255, 120, 120, 0.95);
+}
+.statusDot--lifecycle.is-cancelled {
+  background: rgba(180, 180, 180, 0.85);
+}
+/* =========================
+   FORCE status subline to left edge (override any centering)
+   Paste at very bottom of file
+   ========================= */
+
+.metaGrid > .metaGrid__value.metaGrid__value--status {
+  width: 100%;
+  justify-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start !important;
+  text-align: left !important;
+}
+
+.metaGrid > .metaGrid__value.metaGrid__value--status .statusSub {
+  width: 100%;
+  margin: 0;
+  text-align: left !important;
+  align-self: stretch;
 }
