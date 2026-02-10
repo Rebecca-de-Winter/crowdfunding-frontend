@@ -536,10 +536,10 @@ export default function FundraiserPage() {
             </span>
           </div>
 
-          <p className="statusSub muted">
+          
+        </div><p className="statusSub muted">
             Accepting pledges: <strong>{accepting ? "Yes" : "No"}</strong>
           </p>
-        </div>
       </div>
 
       {isOwner ? (

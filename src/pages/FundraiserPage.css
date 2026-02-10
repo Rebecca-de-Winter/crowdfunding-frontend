@@ -551,7 +551,7 @@
 }
 
 .statusPill--lifecycle {
-  padding: 6px 12px;
+  padding: 4px 11px;
   gap: 8px;
   border: 1px solid rgba(245, 232, 205, 0.25);
   background: rgba(0, 0, 0, 0.16);
