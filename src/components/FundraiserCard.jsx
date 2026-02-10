@@ -7,7 +7,6 @@ function FundraiserCard({ fundraiserData }) {
     image_url,
     title,
     description,
-    is_open,
     status,
     goal,
     location,
@@ -20,18 +19,6 @@ function FundraiserCard({ fundraiserData }) {
   // UPDATED ROUTE to match main.jsx
   const fundraiserLink = `/fundraisers/${id}`;
 
-  /**
-   * Status display
-   * Your backend Fundraiser model uses:
-   * - draft
-   * - active
-   * - closed
-   * - cancelled
-   *
-   * `is_open` is a computed convenience property (true when status === "active")
-   */
-  const openLabel = is_open ? "Open" : "Closed";
-
   // Goal comes back as a string like "2500.00" sometimes
   const goalNumber = goal !== null && goal !== undefined ? Number(goal) : null;
 
@@ -40,22 +27,47 @@ function FundraiserCard({ fundraiserData }) {
    * (You don't have "raised" yet, so we give a visual indicator based on status.)
    */
   const progressPct =
-    status === "draft" ? 20 : status === "active" ? 55 : status === "closed" ? 100 : 10;
+    status === "draft"
+      ? 20
+      : status === "active"
+      ? 55
+      : status === "closed"
+      ? 100
+      : 10;
 
   const excerpt =
     description && description.length > 120
       ? `${description.slice(0, 120)}…`
       : description;
 
-  const formatDate = (iso) => {
+  // ✅ Force AU format so it’s consistent across devices
+  const formatDateAU = (iso) => {
     if (!iso) return null;
-    return new Date(iso).toLocaleDateString();
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return null;
+    return d.toLocaleDateString("en-AU", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
   };
 
   const formatMoney = (n) => {
     if (typeof n !== "number" || Number.isNaN(n)) return null;
-    return n.toLocaleString(undefined, { style: "currency", currency: "AUD" });
+    return n.toLocaleString("en-AU", { style: "currency", currency: "AUD" });
   };
+
+  // ✅ Status pill labels to match Edit Festival
+  const statusLabel =
+    status === "draft"
+      ? "Draft"
+      : status === "active"
+      ? "Active"
+      : status === "closed"
+      ? "Closed"
+      : status === "cancelled"
+      ? "Cancelled"
+      : "—";
 
   return (
     <article className="fundraiser-card">
@@ -69,9 +81,9 @@ function FundraiserCard({ fundraiserData }) {
           />
 
           <div className="fundraiser-card__badges">
-            {/* Open/Closed pill (based on computed property) */}
-            <span className={`fundraiser-card__pill ${is_open ? "is-open" : "is-closed"}`}>
-              {openLabel}
+            {/* ✅ Status pill based on Fundraiser.status */}
+            <span className={`fundraiser-card__pill is-${status || "unknown"}`}>
+              {statusLabel}
             </span>
           </div>
         </div>
@@ -88,28 +100,28 @@ function FundraiserCard({ fundraiserData }) {
           )}
 
           <div className="fundraiser-card__meta">
-  <div className="fundraiser-card__metaLeft">
-    {/* Row 1: Location (or blank spacer) */}
-    <span className="fundraiser-card__metaItem">
-      {location || "\u00A0"}
-    </span>
+            <div className="fundraiser-card__metaLeft">
+              {/* Row 1: Location (or blank spacer) */}
+              <span className="fundraiser-card__metaItem">
+                {location || "\u00A0"}
+              </span>
 
-    {/* Row 2: Dates (or blank spacer to keep alignment consistent) */}
-    <span className="fundraiser-card__metaItem fundraiser-card__metaItem--date">
-      {(start_date || end_date)
-        ? `${formatDate(start_date)}${end_date ? ` → ${formatDate(end_date)}` : ""}`
-        : "\u00A0"}
-    </span>
-  </div>
+              {/* Row 2: Dates */}
+              <span className="fundraiser-card__metaItem fundraiser-card__metaItem--date">
+                {start_date || end_date
+                  ? `${formatDateAU(start_date)}${
+                      end_date ? ` → ${formatDateAU(end_date)}` : ""
+                    }`
+                  : "\u00A0"}
+              </span>
+            </div>
 
-  <div className="fundraiser-card__metaRight">
-  <span className={`fundraiser-card__goal ${goalNumber ? "" : "is-ghost"}`}>
-    {goalNumber ? formatMoney(goalNumber) : "A$0.00"}
-  </span>
-</div>
-
-</div>
-
+            <div className="fundraiser-card__metaRight">
+              <span className={`fundraiser-card__goal ${goalNumber ? "" : "is-ghost"}`}>
+                {goalNumber ? formatMoney(goalNumber) : "A$0.00"}
+              </span>
+            </div>
+          </div>
 
           <div className="fundraiser-card__progressRow">
             <div className="fundraiser-card__progressTrack" aria-hidden="true">
@@ -123,7 +135,7 @@ function FundraiserCard({ fundraiserData }) {
 
           <div className="fundraiser-card__fine">
             <span>Host #{owner ?? "—"}</span>
-            {date_created ? <span>Created {formatDate(date_created)}</span> : null}
+            {date_created ? <span>Created {formatDateAU(date_created)}</span> : null}
           </div>
         </div>
       </Link>
