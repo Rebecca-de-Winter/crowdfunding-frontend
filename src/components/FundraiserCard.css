@@ -79,7 +79,7 @@
 
 /* Draft = warm amber */
 .fundraiser-card__pill.is-draft {
-  background: rgba(250, 187, 76, 0.16);
+  background: rgba(250, 187, 76, 0.86);
   border-color: rgba(250, 187, 76, 0.32);
   color: var(--accent);
 }
