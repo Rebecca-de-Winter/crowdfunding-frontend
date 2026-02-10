@@ -17,7 +17,8 @@ function FundraiserCard({ fundraiserData }) {
   } = fundraiserData;
 
   // UPDATED ROUTE to match main.jsx
-  const fundraiserLink = `/fundraisers/${id}`;
+ const fundraiserLink = id ? `/fundraisers/${id}` : "/fundraisers";
+
 
   // Goal comes back as a string like "2500.00" sometimes
   const goalNumber = goal !== null && goal !== undefined ? Number(goal) : null;
