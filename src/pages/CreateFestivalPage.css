@@ -296,149 +296,21 @@
   gap: 12px;
 }
 
-/* Optional two-column preview inside panel (Needs | Rewards) */
-.cf-previewCols {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 14px;
-}
-
-@media (min-width: 980px) {
-  .cf-previewCols {
-    grid-template-columns: 1fr 1fr;
-    align-items: start;
-  }
-}
-
-.cf-previewHeading {
-  margin: 0 0 10px;
-  color: rgba(253, 244, 225, 0.92);
-  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  font-weight: 900;
-  font-size: 1rem;
-}
-
-.cf-previewCol {
-  display: grid;
-  gap: 10px;
-}
-
 /* =========================
-   Needs + rewards “simple preview” styles
-   (used by renderNeedsPreview / renderRewardsPreview)
-   ========================= */
-
-.cf-previewGrid {
-  display: grid;
-  gap: 10px;
-}
-
-.cf-previewSection {
-  border: 1px solid rgba(245, 232, 205, 0.18);
-  background: rgba(245, 232, 205, 0.05);
-  border-radius: 14px;
-  padding: 10px;
-}
-
-.cf-previewTitle {
-  margin: 0 0 8px;
-  color: rgba(253, 244, 225, 0.92);
-  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  font-weight: 900;
-  font-size: 0.95rem;
-}
-
-.cf-previewList {
-  margin: 0;
-  padding-left: 18px;
-  color: rgba(253, 244, 225, 0.8);
-  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  font-weight: 650;
-  line-height: 1.35;
-}
-
-.cf-previewItem {
-  margin-bottom: 6px;
-}
-
-.cf-previewItemName {
-  font-weight: 900;
-  color: rgba(253, 244, 225, 0.92);
-}
-
-.cf-previewItemMeta {
-  color: rgba(253, 244, 225, 0.7);
-}
-
-/* Need preview */
-.cf-previewNeed {
-  list-style: none;
-  margin: 0 0 10px;
-  padding: 10px;
-  border-radius: 14px;
-  border: 1px solid rgba(245, 232, 205, 0.18);
-  background: rgba(0, 0, 0, 0.12);
-}
-
-.cf-previewNeedTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-
-.cf-previewNeedName {
-  font-weight: 900;
-  color: rgba(253, 244, 225, 0.92);
-  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-}
-
-.cf-previewNeedDesc {
-  color: rgba(253, 244, 225, 0.78);
-  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  font-weight: 650;
-  line-height: 1.35;
-  margin-bottom: 6px;
-}
-
-.cf-previewNeedMeta {
-  color: rgba(253, 244, 225, 0.70);
-  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  font-weight: 650;
-  font-size: 0.9rem;
-}
-
-/* Priority pill */
-.cf-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(250, 187, 76, 0.30);
-  background: rgba(250, 187, 76, 0.12);
-  color: rgba(253, 244, 225, 0.92);
-  font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  font-weight: 900;
-  font-size: 0.82rem;
-}
-
-/* =========================
-   Safety: if you ever render FundraiserPage UI inside preview,
-   scope it ONLY to the preview wrapper.
+   Safety: ensure layout behaves inside preview only
    (Does NOT affect Fundraiser ID page.)
    ========================= */
 
 .cf-previewPanel .fundraiser--preview .fundraiser__topGrid {
   display: grid;
-  grid-template-columns: 1fr 360px; /* NO COMMAS */
+  grid-template-columns: 1fr 360px;
   gap: 16px;
   align-items: stretch;
 }
 
 .cf-previewPanel .fundraiser--preview .fundraiser__belowGrid {
   display: grid;
-  grid-template-columns: 1fr 360px; /* NO COMMAS */
+  grid-template-columns: 1fr 360px;
   gap: 16px;
   align-items: start;
 }
@@ -464,23 +336,25 @@
   cursor: default;
 }
 
-/* =====================================
-   TEMPLATE PREVIEW — simplify need row
-   ===================================== */
+/* =========================
+   TEMPLATE PREVIEW — streamline need rows
+   ========================= */
 
-/* Remove status pill entirely */
-.fundraiser--preview .needPill--status {
+/* Remove status pill entirely (preview only) */
+.cf-previewPanel .fundraiser--preview .needPill--status {
   display: none !important;
 }
-/* Title + small badges */
-.fundraiser--preview .needRow__title {
-  display: flex;
+
+/* Keep title + badges together */
+.cf-previewPanel .fundraiser--preview .needRow__title {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
-/* Small badge style (Qty / Vols / Target) */
-.fundraiser--preview .needMiniBadge {
+/* Small badge (Vol × / Qty × / $Target) */
+.cf-previewPanel .fundraiser--preview .needMiniBadge {
   display: inline-flex;
   align-items: center;
   padding: 3px 10px;
@@ -493,24 +367,14 @@
   white-space: nowrap;
 }
 
-/* Make the secondary line feel calmer */
-.fundraiser--preview .needRow__desc {
-  margin-top: 6px;
-  line-height: 1.35;
+/* Force “secondary” line to be bright (no grey) */
+.cf-previewPanel .fundraiser--preview .needRow__desc--secondary {
+  color: rgba(253, 244, 225, 0.95) !important;
+  opacity: 1 !important;
 }
 
-/* Little badge (Qty / Vols) */
-.fundraiser--preview .needMiniBadge {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 900;
-  border: 1px solid rgba(250, 187, 76, 0.35);
-  background: rgba(250, 187, 76, 0.14);
-  color: rgba(253, 244, 225, 0.95);
-  white-space: nowrap;
-  margin-left: 8px;
+/* Also prevent any muted/opacity bleed inside preview need rows */
+.cf-previewPanel .fundraiser--preview .needRow__desc,
+.cf-previewPanel .fundraiser--preview .needRow__meta {
+  opacity: 1 !important;
 }
-

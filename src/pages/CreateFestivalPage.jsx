@@ -38,7 +38,8 @@ function normaliseMode(raw) {
 
 /* -------------------------
    Preview components (read-only)
-   Uses the SAME classes as FundraiserPage Needs/Rewards
+   Uses the SAME classes as FundraiserPage Needs/Rewards,
+   but is scoped via .cf-previewPanel .fundraiser--preview in CSS.
 ------------------------- */
 
 function TemplateNeedsPreview({ templateNeeds = [] }) {
@@ -55,6 +56,21 @@ function TemplateNeedsPreview({ templateNeeds = [] }) {
   });
 
   const toggle = (key) => setOpenGroups((p) => ({ ...p, [key]: !p[key] }));
+
+  const VolBadge = ({ n }) =>
+    n?.volunteers_needed ? (
+      <span className="needMiniBadge">Vol × {n.volunteers_needed}</span>
+    ) : null;
+
+  const QtyBadge = ({ n }) =>
+    n?.quantity_needed ? (
+      <span className="needMiniBadge">Qty × {n.quantity_needed}</span>
+    ) : null;
+
+  const TargetBadge = ({ n }) =>
+    n?.target_amount != null && n?.target_amount !== "" ? (
+      <span className="needMiniBadge">${n.target_amount}</span>
+    ) : null;
 
   return (
     <div className="panel needsPanel">
@@ -92,19 +108,20 @@ function TemplateNeedsPreview({ templateNeeds = [] }) {
                 <div className="needsList">
                   {moneyNeeds.map((n) => (
                     <div key={n.id ?? `${n.title}-money`} className="needRow">
-                      <div>
-                        <div className="needRow__title">{n.title || "Money need"}</div>
+                      <div className="needRow__left">
+                        <div className="needRow__title">
+                          {n.title || "Money need"} <TargetBadge n={n} />
+                        </div>
 
                         {n.description ? <div className="needRow__desc">{n.description}</div> : null}
 
-                        <div className="needRow__desc">
+                        <div className="needRow__desc needRow__desc--secondary">
                           <strong>Target:</strong>{" "}
-                          {n.target_amount != null && n.target_amount !== ""
-                            ? `$${n.target_amount}`
-                            : "—"}
+                          {n.target_amount != null && n.target_amount !== "" ? `$${n.target_amount}` : "—"}
                         </div>
 
                         <div className="needRow__meta">
+                          {/* status hidden in preview via CSS */}
                           <span className={`needPill needPill--status is-${safeLower(n.status)}`}>
                             Status: {n.status ?? "—"}
                           </span>
@@ -149,49 +166,45 @@ function TemplateNeedsPreview({ templateNeeds = [] }) {
                 <div className="needsEmpty">No time needs in this template.</div>
               ) : (
                 <div className="needsList">
-                 {timeNeeds.map((n) => {
-  const vols = Number(n.volunteers_needed ?? 0);
-  const hasVols = Number.isFinite(vols) && vols > 0;
+                  {timeNeeds.map((n) => (
+                    <div key={n.id ?? `${n.title}-time`} className="needRow">
+                      <div className="needRow__left">
+                        <div className="needRow__title">
+                          {n.title || "Time need"} <VolBadge n={n} />
+                        </div>
 
-  return (
-    <div key={n.id ?? `${n.title}-time`} className="needRow">
-      <div>
-        <div className="needRow__title">
-          {n.title || "Time need"}
-          {hasVols ? <span className="needMiniBadge">Vols × {vols}</span> : null}
-        </div>
+                        {/* Primary line: Role */}
+                        <div className="needRow__desc">
+                          <strong>Role:</strong> {n.role_title || "—"}
+                        </div>
 
-        {/* Role on its own clean line */}
-        <div className="needRow__desc">
-          <strong>Role:</strong> {n.role_title || "—"}
-        </div>
+                        {/* Secondary line: Location (on its own line, bright) */}
+                        {n.location ? (
+                          <div className="needRow__desc needRow__desc--secondary">
+                            <strong>Location:</strong> {n.location}
+                          </div>
+                        ) : null}
 
-        {/* Location on muted new line (so it never cramps) */}
-        {n.location ? (
-          <div className="needRow__desc muted">
-            Location: {n.location}
-          </div>
-        ) : null}
+                        {n.description ? <div className="needRow__desc">{n.description}</div> : null}
 
-        {n.description ? <div className="needRow__desc muted">{n.description}</div> : null}
+                        <div className="needRow__meta">
+                          {/* status hidden in preview via CSS */}
+                          <span className={`needPill needPill--status is-${safeLower(n.status)}`}>
+                            Status: {n.status ?? "—"}
+                          </span>
+                          <span className={`needPill needPill--priority is-${safeLower(n.priority)}`}>
+                            Priority: {n.priority ?? "—"}
+                          </span>
+                        </div>
+                      </div>
 
-        <div className="needRow__meta">
-          {/* status pill removed by CSS */}
-          <span className={`needPill needPill--priority is-${safeLower(n.priority)}`}>
-            Priority: {n.priority ?? "—"}
-          </span>
-        </div>
-      </div>
-
-      <div className="needRow__actions">
-        <button className="btn btn--small" type="button" disabled>
-          Volunteer time
-        </button>
-      </div>
-    </div>
-  );
-})}
-
+                      <div className="needRow__actions">
+                        <button className="btn btn--small" type="button" disabled>
+                          Volunteer time
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -221,49 +234,43 @@ function TemplateNeedsPreview({ templateNeeds = [] }) {
               ) : (
                 <div className="needsList">
                   {itemNeeds.map((n) => {
-  const modeLabel = normaliseMode(n.mode);
+                    const modeLabel = normaliseMode(n.mode);
 
-  const qty = Number(n.quantity_needed ?? 0);
-  const showQty = Number.isFinite(qty) && qty > 0;
+                    return (
+                      <div key={n.id ?? `${n.title}-item`} className="needRow">
+                        <div className="needRow__left">
+                          <div className="needRow__title">
+                            {n.title || "Item need"} <QtyBadge n={n} />
+                          </div>
 
-  return (
-    <div key={n.id ?? `${n.title}-item`} className="needRow">
-      <div className="needRow__left">
-        <div className="needRow__title">
-          {n.title || "Item need"}
-          {showQty ? <span className="needMiniBadge">Qty × {qty}</span> : null}
-        </div>
+                          {n.description ? <div className="needRow__desc">{n.description}</div> : null}
 
-        {n.description ? <div className="needRow__desc">{n.description}</div> : null}
+                          {/* Clean info (no duplicate “Type” pill) */}
+                          <div className="needRow__desc needRow__desc--secondary">
+                            <strong>Item:</strong> {n.item_name || "—"}
+                            {n.quantity_needed ? ` • Qty: ${n.quantity_needed}` : ""}
+                            {modeLabel ? ` • Mode: ${modeLabel}` : ""}
+                          </div>
 
-        {/* keep item line readable */}
-        <div className="needRow__desc">
-          <strong>Item:</strong> {n.item_name || "—"}
-        </div>
+                          <div className="needRow__meta">
+                            {/* status hidden in preview via CSS */}
+                            <span className={`needPill needPill--status is-${safeLower(n.status)}`}>
+                              Status: {n.status ?? "—"}
+                            </span>
+                            <span className={`needPill needPill--priority is-${safeLower(n.priority)}`}>
+                              Priority: {n.priority ?? "—"}
+                            </span>
+                          </div>
+                        </div>
 
-        <div className="needRow__meta">
-          {modeLabel ? (
-            <span className={`needPill needPill--type is-${safeLower(modeLabel)}`}>
-              Type: {modeLabel}
-            </span>
-          ) : null}
-
-          {/* status removed by CSS */}
-          <span className={`needPill needPill--priority is-${safeLower(n.priority)}`}>
-            Priority: {n.priority ?? "—"}
-          </span>
-        </div>
-      </div>
-
-      <div className="needRow__actions">
-        <button className="btn btn--small" type="button" disabled>
-          Pledge item
-        </button>
-      </div>
-    </div>
-  );
-})}
-
+                        <div className="needRow__actions">
+                          <button className="btn btn--small" type="button" disabled>
+                            Pledge item
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -408,9 +415,7 @@ export default function CreateFestivalPage() {
         </p>
 
         {!tokenExists && (
-          <div className="cf-banner cf-banner--warn">
-            You need to log in before creating a fundraiser.
-          </div>
+          <div className="cf-banner cf-banner--warn">You need to log in before creating a fundraiser.</div>
         )}
 
         {error && <div className="cf-banner cf-banner--error">{error}</div>}
@@ -420,8 +425,8 @@ export default function CreateFestivalPage() {
         <div className="cf-sectionHeader">
           <h2 className="cf-h2">Start blank</h2>
           <p className="cf-help">
-            Create your festival as a Draft first, then set status to{" "}
-            <strong>Active</strong> from the edit screen when you’re ready to accept pledges.
+            Create your festival as a Draft first, then set status to <strong>Active</strong> from the edit screen
+            when you’re ready to accept pledges.
           </p>
         </div>
 
@@ -433,9 +438,7 @@ export default function CreateFestivalPage() {
       <section className="cf-section">
         <div className="cf-sectionHeader">
           <h2 className="cf-h2">...Or use a template</h2>
-          <p className="cf-help">
-            Preview what you’ll get (needs + rewards), then click “Use this template”.
-          </p>
+          <p className="cf-help">Preview what you’ll get (needs + rewards), then click “Use this template”.</p>
         </div>
 
         {templatesLoading && <p className="cf-muted">Loading templates…</p>}
@@ -475,12 +478,10 @@ export default function CreateFestivalPage() {
                           <span className="cf-strong">Goal:</span> {t.goal ?? "—"}
                         </span>
                         <span>
-                          <span className="cf-strong">Rewards:</span>{" "}
-                          {t.enable_rewards ? "On" : "Off"}
+                          <span className="cf-strong">Rewards:</span> {t.enable_rewards ? "On" : "Off"}
                         </span>
                         <span>
-                          <span className="cf-strong">Includes:</span> {needsCount} needs •{" "}
-                          {rewardsCount} rewards
+                          <span className="cf-strong">Includes:</span> {needsCount} needs • {rewardsCount} rewards
                         </span>
                       </div>
 
@@ -543,33 +544,13 @@ export default function CreateFestivalPage() {
                                 {t.title || "Untitled festival"}
                               </h2>
 
-                              {/* keep this simple to avoid “wiping” your Create form */}
+                              {/* Keep meta minimal */}
                               <div className="metaGrid">
                                 <div className="metaGrid__label">Location</div>
                                 <div className="metaGrid__value">{t.location || "—"}</div>
 
                                 <div className="metaGrid__label">Backyard Dates</div>
                                 <div className="metaGrid__value">TBA</div>
-
-                                <div className="metaGrid__label metaGrid__label--top">
-                                  Fundraiser status
-                                </div>
-                                <div className="metaGrid__value metaGrid__value--status">
-                                  <div className="statusRow">
-                                    <span className="statusPill statusPill--lifecycle">
-                                      <span
-                                        className="statusDot statusDot--lifecycle is-draft"
-                                        aria-hidden="true"
-                                      />
-                                      <span className="statusPill__text">Template preview</span>
-                                    </span>
-                                  </div>
-                                </div>
-
-                                <div className="metaGrid__label">Accepting pledges</div>
-                                <div className="metaGrid__value">
-                                  <strong>—</strong>
-                                </div>
                               </div>
                             </div>
 
@@ -582,10 +563,7 @@ export default function CreateFestivalPage() {
                           </div>
 
                           <aside className="fundraiser__rightCol">
-                            <TemplateRewardsPreview
-                              enableRewards={Boolean(t.enable_rewards)}
-                              tiers={tiers}
-                            />
+                            <TemplateRewardsPreview enableRewards={Boolean(t.enable_rewards)} tiers={tiers} />
                           </aside>
                         </div>
                       </div>
