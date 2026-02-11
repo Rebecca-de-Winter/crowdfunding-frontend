@@ -1,26 +1,309 @@
-import { useState, useEffect } from "react";
+// src/pages/CreateFestivalPage.jsx
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 import FundraiserForm from "../components/FundraiserForm";
+import RewardTierList from "../components/RewardTierList";
+
 import postFundraiser from "../api/post-fundraiser";
 import { applyTemplate } from "../api/apply-template";
 import getFundraiserTemplates from "../api/get-fundraiser-templates";
 
 import "./CreateFestivalPage.css";
 
-function CreateFestivalPage() {
+/* -------------------------
+   Tiny helpers
+------------------------- */
+
+function safeLower(v) {
+  return String(v ?? "").toLowerCase();
+}
+
+function groupBy(items, key) {
+  return (items || []).reduce((acc, item) => {
+    const k = item?.[key] ?? "other";
+    if (!acc[k]) acc[k] = [];
+    acc[k].push(item);
+    return acc;
+  }, {});
+}
+
+function normaliseMode(raw) {
+  const s = String(raw ?? "").toLowerCase();
+  if (s.includes("donat")) return "Donation";
+  if (s.includes("loan")) return "Loan";
+  if (s.includes("either")) return "Either";
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : null;
+}
+
+/* -------------------------
+   Preview components (read-only)
+   Uses the SAME classes as FundraiserPage Needs/Rewards
+------------------------- */
+
+function TemplateNeedsPreview({ templateNeeds = [] }) {
+  const grouped = useMemo(() => groupBy(templateNeeds, "need_type"), [templateNeeds]);
+
+  const moneyNeeds = grouped.money || [];
+  const timeNeeds = grouped.time || [];
+  const itemNeeds = grouped.item || [];
+
+  const [openGroups, setOpenGroups] = useState({
+    money: true,
+    time: true,
+    item: true,
+  });
+
+  const toggle = (key) => setOpenGroups((p) => ({ ...p, [key]: !p[key] }));
+
+  return (
+    <div className="panel needsPanel">
+      <div className="needsPanel__head">
+        <div>
+          <h3 className="panel__title" style={{ marginBottom: 6 }}>
+            What this fundraiser needs
+          </h3>
+          <p className="needsPanel__note muted">Template preview (no pledging yet).</p>
+        </div>
+      </div>
+
+      <div className="needsPanel__groups">
+        {/* Money */}
+        <div className="needAcc">
+          <button
+            type="button"
+            className="needAcc__head"
+            onClick={() => toggle("money")}
+            aria-expanded={openGroups.money}
+          >
+            <span className="needAcc__left">
+              <span className="needAcc__chev">{openGroups.money ? "▾" : "▸"}</span>
+              <span className="needAcc__title">Money needs</span>
+              <span className="needAcc__count">{moneyNeeds.length}</span>
+            </span>
+            <span className="needAcc__hint">{openGroups.money ? "Collapse" : "Expand"}</span>
+          </button>
+
+          {openGroups.money ? (
+            <div className="needAcc__body">
+              {moneyNeeds.length === 0 ? (
+                <div className="needsEmpty">No money needs in this template.</div>
+              ) : (
+                <div className="needsList">
+                  {moneyNeeds.map((n) => (
+                    <div key={n.id ?? `${n.title}-money`} className="needRow">
+                      <div>
+                        <div className="needRow__title">{n.title || "Money need"}</div>
+
+                        {n.description ? <div className="needRow__desc">{n.description}</div> : null}
+
+                        <div className="needRow__desc">
+                          <strong>Target:</strong>{" "}
+                          {n.target_amount != null && n.target_amount !== ""
+                            ? `$${n.target_amount}`
+                            : "—"}
+                        </div>
+
+                        <div className="needRow__meta">
+                          <span className={`needPill needPill--status is-${safeLower(n.status)}`}>
+                            Status: {n.status ?? "—"}
+                          </span>
+                          <span className={`needPill needPill--priority is-${safeLower(n.priority)}`}>
+                            Priority: {n.priority ?? "—"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="needRow__actions">
+                        <button className="btn btn--small" type="button" disabled>
+                          Pledge money
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : null}
+        </div>
+
+        {/* Time */}
+        <div className="needAcc">
+          <button
+            type="button"
+            className="needAcc__head"
+            onClick={() => toggle("time")}
+            aria-expanded={openGroups.time}
+          >
+            <span className="needAcc__left">
+              <span className="needAcc__chev">{openGroups.time ? "▾" : "▸"}</span>
+              <span className="needAcc__title">Time needs</span>
+              <span className="needAcc__count">{timeNeeds.length}</span>
+            </span>
+            <span className="needAcc__hint">{openGroups.time ? "Collapse" : "Expand"}</span>
+          </button>
+
+          {openGroups.time ? (
+            <div className="needAcc__body">
+              {timeNeeds.length === 0 ? (
+                <div className="needsEmpty">No time needs in this template.</div>
+              ) : (
+                <div className="needsList">
+                 {timeNeeds.map((n) => {
+  const vols = Number(n.volunteers_needed ?? 0);
+  const hasVols = Number.isFinite(vols) && vols > 0;
+
+  return (
+    <div key={n.id ?? `${n.title}-time`} className="needRow">
+      <div>
+        <div className="needRow__title">
+          {n.title || "Time need"}
+          {hasVols ? <span className="needMiniBadge">Vols × {vols}</span> : null}
+        </div>
+
+        {/* Role on its own clean line */}
+        <div className="needRow__desc">
+          <strong>Role:</strong> {n.role_title || "—"}
+        </div>
+
+        {/* Location on muted new line (so it never cramps) */}
+        {n.location ? (
+          <div className="needRow__desc muted">
+            Location: {n.location}
+          </div>
+        ) : null}
+
+        {n.description ? <div className="needRow__desc muted">{n.description}</div> : null}
+
+        <div className="needRow__meta">
+          {/* status pill removed by CSS */}
+          <span className={`needPill needPill--priority is-${safeLower(n.priority)}`}>
+            Priority: {n.priority ?? "—"}
+          </span>
+        </div>
+      </div>
+
+      <div className="needRow__actions">
+        <button className="btn btn--small" type="button" disabled>
+          Volunteer time
+        </button>
+      </div>
+    </div>
+  );
+})}
+
+                </div>
+              )}
+            </div>
+          ) : null}
+        </div>
+
+        {/* Items */}
+        <div className="needAcc">
+          <button
+            type="button"
+            className="needAcc__head"
+            onClick={() => toggle("item")}
+            aria-expanded={openGroups.item}
+          >
+            <span className="needAcc__left">
+              <span className="needAcc__chev">{openGroups.item ? "▾" : "▸"}</span>
+              <span className="needAcc__title">Item needs</span>
+              <span className="needAcc__count">{itemNeeds.length}</span>
+            </span>
+            <span className="needAcc__hint">{openGroups.item ? "Collapse" : "Expand"}</span>
+          </button>
+
+          {openGroups.item ? (
+            <div className="needAcc__body">
+              {itemNeeds.length === 0 ? (
+                <div className="needsEmpty">No item needs in this template.</div>
+              ) : (
+                <div className="needsList">
+                  {itemNeeds.map((n) => {
+  const modeLabel = normaliseMode(n.mode);
+
+  const qty = Number(n.quantity_needed ?? 0);
+  const showQty = Number.isFinite(qty) && qty > 0;
+
+  return (
+    <div key={n.id ?? `${n.title}-item`} className="needRow">
+      <div className="needRow__left">
+        <div className="needRow__title">
+          {n.title || "Item need"}
+          {showQty ? <span className="needMiniBadge">Qty × {qty}</span> : null}
+        </div>
+
+        {n.description ? <div className="needRow__desc">{n.description}</div> : null}
+
+        {/* keep item line readable */}
+        <div className="needRow__desc">
+          <strong>Item:</strong> {n.item_name || "—"}
+        </div>
+
+        <div className="needRow__meta">
+          {modeLabel ? (
+            <span className={`needPill needPill--type is-${safeLower(modeLabel)}`}>
+              Type: {modeLabel}
+            </span>
+          ) : null}
+
+          {/* status removed by CSS */}
+          <span className={`needPill needPill--priority is-${safeLower(n.priority)}`}>
+            Priority: {n.priority ?? "—"}
+          </span>
+        </div>
+      </div>
+
+      <div className="needRow__actions">
+        <button className="btn btn--small" type="button" disabled>
+          Pledge item
+        </button>
+      </div>
+    </div>
+  );
+})}
+
+                </div>
+              )}
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TemplateRewardsPreview({ enableRewards, tiers = [] }) {
+  return (
+    <div className="panel rewardsPanel">
+      <h3 className="panel__title">Rewards</h3>
+
+      {!enableRewards ? (
+        <p className="muted">Rewards are turned off for this template.</p>
+      ) : tiers.length > 0 ? (
+        <RewardTierList tiers={tiers} disabled={true} onDeleteTier={null} onUpdateTier={null} />
+      ) : (
+        <p className="muted">No reward tiers in this template.</p>
+      )}
+    </div>
+  );
+}
+
+/* -------------------------
+   Page
+------------------------- */
+
+export default function CreateFestivalPage() {
   const navigate = useNavigate();
 
-  // Page-level UI state
   const [error, setError] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Template loading state
   const [templates, setTemplates] = useState([]);
   const [templatesLoading, setTemplatesLoading] = useState(true);
   const [templatesError, setTemplatesError] = useState(null);
 
-  // Which template previews are open
   const [openPreviews, setOpenPreviews] = useState(() => new Set());
 
   const tokenExists = Boolean(localStorage.getItem("token"));
@@ -32,7 +315,7 @@ function CreateFestivalPage() {
 
       try {
         const data = await getFundraiserTemplates();
-        setTemplates(data);
+        setTemplates(data || []);
       } catch (e) {
         setTemplatesError(e);
       } finally {
@@ -51,10 +334,9 @@ function CreateFestivalPage() {
     location,
     start_date,
     end_date,
-    status,           // ✅ correct position
-    enable_rewards,   // ✅ correct position
-    sort_order    
-
+    status,
+    enable_rewards,
+    sort_order
   ) {
     setError(null);
     setIsSaving(true);
@@ -86,8 +368,7 @@ function CreateFestivalPage() {
     setIsSaving(true);
 
     try {
-      // Create placeholder fundraiser (dates intentionally blank)
-      const placeholderFundraiser = await postFundraiser(
+      const placeholder = await postFundraiser(
         template.title || "Untitled festival",
         template.description || "Created from template",
         Number(template.goal ?? 0),
@@ -100,7 +381,7 @@ function CreateFestivalPage() {
         0
       );
 
-      const applied = await applyTemplate(placeholderFundraiser.id, template.id);
+      const applied = await applyTemplate(placeholder.id, template.id);
       navigate(`/fundraisers/${applied.id}/edit`);
     } catch (e) {
       setError(e.message);
@@ -116,116 +397,6 @@ function CreateFestivalPage() {
       else next.add(templateId);
       return next;
     });
-  }
-
-  function groupBy(items, key) {
-    return (items || []).reduce((acc, item) => {
-      const k = item?.[key] ?? "other";
-      if (!acc[k]) acc[k] = [];
-      acc[k].push(item);
-      return acc;
-    }, {});
-  }
-
-  function renderRewardsPreview(templateRewardTiers) {
-    const grouped = groupBy(templateRewardTiers, "reward_type");
-    const order = ["money", "time", "item"];
-
-    return (
-      <div className="cf-previewGrid">
-        {order.map((type) => {
-          const list = grouped[type] || [];
-          if (list.length === 0) return null;
-
-          const heading =
-            type === "money" ? "Money rewards" : type === "time" ? "Time rewards" : "Item rewards";
-
-          return (
-            <section key={type} className="cf-previewSection">
-              <h4 className="cf-previewTitle">{heading}</h4>
-
-              <ul className="cf-previewList">
-                {list.map((r) => (
-                  <li key={r.id} className="cf-previewItem">
-                    <span className="cf-previewItemName">{r.name || "Reward tier"}</span>
-
-                    {r.minimum_contribution_value ? (
-                      <span className="cf-previewItemMeta">
-                        {" "}
-                        — min ${r.minimum_contribution_value}
-                      </span>
-                    ) : null}
-
-                    {r.description ? (
-                      <span className="cf-previewItemMeta"> — {r.description}</span>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          );
-        })}
-      </div>
-    );
-  }
-
-  function renderNeedsPreview(templateNeeds) {
-    const grouped = groupBy(templateNeeds, "need_type");
-    const order = ["money", "time", "item"];
-
-    return (
-      <div className="cf-previewGrid">
-        {order.map((type) => {
-          const list = grouped[type] || [];
-          if (list.length === 0) return null;
-
-          const heading =
-            type === "money" ? "Money needs" : type === "time" ? "Time needs" : "Item needs";
-
-          return (
-            <section key={type} className="cf-previewSection">
-              <h4 className="cf-previewTitle">{heading}</h4>
-
-              <ul className="cf-previewList">
-                {list.map((n) => (
-                  <li key={n.id} className="cf-previewNeed">
-                    <div className="cf-previewNeedTop">
-                      <span className="cf-previewNeedName">{n.title || "Need"}</span>
-                      {n.priority ? <span className="cf-pill">{n.priority}</span> : null}
-                    </div>
-
-                    {n.description ? (
-                      <div className="cf-previewNeedDesc">{n.description}</div>
-                    ) : null}
-
-                    <div className="cf-previewNeedMeta">
-                      {type === "money" && n.target_amount ? (
-                        <span>Target: ${n.target_amount}</span>
-                      ) : null}
-
-                      {type === "time" ? (
-                        <span>
-                          {n.role_title ? `Role: ${n.role_title}` : "Role: —"}
-                          {n.volunteers_needed ? ` • Volunteers: ${n.volunteers_needed}` : ""}
-                        </span>
-                      ) : null}
-
-                      {type === "item" ? (
-                        <span>
-                          {n.item_name ? `Item: ${n.item_name}` : "Item: —"}
-                          {n.quantity_needed ? ` • Qty: ${n.quantity_needed}` : ""}
-                          {n.mode ? ` • Mode: ${n.mode}` : ""}
-                        </span>
-                      ) : null}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          );
-        })}
-      </div>
-    );
   }
 
   return (
@@ -249,7 +420,8 @@ function CreateFestivalPage() {
         <div className="cf-sectionHeader">
           <h2 className="cf-h2">Start blank</h2>
           <p className="cf-help">
-            Create your festival as a Draft first, then set status to <strong>Active</strong> from the edit screen when you’re ready to accept pledges.
+            Create your festival as a Draft first, then set status to{" "}
+            <strong>Active</strong> from the edit screen when you’re ready to accept pledges.
           </p>
         </div>
 
@@ -261,7 +433,9 @@ function CreateFestivalPage() {
       <section className="cf-section">
         <div className="cf-sectionHeader">
           <h2 className="cf-h2">...Or use a template</h2>
-          <p className="cf-help">Preview what you’ll get (needs + rewards), then click “Use this template”.</p>
+          <p className="cf-help">
+            Preview what you’ll get (needs + rewards), then click “Use this template”.
+          </p>
         </div>
 
         {templatesLoading && <p className="cf-muted">Loading templates…</p>}
@@ -273,8 +447,11 @@ function CreateFestivalPage() {
               const previewOpen = openPreviews.has(t.id);
 
               const templateImg = t.image_url || "https://picsum.photos/900/500?blur=1";
-              const needsCount = t.template_needs?.length ?? 0;
-              const rewardsCount = t.template_reward_tiers?.length ?? 0;
+              const needs = t.template_needs || [];
+              const tiers = t.template_reward_tiers || [];
+
+              const needsCount = needs.length;
+              const rewardsCount = tiers.length;
 
               return (
                 <article key={t.id} className={`cf-templateCard ${isSaving ? "is-saving" : ""}`}>
@@ -298,10 +475,12 @@ function CreateFestivalPage() {
                           <span className="cf-strong">Goal:</span> {t.goal ?? "—"}
                         </span>
                         <span>
-                          <span className="cf-strong">Rewards:</span> {t.enable_rewards ? "On" : "Off"}
+                          <span className="cf-strong">Rewards:</span>{" "}
+                          {t.enable_rewards ? "On" : "Off"}
                         </span>
                         <span>
-                          <span className="cf-strong">Includes:</span> {needsCount} needs • {rewardsCount} rewards
+                          <span className="cf-strong">Includes:</span> {needsCount} needs •{" "}
+                          {rewardsCount} rewards
                         </span>
                       </div>
 
@@ -327,31 +506,91 @@ function CreateFestivalPage() {
                     </div>
                   </div>
 
-                  {previewOpen && (
+                  {previewOpen ? (
                     <div className="cf-previewPanel">
-                      <div className="cf-previewBlock">
-                        <h4 className="cf-previewBlockTitle">Rewards</h4>
-                        {t.enable_rewards ? (
-                          rewardsCount > 0 ? (
-                            renderRewardsPreview(t.template_reward_tiers)
-                          ) : (
-                            <p className="cf-muted">No reward tiers in this template.</p>
-                          )
-                        ) : (
-                          <p className="cf-muted">Rewards are turned off for this template.</p>
-                        )}
-                      </div>
+                      <div className="fundraiser fundraiser--preview">
+                        {/* TOP (Hero + Goal) */}
+                        <div className="fundraiser__topGrid">
+                          <div className="fundraiser__hero">
+                            <img
+                              className="fundraiser__heroImg"
+                              src={templateImg}
+                              alt={t.title || t.name || "Template preview"}
+                            />
+                          </div>
 
-                      <div className="cf-previewBlock">
-                        <h4 className="cf-previewBlockTitle">Needs</h4>
-                        {needsCount > 0 ? (
-                          renderNeedsPreview(t.template_needs)
-                        ) : (
-                          <p className="cf-muted">No needs in this template.</p>
-                        )}
+                          <div className="fundraiser__sidebarTop">
+                            <div className="panel goalPanel">
+                              <div className="goalPanel__head">
+                                <div className="goalPanel__label">Goal (AUD)</div>
+                                <div className="goalPanel__value">{t.goal ?? "—"}</div>
+                              </div>
+
+                              <div className="goalPanel__divider" />
+
+                              <p className="muted" style={{ margin: 0 }}>
+                                Template preview (totals appear after you create the fundraiser).
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* BELOW (Title/Meta + Needs | Rewards) */}
+                        <div className="fundraiser__belowGrid">
+                          <div className="fundraiser__leftCol">
+                            <div className="panel headerMetaPanel">
+                              <h2 className="fundraiser__title" style={{ marginTop: 0 }}>
+                                {t.title || "Untitled festival"}
+                              </h2>
+
+                              {/* keep this simple to avoid “wiping” your Create form */}
+                              <div className="metaGrid">
+                                <div className="metaGrid__label">Location</div>
+                                <div className="metaGrid__value">{t.location || "—"}</div>
+
+                                <div className="metaGrid__label">Backyard Dates</div>
+                                <div className="metaGrid__value">TBA</div>
+
+                                <div className="metaGrid__label metaGrid__label--top">
+                                  Fundraiser status
+                                </div>
+                                <div className="metaGrid__value metaGrid__value--status">
+                                  <div className="statusRow">
+                                    <span className="statusPill statusPill--lifecycle">
+                                      <span
+                                        className="statusDot statusDot--lifecycle is-draft"
+                                        aria-hidden="true"
+                                      />
+                                      <span className="statusPill__text">Template preview</span>
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="metaGrid__label">Accepting pledges</div>
+                                <div className="metaGrid__value">
+                                  <strong>—</strong>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="panel storyPanel">
+                              <h3 className="panel__title">Story / Description</h3>
+                              <p className="fundraiser__desc">{t.description || "—"}</p>
+                            </div>
+
+                            <TemplateNeedsPreview templateNeeds={needs} />
+                          </div>
+
+                          <aside className="fundraiser__rightCol">
+                            <TemplateRewardsPreview
+                              enableRewards={Boolean(t.enable_rewards)}
+                              tiers={tiers}
+                            />
+                          </aside>
+                        </div>
                       </div>
                     </div>
-                  )}
+                  ) : null}
                 </article>
               );
             })}
@@ -361,5 +600,3 @@ function CreateFestivalPage() {
     </div>
   );
 }
-
-export default CreateFestivalPage;

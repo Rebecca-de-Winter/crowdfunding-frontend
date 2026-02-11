@@ -43,7 +43,8 @@
 .fundraiser-card__badges {
   position: absolute;
   top: 14px;
-  left: 14px;
+  right: 14px;
+  left: auto;
   display: flex;
   gap: 10px;
   z-index: 2;
@@ -82,7 +83,7 @@
   height: 9px;
   border-radius: 999px;
   background: currentColor;
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
+  /* box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35); */
 }
 
 /* Status colours (vivid but still classy) */
@@ -92,7 +93,7 @@
 }
 
 .fundraiser-card__pill.is-active {
-  color: rgba(130, 255, 200, 1);
+  color: rgb(110, 201, 161);
   border-color: rgba(130, 255, 200, 0.38);
 }
 

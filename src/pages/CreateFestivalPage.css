@@ -285,7 +285,9 @@
   filter: none;
 }
 
-/* Preview panel */
+/* =========================
+   Preview panel
+   ========================= */
 .cf-previewPanel {
   border-top: 1px solid var(--line);
   background: rgba(0, 0, 0, 0.14);
@@ -294,14 +296,21 @@
   gap: 12px;
 }
 
-@media (min-width: 900px) {
-  .cf-previewPanel {
+/* Optional two-column preview inside panel (Needs | Rewards) */
+.cf-previewCols {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+@media (min-width: 980px) {
+  .cf-previewCols {
     grid-template-columns: 1fr 1fr;
-    gap: 14px;
+    align-items: start;
   }
 }
 
-.cf-previewBlockTitle {
+.cf-previewHeading {
   margin: 0 0 10px;
   color: rgba(253, 244, 225, 0.92);
   font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
@@ -309,7 +318,16 @@
   font-size: 1rem;
 }
 
-/* Rewards + needs preview layout */
+.cf-previewCol {
+  display: grid;
+  gap: 10px;
+}
+
+/* =========================
+   Needs + rewards “simple preview” styles
+   (used by renderNeedsPreview / renderRewardsPreview)
+   ========================= */
+
 .cf-previewGrid {
   display: grid;
   gap: 10px;
@@ -404,3 +422,95 @@
   font-weight: 900;
   font-size: 0.82rem;
 }
+
+/* =========================
+   Safety: if you ever render FundraiserPage UI inside preview,
+   scope it ONLY to the preview wrapper.
+   (Does NOT affect Fundraiser ID page.)
+   ========================= */
+
+.cf-previewPanel .fundraiser--preview .fundraiser__topGrid {
+  display: grid;
+  grid-template-columns: 1fr 360px; /* NO COMMAS */
+  gap: 16px;
+  align-items: stretch;
+}
+
+.cf-previewPanel .fundraiser--preview .fundraiser__belowGrid {
+  display: grid;
+  grid-template-columns: 1fr 360px; /* NO COMMAS */
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 980px) {
+  .cf-previewPanel .fundraiser--preview .fundraiser__topGrid,
+  .cf-previewPanel .fundraiser--preview .fundraiser__belowGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cf-previewPanel .fundraiser--preview .fundraiser__heroImg {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  object-fit: cover;
+  border-radius: 18px;
+}
+
+/* Make preview buttons feel non-interactive */
+.cf-previewPanel .fundraiser--preview .btn,
+.cf-previewPanel .fundraiser--preview .needAcc__head {
+  cursor: default;
+}
+
+/* =====================================
+   TEMPLATE PREVIEW — simplify need row
+   ===================================== */
+
+/* Remove status pill entirely */
+.fundraiser--preview .needPill--status {
+  display: none !important;
+}
+/* Title + small badges */
+.fundraiser--preview .needRow__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Small badge style (Qty / Vols / Target) */
+.fundraiser--preview .needMiniBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  border: 1px solid rgba(250, 187, 76, 0.35);
+  background: rgba(250, 187, 76, 0.14);
+  color: rgba(253, 244, 225, 0.95);
+  white-space: nowrap;
+}
+
+/* Make the secondary line feel calmer */
+.fundraiser--preview .needRow__desc {
+  margin-top: 6px;
+  line-height: 1.35;
+}
+
+/* Little badge (Qty / Vols) */
+.fundraiser--preview .needMiniBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  border: 1px solid rgba(250, 187, 76, 0.35);
+  background: rgba(250, 187, 76, 0.14);
+  color: rgba(253, 244, 225, 0.95);
+  white-space: nowrap;
+  margin-left: 8px;
+}
+

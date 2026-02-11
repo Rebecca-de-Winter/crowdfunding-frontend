@@ -1,0 +1,111 @@
+/* FundraiserLayout.css
+   Overrides FundraiserPage.css ONLY for template previews.
+*/
+
+.fundraiser--preview {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 18px 14px 40px;
+}
+
+/* TOP GRID: hero + goal panel */
+.fundraiser--preview .fundraiser__topGrid {
+  display: grid;
+  grid-template-columns: 1.55fr 0.85fr;
+  gap: var(--gap);
+  margin-bottom: var(--gap);
+  align-items: stretch;
+}
+
+.fundraiser--preview .fundraiser__hero {
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.35);
+}
+
+/* Stop the hero from being a skyscraper */
+.fundraiser--preview .fundraiser__heroImg {
+  width: 100%;
+  height: 260px;
+  display: block;
+  object-fit: cover;
+}
+
+
+
+.fundraiser--preview .goalPanel {
+  position: sticky;
+  top: 16px;
+}
+
+/* BELOW GRID: left content + rewards */
+.fundraiser--preview .fundraiser__belowGrid {
+  display: grid;
+  grid-template-columns: 1.55fr 0.85fr;
+  gap: var(--gap);
+  align-items: start;
+}
+
+/* Prevent huge empty blocks / weird stretching */
+.fundraiser--preview .fundraiser__leftCol,
+.fundraiser--preview .fundraiser__rightCol {
+  min-width: 0;
+}
+
+.fundraiser--preview .panel {
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.25);
+}
+
+/* Title block: tighten it up */
+.fundraiser--preview .fundraiser__title {
+  font-size: 34px;
+  line-height: 1.05;
+  margin: 0 0 10px;
+}
+
+/* Meta grid: make labels/value alignment cleaner */
+.fundraiser--preview .metaGrid {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 10px 14px;
+  align-items: start;
+}
+
+.fundraiser--preview .metaGrid__label {
+  opacity: 0.85;
+}
+
+/* Needs accordions: reduce visual bulk */
+.fundraiser--preview .needAcc__head {
+  border-radius: 14px;
+}
+
+.fundraiser--preview .needRow {
+  border-radius: 14px;
+}
+
+/* Rewards should feel like a sidebar, not a giant slab */
+.fundraiser--preview .rewardsPanel {
+  position: sticky;
+  top: 16px;
+}
+
+@media (max-width: 980px) {
+  .fundraiser--preview .fundraiser__topGrid,
+  .fundraiser--preview .fundraiser__belowGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .fundraiser--preview .goalPanel,
+  .fundraiser--preview .rewardsPanel {
+    position: static;
+  }
+
+  .fundraiser--preview .fundraiser__heroImg {
+    height: 220px;
+  }
+}

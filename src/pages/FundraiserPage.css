@@ -48,9 +48,9 @@
   text-decoration: underline;
 }
 
-.muted {
+/* .muted {
   opacity: 0.78;
-}
+} */
 
 /* Panels */
 .panel {
@@ -97,11 +97,7 @@
   object-fit: cover;
 }
 
-@media (min-width: 980px) {
-  .fundraiser__hero {
-    min-height: 380px;
-  }
-}
+
 
 /* Make Goal panel match hero height */
 .fundraiser__sidebarTop {
@@ -551,7 +547,7 @@
 }
 
 .statusPill--lifecycle {
-  padding: 4px 11px;
+  padding: 6px 11px;
   gap: 8px;
   border: 1px solid rgba(245, 232, 205, 0.25);
   background: rgba(0, 0, 0, 0.16);
@@ -598,4 +594,28 @@
   margin: 0;
   text-align: left !important;
   align-self: stretch;
+}
+/* =========================
+   TEMPLATE PREVIEW: fix wasted space (scoped)
+   Paste at VERY BOTTOM
+   ========================= */
+
+@media (min-width: 980px) {
+  /* Make the sidebar a fixed width so it can't become a giant empty column */
+  .fundraiser--preview .fundraiser__topGrid,
+  .fundraiser--preview .fundraiser__belowGrid {
+    grid-template-columns: minmax(0, 1fr) 420px;
+    align-items: start;
+  }
+
+  /* Ensure the sidebar actually stretches to fill its grid column */
+  .fundraiser--preview .fundraiser__sidebarTop,
+  .fundraiser--preview .fundraiser__rightCol {
+    width: 100%;
+  }
+
+  /* Ensure the Goal panel fills the sidebar column (no dead space) */
+  .fundraiser--preview .fundraiser__sidebarTop .panel {
+    width: 100%;
+  }
 }
