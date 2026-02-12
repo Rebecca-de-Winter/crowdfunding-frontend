@@ -113,3 +113,9 @@
   text-decoration: none;
   font-size: 0.88rem;
 }
+.btnTiny--danger {
+  border-color: rgba(255, 120, 120, 0.55);
+}
+.btnTiny--danger:hover {
+  filter: brightness(1.1);
+}
