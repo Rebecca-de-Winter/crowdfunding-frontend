@@ -131,6 +131,51 @@ function hoursBetween(startIso, endIso) {
   return ms / (1000 * 60 * 60);
 }
 
+function toNumber(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+// Count pledges that should “reserve” capacity.
+// This makes the badge count down immediately while pledges are pending.
+function shouldReserveCapacity(status) {
+  const s = String(status ?? "").toLowerCase();
+  if (s === "cancelled" || s === "rejected") return false;
+  return true; // pending + approved count
+}
+
+function buildFilledMapsFromReport(pledges = []) {
+  const timeFilledByNeedId = {};
+  const itemFilledByNeedId = {};
+
+  for (const p of pledges) {
+    if (!shouldReserveCapacity(p?.status)) continue;
+
+    const needId = p?.need_id ?? p?.need;
+    if (!needId) continue;
+
+    const type = String(p?.need_type ?? "").toLowerCase();
+
+    if (type === "time") {
+      // Report rows don't include hours per pledge, so treat 1 pledge = 1 volunteer slot
+      timeFilledByNeedId[needId] = (timeFilledByNeedId[needId] ?? 0) + 1;
+    }
+
+    if (type === "item") {
+      // Report rows don’t include quantity per pledge, so fallback to 1.
+      const qty =
+        toNumber(p?.quantity_pledged) ||
+        toNumber(p?.quantity) ||
+        toNumber(p?.quantity_committed) ||
+        1;
+
+      itemFilledByNeedId[needId] = (itemFilledByNeedId[needId] ?? 0) + qty;
+    }
+  }
+
+  return { timeFilledByNeedId, itemFilledByNeedId };
+}
+
 /* =========================
    Fundraiser status helpers
    ========================= */
@@ -139,7 +184,6 @@ function normaliseFundraiserStatus(raw) {
   const s = String(raw ?? "").toLowerCase().trim();
   if (!s) return "draft";
 
-  // allow mild synonyms if they pop up
   if (s === "unpublished") return "draft";
   if (s === "published") return "active";
 
@@ -152,14 +196,9 @@ function statusLabel(raw) {
   if (s === "active") return "Active";
   if (s === "closed") return "Closed";
   if (s === "cancelled") return "Cancelled";
-  // fallback: Title Case-ish
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-/**
- * Optional “accepting pledges” line.
- * Use is_open if backend provides it; otherwise infer from status + dates.
- */
 function isAcceptingPledges(fundraiser) {
   if (typeof fundraiser?.is_open === "boolean") return fundraiser.is_open;
 
@@ -211,6 +250,10 @@ export default function FundraiserPage() {
   const { fundraiser, isLoading, error } = useFundraiser(id);
   const { report, isLoading: isReportLoading, error: reportError } =
     useFundraiserPledgesReport(id);
+
+  useEffect(() => {
+    if (report) console.log("PLEDGES REPORT:", report);
+  }, [report]);
 
   const [currentUser, setCurrentUser] = useState(null);
   const [openGroups, setOpenGroups] = useState({
@@ -374,10 +417,19 @@ export default function FundraiserPage() {
     };
   }, [moneyNeeds, moneyNeedMap]);
 
+  // ✅ Derive pledge maps BEFORE early returns, and avoid dependency warnings
+  const pledgesArr = report?.pledges; // may be undefined
+  const totals = report?.totals;
+
+  const { timeFilledByNeedId, itemFilledByNeedId } = useMemo(() => {
+    return buildFilledMapsFromReport(pledgesArr ?? []);
+  }, [pledgesArr]);
+
   // Early returns AFTER hooks
   if (isLoading) return <p className="fundraiser__state">Loading…</p>;
   if (error) return <p className="fundraiser__state">{error.message}</p>;
-  if (!fundraiser) return <p className="fundraiser__state">Fundraiser not found.</p>;
+  if (!fundraiser)
+    return <p className="fundraiser__state">Fundraiser not found.</p>;
 
   const {
     title,
@@ -395,8 +447,7 @@ export default function FundraiserPage() {
   const isOwner = currentUser?.id === owner;
   const heroImg = resolveImageUrl(image_url) || "https://picsum.photos/1200/700";
 
-  const totals = report?.totals;
-  const pledges = report?.pledges ?? [];
+  const pledges = pledgesArr ?? [];
 
   const moneyPledged = totals?.total_money_pledged ?? 0;
   const timeHoursPledged = totals?.total_time_hours_pledged ?? 0;
@@ -423,7 +474,8 @@ export default function FundraiserPage() {
     }
   }
 
-  const timeTarget = foundTimeTarget && timeTargetSum > 0 ? timeTargetSum : null;
+  const timeTarget =
+    foundTimeTarget && timeTargetSum > 0 ? timeTargetSum : null;
 
   // ✅ Item target = sum of quantity_needed across item needs
   let itemTargetSum = 0;
@@ -440,7 +492,8 @@ export default function FundraiserPage() {
     }
   }
 
-  const itemTarget = foundItemTarget && itemTargetSum > 0 ? itemTargetSum : null;
+  const itemTarget =
+    foundItemTarget && itemTargetSum > 0 ? itemTargetSum : null;
 
   const moneyPercent = moneyTarget ? moneyPledged / moneyTarget : null;
   const timePercent = timeTarget ? timeHoursPledged / timeTarget : null;
@@ -450,496 +503,551 @@ export default function FundraiserPage() {
 
   const dateRangeLabel =
     start_date || end_date
-      ? `${formatDateAU(start_date)}${end_date ? ` → ${formatDateAU(end_date)}` : ""}`
+      ? `${formatDateAU(start_date)}${
+          end_date ? ` → ${formatDateAU(end_date)}` : ""
+        }`
       : "TBA";
 
   const lifecycle = normaliseFundraiserStatus(status);
   const accepting = isAcceptingPledges(fundraiser);
 
   return (
-  <div className="fundraiser">
-    <Link className="fundraiser__back" to="/fundraisers">
-      ← Back to fundraisers
-    </Link>
+    <div className="fundraiser">
+      <Link className="fundraiser__back" to="/fundraisers">
+        ← Back to fundraisers
+      </Link>
 
-    {/* TOP GRID (Hero + Goal) */}
-    <div className="fundraiser__topGrid">
-      <div className="fundraiser__hero">
-        <img className="fundraiser__heroImg" src={heroImg} alt={title} />
-      </div>
-
-      <div className="fundraiser__sidebarTop">
-        <div className="panel goalPanel">
-          <div className="goalPanel__head">
-            <div className="goalPanel__label">Goal (AUD)</div>
-            <div className="goalPanel__value">
-              {formatAUD(goal).replace("$", "")}
-            </div>
-          </div>
-
-          <div className="goalPanel__divider" />
-
-          <div className="goalPanel__progress">
-            {!canShowTotals ? (
-              <p className="muted">Loading totals…</p>
-            ) : (
-              <>
-                <ProgressRow
-                  label="Money pledged"
-                  valueText={formatAUD(moneyPledged)}
-                  percent={moneyPercent}
-                  note={moneyTarget ? null : "No money goal set."}
-                />
-
-                <ProgressRow
-                  label="Time pledged"
-                  valueText={`${formatHours(timeHoursPledged)} hrs`}
-                  percent={timePercent}
-                  note={
-                    timeTarget
-                      ? `Target: ${formatHours(timeTarget)} hrs`
-                      : "No time targets set on needs yet."
-                  }
-                />
-
-                <ProgressRow
-                  label="Items pledged"
-                  valueText={`${Number(itemQtyPledged) || 0}`}
-                  percent={itemPercent}
-                  note={
-                    itemTarget ? `Target: ${Number(itemTarget)}` : "No item targets set on needs yet."
-                  }
-                />
-              </>
-            )}
-          </div>
+      {/* TOP GRID (Hero + Goal) */}
+      <div className="fundraiser__topGrid">
+        <div className="fundraiser__hero">
+          <img className="fundraiser__heroImg" src={heroImg} alt={title} />
         </div>
-      </div>
-    </div>
 
-    {/* BELOW GRID (Left + Rewards) */}
-    <div className="fundraiser__belowGrid">
-      {/* LEFT */}
-      <div className="fundraiser__leftCol">
-        <div className="panel headerMetaPanel">
-          <h1 className="fundraiser__title">{title}</h1>
-
-          <div className="metaGrid">
-            <div className="metaGrid__label">Location</div>
-            <div className="metaGrid__value">{location || "—"}</div>
-
-            <div className="metaGrid__label">Backyard Dates</div>
-            <div className="metaGrid__value">{dateRangeLabel}</div>
-
-            <div className="metaGrid__label metaGrid__label--top">
-              Fundraiser status
+        <div className="fundraiser__sidebarTop">
+          <div className="panel goalPanel">
+            <div className="goalPanel__head">
+              <div className="goalPanel__label">Goal (AUD)</div>
+              <div className="goalPanel__value">
+                {formatAUD(goal).replace("$", "")}
+              </div>
             </div>
-            <div className="metaGrid__value metaGrid__value--status">
-              <div className="statusRow">
-                <span className="statusPill statusPill--lifecycle">
-                  <span
-                    className={`statusDot statusDot--lifecycle is-${safeLower(
-                      lifecycle
-                    )}`}
-                    aria-hidden="true"
+
+            <div className="goalPanel__divider" />
+
+            <div className="goalPanel__progress">
+              {!canShowTotals ? (
+                <p className="muted">Loading totals…</p>
+              ) : (
+                <>
+                  <ProgressRow
+                    label="Money pledged"
+                    valueText={formatAUD(moneyPledged)}
+                    percent={moneyPercent}
+                    note={moneyTarget ? null : "No money goal set."}
                   />
-                  <span className="statusPill__text">
-                    {statusLabel(lifecycle)}
-                  </span>
-                </span>
-              </div>
-            </div>
 
-            <div className="metaGrid__label">Accepting pledges</div>
-            <div className="metaGrid__value">
-              <strong>{accepting ? "Yes" : "No"}</strong>
+                  <ProgressRow
+                    label="Time pledged"
+                    valueText={`${formatHours(timeHoursPledged)} hrs`}
+                    percent={timePercent}
+                    note={
+                      timeTarget
+                        ? `Target: ${formatHours(timeTarget)} hrs`
+                        : "No time targets set on needs yet."
+                    }
+                  />
+
+                  <ProgressRow
+                    label="Items pledged"
+                    valueText={`${Number(itemQtyPledged) || 0}`}
+                    percent={itemPercent}
+                    note={
+                      itemTarget
+                        ? `Target: ${Number(itemTarget)}`
+                        : "No item targets set on needs yet."
+                    }
+                  />
+                </>
+              )}
             </div>
           </div>
-
-          {isOwner ? (
-            <div className="headerMetaPanel__actions">
-              <Link className="fundraiser__editLink" to={`/fundraisers/${id}/edit`}>
-                Edit fundraiser
-              </Link>
-            </div>
-          ) : null}
         </div>
+      </div>
 
-        {/* STORY */}
-        <div className="panel storyPanel">
-          <h2 className="panel__title">Story / Description</h2>
-          <p className="fundraiser__desc">{description || "—"}</p>
-        </div>
+      {/* BELOW GRID (Left + Rewards) */}
+      <div className="fundraiser__belowGrid">
+        {/* LEFT */}
+        <div className="fundraiser__leftCol">
+          <div className="panel headerMetaPanel">
+            <h1 className="fundraiser__title">{title}</h1>
 
-        {/* NEEDS */}
-        <section className="fundraiser__section">
-          <div className="panel needsPanel">
-            <div className="needsPanel__head">
-              <div>
-                <h2 className="panel__title" style={{ marginBottom: 6 }}>
-                  What this fundraiser needs
-                </h2>
-                <p className="needsPanel__note muted">
-                  Choose a need to pledge against. Keep sections open while you
-                  work; collapse when you want a cleaner view.
-                </p>
+            <div className="metaGrid">
+              <div className="metaGrid__label">Location</div>
+              <div className="metaGrid__value">{location || "—"}</div>
+
+              <div className="metaGrid__label">Backyard Dates</div>
+              <div className="metaGrid__value">{dateRangeLabel}</div>
+
+              <div className="metaGrid__label metaGrid__label--top">
+                Fundraiser status
+              </div>
+              <div className="metaGrid__value metaGrid__value--status">
+                <div className="statusRow">
+                  <span className="statusPill statusPill--lifecycle">
+                    <span
+                      className={`statusDot statusDot--lifecycle is-${safeLower(
+                        lifecycle
+                      )}`}
+                      aria-hidden="true"
+                    />
+                    <span className="statusPill__text">
+                      {statusLabel(lifecycle)}
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              <div className="metaGrid__label">Accepting pledges</div>
+              <div className="metaGrid__value">
+                <strong>{accepting ? "Yes" : "No"}</strong>
               </div>
             </div>
 
-            <div className="needsPanel__groups">
-              {/* Money */}
-              <div className="needAcc">
-                <button
-                  type="button"
-                  className="needAcc__head"
-                  onClick={() =>
-                    setOpenGroups((p) => ({ ...p, money: !p.money }))
-                  }
-                  aria-expanded={openGroups.money}
+            {isOwner ? (
+              <div className="headerMetaPanel__actions">
+                <Link
+                  className="fundraiser__editLink"
+                  to={`/fundraisers/${id}/edit`}
                 >
-                  <span className="needAcc__left">
-                    <span className="needAcc__chev">
-                      {openGroups.money ? "▾" : "▸"}
-                    </span>
-                    <span className="needAcc__title">Money needs</span>
-                    <span className="needAcc__count">{moneyNeeds.length}</span>
-                  </span>
-                  <span className="needAcc__hint">
-                    {openGroups.money ? "Collapse" : "Expand"}
-                  </span>
-                </button>
+                  Edit fundraiser
+                </Link>
+              </div>
+            ) : null}
+          </div>
 
-                {openGroups.money ? (
-                  <div className="needAcc__body">
-                    {moneyNeeds.length === 0 ? (
-                      <div className="needsEmpty">No money needs yet.</div>
-                    ) : (
-                      <div className="needsList">
-                        {moneyNeeds.map((n) => {
-                          const md = moneyNeedMap[n.id] ?? null;
-                          const targetAmount = getMoneyTargetAmount(n, md);
+          {/* STORY */}
+          <div className="panel storyPanel">
+            <h2 className="panel__title">Story / Description</h2>
+            <p className="fundraiser__desc">{description || "—"}</p>
+          </div>
 
-                          return (
-                            <div key={n.id} className="needRow">
-                              <div>
-                                <div className="needRow__title">{n.title}</div>
-                                {n.description ? (
-                                  <div className="needRow__desc">
-                                    {n.description}
-                                  </div>
-                                ) : null}
-
-                                {targetAmount != null ? (
-                                  <div className="needRow__desc">
-                                    <strong>Target:</strong>{" "}
-                                    {formatAUD(targetAmount)}
-                                  </div>
-                                ) : (
-                                  <div className="needRow__desc muted">
-                                    Target: —
-                                  </div>
-                                )}
-
-                                <div className="needRow__meta">
-                                  <span
-                                    className={`needPill needPill--status is-${safeLower(
-                                      n.status
-                                    )}`}
-                                  >
-                                    Status: {n.status ?? "—"}
-                                  </span>
-                                  <span
-                                    className={`needPill needPill--priority is-${safeLower(
-                                      n.priority
-                                    )}`}
-                                  >
-                                    Priority: {n.priority ?? "—"}
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="needRow__actions">
-                                <Link
-                                  className="btn btn--small"
-                                  to={`/fundraisers/${id}/needs/${n.id}/pledge`}
-                                >
-                                  Pledge money
-                                </Link>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                ) : null}
+          {/* NEEDS */}
+          <section className="fundraiser__section">
+            <div className="panel needsPanel">
+              <div className="needsPanel__head">
+                <div>
+                  <h2 className="panel__title" style={{ marginBottom: 6 }}>
+                    What this fundraiser needs
+                  </h2>
+                  <p className="needsPanel__note muted">
+                    Choose a need to pledge against. Keep sections open while
+                    you work; collapse when you want a cleaner view.
+                  </p>
+                </div>
               </div>
 
-              {/* Time */}
-              <div className="needAcc">
-                <button
-                  type="button"
-                  className="needAcc__head"
-                  onClick={() =>
-                    setOpenGroups((p) => ({ ...p, time: !p.time }))
-                  }
-                  aria-expanded={openGroups.time}
-                >
-                  <span className="needAcc__left">
-                    <span className="needAcc__chev">
-                      {openGroups.time ? "▾" : "▸"}
+              <div className="needsPanel__groups">
+                {/* Money */}
+                <div className="needAcc">
+                  <button
+                    type="button"
+                    className="needAcc__head"
+                    onClick={() =>
+                      setOpenGroups((p) => ({ ...p, money: !p.money }))
+                    }
+                    aria-expanded={openGroups.money}
+                  >
+                    <span className="needAcc__left">
+                      <span className="needAcc__chev">
+                        {openGroups.money ? "▾" : "▸"}
+                      </span>
+                      <span className="needAcc__title">Money needs</span>
+                      <span className="needAcc__count">{moneyNeeds.length}</span>
                     </span>
-                    <span className="needAcc__title">Time needs</span>
-                    <span className="needAcc__count">{timeNeeds.length}</span>
-                  </span>
-                  <span className="needAcc__hint">
-                    {openGroups.time ? "Collapse" : "Expand"}
-                  </span>
-                </button>
-
-                {openGroups.time ? (
-                  <div className="needAcc__body">
-                    {timeNeeds.length === 0 ? (
-                      <div className="needsEmpty">No time needs yet.</div>
-                    ) : (
-                      <div className="needsList">
-                        {timeNeeds.map((n) => {
-                          const td = timeNeedMap[n.id] ?? null;
-                          const whenLabel = td
-                            ? formatShiftLineAU(td.start_datetime, td.end_datetime)
-                            : null;
-
-                          return (
-                            <div key={n.id} className="needRow">
-                              <div>
-                                <div className="needRow__title">
-  {n.title}
-  {Number(td?.volunteers_needed) > 0 ? (
-    <span className="needMiniBadge">Vol × {td.volunteers_needed}</span>
-  ) : null}
-</div>
-
-
-                                {whenLabel ? (
-                                  <div className="needRow__desc">
-                                    <strong>Time:</strong> {whenLabel}
-                                  </div>
-                                ) : (
-                                  <div className="needRow__desc muted">
-                                    Time: TBA
-                                  </div>
-                                )}
-
-                                {n.description ? (
-                                  <div className="needRow__desc">
-                                    {n.description}
-                                  </div>
-                                ) : null}
-
-                                <div className="needRow__meta">
-                                  <span
-                                    className={`needPill needPill--status is-${safeLower(
-                                      n.status
-                                    )}`}
-                                  >
-                                    Status: {n.status ?? "—"}
-                                  </span>
-                                  <span
-                                    className={`needPill needPill--priority is-${safeLower(
-                                      n.priority
-                                    )}`}
-                                  >
-                                    Priority: {n.priority ?? "—"}
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="needRow__actions">
-                                <Link
-                                  className="btn btn--small"
-                                  to={`/fundraisers/${id}/needs/${n.id}/pledge`}
-                                >
-                                  Volunteer time
-                                </Link>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                ) : null}
-              </div>
-
-              {/* Items */}
-              <div className="needAcc">
-                <button
-                  type="button"
-                  className="needAcc__head"
-                  onClick={() =>
-                    setOpenGroups((p) => ({ ...p, item: !p.item }))
-                  }
-                  aria-expanded={openGroups.item}
-                >
-                  <span className="needAcc__left">
-                    <span className="needAcc__chev">
-                      {openGroups.item ? "▾" : "▸"}
+                    <span className="needAcc__hint">
+                      {openGroups.money ? "Collapse" : "Expand"}
                     </span>
-                    <span className="needAcc__title">Item needs</span>
-                    <span className="needAcc__count">{itemNeeds.length}</span>
-                  </span>
-                  <span className="needAcc__hint">
-                    {openGroups.item ? "Collapse" : "Expand"}
-                  </span>
-                </button>
+                  </button>
 
-                {openGroups.item ? (
-                  <div className="needAcc__body">
-                    {itemNeeds.length === 0 ? (
-                      <div className="needsEmpty">No item needs yet.</div>
-                    ) : (
-                      <div className="needsList">
-                        {itemNeeds.map((n) => {
-                          const idetail = itemNeedMap[n.id] ?? null;
+                  {openGroups.money ? (
+                    <div className="needAcc__body">
+                      {moneyNeeds.length === 0 ? (
+                        <div className="needsEmpty">No money needs yet.</div>
+                      ) : (
+                        <div className="needsList">
+                          {moneyNeeds.map((n) => {
+                            const md = moneyNeedMap[n.id] ?? null;
+                            const targetAmount = getMoneyTargetAmount(n, md);
 
-                          const mode = String(idetail?.mode ?? "").toLowerCase();
-                          const hasDonation = idetail?.donation_reward_tier != null;
-                          const hasLoan = idetail?.loan_reward_tier != null;
-
-                          const baseTo = `/fundraisers/${id}/needs/${n.id}/pledge`;
-
-                          let itemModeLabel = null;
-                          let buttons = [{ label: "Pledge item", to: baseTo }];
-
-                          if (mode.includes("donat") || (hasDonation && !hasLoan)) {
-                            itemModeLabel = "Donation";
-                            buttons = [
-                              { label: "Donate item", to: `${baseTo}?mode=donation` },
-                            ];
-                          } else if (mode.includes("loan") || (!hasDonation && hasLoan)) {
-                            itemModeLabel = "Loan";
-                            buttons = [{ label: "Loan item", to: `${baseTo}?mode=loan` }];
-                          } else if (mode.includes("either") || (hasDonation && hasLoan)) {
-                            itemModeLabel = "Either";
-                            buttons = [
-                              { label: "Donate item", to: `${baseTo}?mode=donation` },
-                              { label: "Loan item", to: `${baseTo}?mode=loan` },
-                            ];
-                          }
-
-                          return (
-                            <div key={n.id} className="needRow">
-                              <div className="needRow__left">
-                                <div className="needRow__title">
-  {n.title}
-  {Number(idetail?.quantity_needed) > 0 ? (
-    <span className="needMiniBadge">Qty × {idetail.quantity_needed}</span>
-  ) : null}
-</div>
-
-
-                                {n.description ? (
-                                  <div className="needRow__desc">{n.description}</div>
-                                ) : null}
-
-                                <div className="needRow__meta">
-                                  {itemModeLabel ? (
-                                    <span
-                                      className={`needPill needPill--type is-${safeLower(
-                                        itemModeLabel
-                                      )}`}
-                                    >
-                                      Type: {itemModeLabel}
-                                    </span>
+                            return (
+                              <div key={n.id} className="needRow">
+                                <div>
+                                  <div className="needRow__title">{n.title}</div>
+                                  {n.description ? (
+                                    <div className="needRow__desc">
+                                      {n.description}
+                                    </div>
                                   ) : null}
 
-                                  <span
-                                    className={`needPill needPill--status is-${safeLower(
-                                      n.status
-                                    )}`}
-                                  >
-                                    Status: {n.status ?? "—"}
-                                  </span>
+                                  {targetAmount != null ? (
+                                    <div className="needRow__desc">
+                                      <strong>Target:</strong>{" "}
+                                      {formatAUD(targetAmount)}
+                                    </div>
+                                  ) : (
+                                    <div className="needRow__desc muted">
+                                      Target: —
+                                    </div>
+                                  )}
 
-                                  <span
-                                    className={`needPill needPill--priority is-${safeLower(
-                                      n.priority
-                                    )}`}
+                                  <div className="needRow__meta">
+                                    <span
+                                      className={`needPill needPill--status is-${safeLower(
+                                        n.status
+                                      )}`}
+                                    >
+                                      Status: {n.status ?? "—"}
+                                    </span>
+                                    <span
+                                      className={`needPill needPill--priority is-${safeLower(
+                                        n.priority
+                                      )}`}
+                                    >
+                                      Priority: {n.priority ?? "—"}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="needRow__actions">
+                                  <Link
+                                    className="btn btn--small"
+                                    to={`/fundraisers/${id}/needs/${n.id}/pledge`}
                                   >
-                                    Priority: {n.priority ?? "—"}
-                                  </span>
+                                    Pledge money
+                                  </Link>
                                 </div>
                               </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
 
-                              <div className="needRow__actions">
-                                {buttons.map((b) => (
-                                  <Link key={b.to} className="btn btn--small" to={b.to}>
-                                    {b.label}
+                {/* Time */}
+                <div className="needAcc">
+                  <button
+                    type="button"
+                    className="needAcc__head"
+                    onClick={() =>
+                      setOpenGroups((p) => ({ ...p, time: !p.time }))
+                    }
+                    aria-expanded={openGroups.time}
+                  >
+                    <span className="needAcc__left">
+                      <span className="needAcc__chev">
+                        {openGroups.time ? "▾" : "▸"}
+                      </span>
+                      <span className="needAcc__title">Time needs</span>
+                      <span className="needAcc__count">{timeNeeds.length}</span>
+                    </span>
+                    <span className="needAcc__hint">
+                      {openGroups.time ? "Collapse" : "Expand"}
+                    </span>
+                  </button>
+
+                  {openGroups.time ? (
+                    <div className="needAcc__body">
+                      {timeNeeds.length === 0 ? (
+                        <div className="needsEmpty">No time needs yet.</div>
+                      ) : (
+                        <div className="needsList">
+                          {timeNeeds.map((n) => {
+                            const td = timeNeedMap[n.id] ?? null;
+                            const whenLabel = td
+                              ? formatShiftLineAU(
+                                  td.start_datetime,
+                                  td.end_datetime
+                                )
+                              : null;
+
+                            const neededVols = toNumber(td?.volunteers_needed);
+                            const filledVols = toNumber(timeFilledByNeedId[n.id]);
+                            const leftVols = Math.max(0, neededVols - filledVols);
+
+                            return (
+                              <div key={n.id} className="needRow">
+                                <div>
+                                  <div className="needRow__title">
+                                    {n.title}
+                                    {neededVols > 0 ? (
+                                      <span
+                                        className={`needMiniBadge ${
+                                          leftVols === 0
+                                            ? "needMiniBadge--done"
+                                            : ""
+                                        }`}
+                                      >
+                                        Vol left: {leftVols} / {neededVols}
+                                      </span>
+                                    ) : null}
+                                  </div>
+
+                                  {whenLabel ? (
+                                    <div className="needRow__desc">
+                                      <strong>Time:</strong> {whenLabel}
+                                    </div>
+                                  ) : (
+                                    <div className="needRow__desc muted">
+                                      Time: TBA
+                                    </div>
+                                  )}
+
+                                  {n.description ? (
+                                    <div className="needRow__desc">
+                                      {n.description}
+                                    </div>
+                                  ) : null}
+
+                                  <div className="needRow__meta">
+                                    <span
+                                      className={`needPill needPill--status is-${safeLower(
+                                        n.status
+                                      )}`}
+                                    >
+                                      Status: {n.status ?? "—"}
+                                    </span>
+                                    <span
+                                      className={`needPill needPill--priority is-${safeLower(
+                                        n.priority
+                                      )}`}
+                                    >
+                                      Priority: {n.priority ?? "—"}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="needRow__actions">
+                                  <Link
+                                    className="btn btn--small"
+                                    to={`/fundraisers/${id}/needs/${n.id}/pledge`}
+                                  >
+                                    Volunteer time
                                   </Link>
-                                ))}
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                ) : null}
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+
+                {/* Items */}
+                <div className="needAcc">
+                  <button
+                    type="button"
+                    className="needAcc__head"
+                    onClick={() =>
+                      setOpenGroups((p) => ({ ...p, item: !p.item }))
+                    }
+                    aria-expanded={openGroups.item}
+                  >
+                    <span className="needAcc__left">
+                      <span className="needAcc__chev">
+                        {openGroups.item ? "▾" : "▸"}
+                      </span>
+                      <span className="needAcc__title">Item needs</span>
+                      <span className="needAcc__count">{itemNeeds.length}</span>
+                    </span>
+                    <span className="needAcc__hint">
+                      {openGroups.item ? "Collapse" : "Expand"}
+                    </span>
+                  </button>
+
+                  {openGroups.item ? (
+                    <div className="needAcc__body">
+                      {itemNeeds.length === 0 ? (
+                        <div className="needsEmpty">No item needs yet.</div>
+                      ) : (
+                        <div className="needsList">
+                          {itemNeeds.map((n) => {
+                            const idetail = itemNeedMap[n.id] ?? null;
+
+                            const mode = String(idetail?.mode ?? "").toLowerCase();
+                            const hasDonation =
+                              idetail?.donation_reward_tier != null;
+                            const hasLoan = idetail?.loan_reward_tier != null;
+
+                            const baseTo = `/fundraisers/${id}/needs/${n.id}/pledge`;
+
+                            let itemModeLabel = null;
+                            let buttons = [{ label: "Pledge item", to: baseTo }];
+
+                            if (mode.includes("donat") || (hasDonation && !hasLoan)) {
+                              itemModeLabel = "Donation";
+                              buttons = [
+                                {
+                                  label: "Donate item",
+                                  to: `${baseTo}?mode=donation`,
+                                },
+                              ];
+                            } else if (
+                              mode.includes("loan") ||
+                              (!hasDonation && hasLoan)
+                            ) {
+                              itemModeLabel = "Loan";
+                              buttons = [
+                                { label: "Loan item", to: `${baseTo}?mode=loan` },
+                              ];
+                            } else if (
+                              mode.includes("either") ||
+                              (hasDonation && hasLoan)
+                            ) {
+                              itemModeLabel = "Either";
+                              buttons = [
+                                {
+                                  label: "Donate item",
+                                  to: `${baseTo}?mode=donation`,
+                                },
+                                { label: "Loan item", to: `${baseTo}?mode=loan` },
+                              ];
+                            }
+
+                            const neededQty = toNumber(idetail?.quantity_needed);
+                            const filledQty = toNumber(itemFilledByNeedId[n.id]);
+                            const leftQty = Math.max(0, neededQty - filledQty);
+
+                            return (
+                              <div key={n.id} className="needRow">
+                                <div className="needRow__left">
+                                  <div className="needRow__title">
+                                    {n.title}
+                                    {neededQty > 0 ? (
+                                      <span
+                                        className={`needMiniBadge ${
+                                          leftQty === 0
+                                            ? "needMiniBadge--done"
+                                            : ""
+                                        }`}
+                                      >
+                                        Qty left: {leftQty} / {neededQty}
+                                      </span>
+                                    ) : null}
+                                  </div>
+
+                                  {n.description ? (
+                                    <div className="needRow__desc">
+                                      {n.description}
+                                    </div>
+                                  ) : null}
+
+                                  <div className="needRow__meta">
+                                    {itemModeLabel ? (
+                                      <span
+                                        className={`needPill needPill--type is-${safeLower(
+                                          itemModeLabel
+                                        )}`}
+                                      >
+                                        Type: {itemModeLabel}
+                                      </span>
+                                    ) : null}
+
+                                    <span
+                                      className={`needPill needPill--status is-${safeLower(
+                                        n.status
+                                      )}`}
+                                    >
+                                      Status: {n.status ?? "—"}
+                                    </span>
+
+                                    <span
+                                      className={`needPill needPill--priority is-${safeLower(
+                                        n.priority
+                                      )}`}
+                                    >
+                                      Priority: {n.priority ?? "—"}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="needRow__actions">
+                                  {buttons.map((b) => (
+                                    <Link
+                                      key={b.to}
+                                      className="btn btn--small"
+                                      to={b.to}
+                                    >
+                                      {b.label}
+                                    </Link>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* PLEDGES */}
-        <section className="fundraiser__section">
-          <div className="panel pledgesPanel">
-            <h3 className="panel__title">Pledges</h3>
+          {/* PLEDGES */}
+          <section className="fundraiser__section">
+            <div className="panel pledgesPanel">
+              <h3 className="panel__title">Pledges</h3>
 
-            {reportError ? (
-              <p className="muted">Couldn’t load pledges.</p>
-            ) : isReportLoading ? (
-              <p className="muted">Loading pledges…</p>
-            ) : pledges.length === 0 ? (
-              <p className="muted">No pledges yet.</p>
+              {reportError ? (
+                <p className="muted">Couldn’t load pledges.</p>
+              ) : isReportLoading ? (
+                <p className="muted">Loading pledges…</p>
+              ) : pledges.length === 0 ? (
+                <p className="muted">No pledges yet.</p>
+              ) : (
+                <ul className="pledgeList">
+                  {pledges.map((p) => (
+                    <li key={p.id} className="pledgeRow">
+                      <div className="pledgeRow__top">
+                        <strong className="pledgeRow__need">
+                          {p.need_title}
+                        </strong>
+                        <span className="pledgeRow__who">
+                          {p.supporter_username ? p.supporter_username : "anonymous"}
+                        </span>
+                      </div>
+                      <div className="pledgeRow__comment">{p.comment ?? "—"}</div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </section>
+        </div>
+
+        {/* RIGHT */}
+        <aside className="fundraiser__rightCol">
+          <div className="panel rewardsPanel">
+            <h3 className="panel__title">Rewards</h3>
+
+            {!enable_rewards ? (
+              <p className="muted">Rewards are disabled for this fundraiser.</p>
+            ) : reward_tiers.length > 0 ? (
+              <RewardTierList
+                tiers={reward_tiers}
+                disabled={true}
+                onDeleteTier={null}
+                onUpdateTier={null}
+              />
             ) : (
-              <ul className="pledgeList">
-                {pledges.map((p) => (
-                  <li key={p.id} className="pledgeRow">
-                    <div className="pledgeRow__top">
-                      <strong className="pledgeRow__need">{p.need_title}</strong>
-                      <span className="pledgeRow__who">
-                        {p.supporter_username ? p.supporter_username : "anonymous"}
-                      </span>
-                    </div>
-                    <div className="pledgeRow__comment">{p.comment ?? "—"}</div>
-                  </li>
-                ))}
-              </ul>
+              <p className="muted">No reward tiers yet.</p>
             )}
           </div>
-        </section>
+        </aside>
       </div>
-
-      {/* RIGHT */}
-      <aside className="fundraiser__rightCol">
-        <div className="panel rewardsPanel">
-          <h3 className="panel__title">Rewards</h3>
-
-          {!enable_rewards ? (
-            <p className="muted">Rewards are disabled for this fundraiser.</p>
-          ) : reward_tiers.length > 0 ? (
-            <RewardTierList
-              tiers={reward_tiers}
-              disabled={true}
-              onDeleteTier={null}
-              onUpdateTier={null}
-            />
-          ) : (
-            <p className="muted">No reward tiers yet.</p>
-          )}
-        </div>
-      </aside>
     </div>
-  </div>
-);
+  );
 }
