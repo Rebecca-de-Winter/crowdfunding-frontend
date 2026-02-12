@@ -234,43 +234,50 @@ function TemplateNeedsPreview({ templateNeeds = [] }) {
               ) : (
                 <div className="needsList">
                   {itemNeeds.map((n) => {
-                    const modeLabel = normaliseMode(n.mode);
+  const modeLabel = normaliseMode(n.mode);
 
-                    return (
-                      <div key={n.id ?? `${n.title}-item`} className="needRow">
-                        <div className="needRow__left">
-                          <div className="needRow__title">
-                            {n.title || "Item need"} <QtyBadge n={n} />
-                          </div>
+  return (
+    <div key={n.id ?? `${n.title}-item`} className="needRow">
+      <div className="needRow__left">
+        <div className="needRow__title">
+          {n.title || "Item need"}
 
-                          {n.description ? <div className="needRow__desc">{n.description}</div> : null}
+          {Number(n.quantity_needed) > 0 ? (
+            <span className="needMiniBadge">Qty × {n.quantity_needed}</span>
+          ) : null}
+        </div>
 
-                          {/* Clean info (no duplicate “Type” pill) */}
-                          <div className="needRow__desc needRow__desc--secondary">
-                            <strong>Item:</strong> {n.item_name || "—"}
-                            {n.quantity_needed ? ` • Qty: ${n.quantity_needed}` : ""}
-                            {modeLabel ? ` • Mode: ${modeLabel}` : ""}
-                          </div>
+        {n.description ? <div className="needRow__desc">{n.description}</div> : null}
 
-                          <div className="needRow__meta">
-                            {/* status hidden in preview via CSS */}
-                            <span className={`needPill needPill--status is-${safeLower(n.status)}`}>
-                              Status: {n.status ?? "—"}
-                            </span>
-                            <span className={`needPill needPill--priority is-${safeLower(n.priority)}`}>
-                              Priority: {n.priority ?? "—"}
-                            </span>
-                          </div>
-                        </div>
+        {/* ✅ Keep this line SIMPLE: item name only (no qty/mode duplicates) */}
+        <div className="needRow__desc">
+          <strong>Item:</strong> {n.item_name || "—"}
+        </div>
 
-                        <div className="needRow__actions">
-                          <button className="btn btn--small" type="button" disabled>
-                            Pledge item
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+        <div className="needRow__meta">
+          {/* ✅ RESTORE Type pill (Loan/Donation/Either) */}
+          {modeLabel ? (
+            <span className={`needPill needPill--type is-${safeLower(modeLabel)}`}>
+              Type: {modeLabel}
+            </span>
+          ) : null}
+
+          {/* ✅ Keep Priority (and Status if you want it—up to you) */}
+          <span className={`needPill needPill--priority is-${safeLower(n.priority)}`}>
+            Priority: {n.priority ?? "—"}
+          </span>
+        </div>
+      </div>
+
+      <div className="needRow__actions">
+        <button className="btn btn--small" type="button" disabled>
+          Pledge item
+        </button>
+      </div>
+    </div>
+  );
+})}
+
                 </div>
               )}
             </div>

@@ -619,3 +619,27 @@
     width: 100%;
   }
 }
+/* =========================
+   Need row mini badges (Fundraiser ID page)
+   ========================= */
+
+.needRow__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Small badge (Qty / Vols / etc.) */
+.needMiniBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  border: 1px solid rgba(250, 187, 76, 0.35);
+  background: rgba(250, 187, 76, 0.14);
+  color: rgba(253, 244, 225, 0.95);
+  white-space: nowrap;
+}

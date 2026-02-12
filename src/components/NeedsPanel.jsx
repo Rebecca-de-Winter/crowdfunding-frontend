@@ -651,7 +651,7 @@ export default function NeedsPanel({
       </div>
 
       <p className="muted needsPanel__note">
-        Add your Money/Time/Item needs. Keep them open while you work; collapse when you want a
+        Add your Money/Time/Item needs. Keep them open while you work, collapse them when you want a
         cleaner view.
       </p>
 

@@ -712,7 +712,13 @@ export default function FundraiserPage() {
                           return (
                             <div key={n.id} className="needRow">
                               <div>
-                                <div className="needRow__title">{n.title}</div>
+                                <div className="needRow__title">
+  {n.title}
+  {Number(td?.volunteers_needed) > 0 ? (
+    <span className="needMiniBadge">Vol × {td.volunteers_needed}</span>
+  ) : null}
+</div>
+
 
                                 {whenLabel ? (
                                   <div className="needRow__desc">
@@ -824,7 +830,13 @@ export default function FundraiserPage() {
                           return (
                             <div key={n.id} className="needRow">
                               <div className="needRow__left">
-                                <div className="needRow__title">{n.title}</div>
+                                <div className="needRow__title">
+  {n.title}
+  {Number(idetail?.quantity_needed) > 0 ? (
+    <span className="needMiniBadge">Qty × {idetail.quantity_needed}</span>
+  ) : null}
+</div>
+
 
                                 {n.description ? (
                                   <div className="needRow__desc">{n.description}</div>
