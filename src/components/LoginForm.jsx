@@ -1,9 +1,14 @@
+// src/components/LoginForm.jsx
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import postLogin from "../api/post-login.js";
 
 function LoginForm() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // RequireAuth sends: state={{ from: location.pathname }}
+  const from = location.state?.from || "/profile";
 
   const [credentials, setCredentials] = useState({
     username: "",
@@ -14,10 +19,7 @@ function LoginForm() {
 
   const handleChange = (event) => {
     const { id, value } = event.target;
-    setCredentials((prev) => ({
-      ...prev,
-      [id]: value,
-    }));
+    setCredentials((prev) => ({ ...prev, [id]: value }));
   };
 
   const handleSubmit = async (event) => {
@@ -28,10 +30,16 @@ function LoginForm() {
 
     try {
       const response = await postLogin(credentials.username, credentials.password);
+
       window.localStorage.setItem("token", response.token);
-      navigate("/");
+
+      // ✅ tell NavBar (and anything else) auth state changed (same tab)
+      window.dispatchEvent(new Event("auth-changed"));
+
+      // ✅ send them back where they wanted to go
+      navigate(from, { replace: true });
     } catch (e) {
-      setError(e.message);
+      setError(e.message || "Login failed");
     }
   };
 
@@ -45,6 +53,7 @@ function LoginForm() {
           placeholder="Enter username"
           onChange={handleChange}
           value={credentials.username}
+          autoComplete="username"
         />
       </div>
 
@@ -56,6 +65,7 @@ function LoginForm() {
           placeholder="Password"
           onChange={handleChange}
           value={credentials.password}
+          autoComplete="current-password"
         />
       </div>
 

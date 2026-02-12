@@ -10,8 +10,10 @@ function LoginPage() {
         <header className="login-header">
           <img className="login-logo" src={bfLogo} alt="Backyard Festival" />
           <h1 className="login-title">Welcome back</h1>
+
           <p className="login-subtitle">
-            Log in to create a festival, apply templates, and edit your fundraisers.
+            Log in to create a festival, apply templates, manage pledges,
+            and edit your fundraisers.
           </p>
         </header>
 
@@ -19,7 +21,11 @@ function LoginPage() {
 
         <footer className="login-footer">
           <p className="login-help">
-            Just browsing? <Link to="/fundraisers">View fundraisers</Link>
+            Just browsing? <Link to="/fundraisers">Explore festivals</Link>
+          </p>
+
+          <p className="login-help">
+            New here? <Link to="/signup">Create an account</Link> and start your own festival.
           </p>
         </footer>
       </div>

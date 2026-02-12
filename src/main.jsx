@@ -12,6 +12,7 @@ import SignUpPage from "./pages/SignUpPage.jsx";
 import EditFestivalPage from "./pages/EditFestivalPage.jsx";
 import PledgeNeedPage from "./pages/PledgeNeedPage.jsx";
 import RequireAuth from "./components/RequireAuth.jsx";
+import ProfilePage from "./pages/ProfilePage.jsx";
 
 import "./index.css";
 
@@ -50,6 +51,17 @@ const MyRouter = createBrowserRouter([
           </RequireAuth>
         ),
       },
+
+      // profile/dashboard (protected)
+      {
+        path: "profile",
+        element: (
+          <RequireAuth>
+            <ProfilePage />
+          </RequireAuth>
+        ),
+      },
+
 
       // pledge a specific need (protected)
       {

@@ -1,3 +1,4 @@
+// src/components/NavBar.jsx
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./NavBar.css";
@@ -12,8 +13,10 @@ function NavBar() {
   const [query, setQuery] = useState("");
   const searchInputRef = useRef(null);
 
-  // Simple auth check
-  const tokenExists = Boolean(localStorage.getItem("token"));
+  // Reactive auth check
+  const [tokenExists, setTokenExists] = useState(
+    Boolean(localStorage.getItem("token"))
+  );
 
   useEffect(() => {
     if (searchOpen) searchInputRef.current?.focus();
@@ -26,6 +29,21 @@ function NavBar() {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  // ✅ Keep tokenExists in sync (other tabs + same-tab trigger)
+useEffect(() => {
+  const syncAuth = () => setTokenExists(Boolean(localStorage.getItem("token")));
+
+  window.addEventListener("storage", syncAuth);        // other tabs
+  window.addEventListener("auth-changed", syncAuth);   // same tab
+
+  syncAuth();
+  return () => {
+    window.removeEventListener("storage", syncAuth);
+    window.removeEventListener("auth-changed", syncAuth);
+  };
+}, []);
+
 
   const toggleMenu = () => setMenuOpen((v) => !v);
 
@@ -40,10 +58,13 @@ function NavBar() {
   const closeMenu = () => setMenuOpen(false);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    closeMenu();
-    navigate("/");
-  };
+  localStorage.removeItem("token");
+  window.dispatchEvent(new Event("auth-changed"));
+  setTokenExists(false);
+  closeMenu();
+  navigate("/");
+};
+
 
   const onSubmitSearch = (e) => {
     e.preventDefault();
@@ -60,43 +81,39 @@ function NavBar() {
           onClick={closeMenu}
           aria-label="Backyard Festival Home"
         >
-          <img
-            className="navbar-logo-img"
-            src={bfLogo}
-            alt="Backyard Festival"
-          />
+          <img className="navbar-logo-img" src={bfLogo} alt="Backyard Festival" />
         </Link>
 
         {/* Desktop navigation */}
         <nav className="navbar-links" aria-label="Primary navigation">
           <Link to="/" className="navbar-link">Home</Link>
-          <Link to="/fundraisers" className="navbar-link">Browse Fundraisers</Link>
+          <Link to="/fundraisers" className="navbar-link">Browse Festivals</Link>
           <Link to="/resources" className="navbar-link">Resources</Link>
           <Link to="/how-it-works" className="navbar-link">How it Works</Link>
 
-          {!tokenExists ? ( <>
-
-            <Link to="/signup" className="navbar-link">Sign Up</Link>
-            <Link to="/login" className="navbar-link">Login</Link>
-            
-         </> ) : (
-            <button
-              type="button"
-              className="navbar-link navbar-link--button"
-              onClick={handleLogout}
-            >
-              Logout
-            </button>
+          {!tokenExists ? (
+            <>
+              <Link to="/signup" className="navbar-link">Sign Up</Link>
+              <Link to="/login" className="navbar-link">Login</Link>
+            </>
+          ) : (
+            <>
+              <Link to="/profile" className="navbar-link">My Dashboard</Link>
+              <button
+                type="button"
+                className="navbar-link navbar-link--button"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            </>
           )}
         </nav>
 
         {/* Actions */}
         <div className="navbar-actions">
           {/* Search */}
-          <form
-            className={`search ${searchOpen ? "open" : ""}`}
-            onSubmit={onSubmitSearch}
-          >
+          <form className={`search ${searchOpen ? "open" : ""}`} onSubmit={onSubmitSearch}>
             <button
               type="button"
               className="icon-btn search-btn"
@@ -133,12 +150,8 @@ function NavBar() {
             )}
           </form>
 
-          {/* Create Festival */}
-          <Link
-            to="/fundraisers/new"
-            className="cta-btn"
-            onClick={closeMenu}
-          >
+          {/* ✅ Always visible; route itself is protected by RequireAuth */}
+          <Link to="/fundraisers/new" className="cta-btn" onClick={closeMenu}>
             Create Festival
           </Link>
 
@@ -191,32 +204,38 @@ function NavBar() {
       <div id="mobile-nav" className={`mobile-panel ${menuOpen ? "open" : ""}`}>
         <nav className="mobile-links" aria-label="Mobile navigation">
           <Link to="/" className="mobile-link" onClick={closeMenu}>Home</Link>
-          <Link to="/fundraisers" className="mobile-link" onClick={closeMenu}>Browse Fundraisers</Link>
+          <Link to="/fundraisers" className="mobile-link" onClick={closeMenu}>Browse Festivals</Link>
           <Link to="/resources" className="mobile-link" onClick={closeMenu}>Resources</Link>
           <Link to="/how-it-works" className="mobile-link" onClick={closeMenu}>How it Works</Link>
 
           {!tokenExists ? (
-           <>
-            <Link to="/signup" className="navbar-link">Sign Up</Link>
-            <Link to="/login" className="navbar-link">Login</Link> 
-         </>
+            <>
+              <Link to="/signup" className="mobile-link" onClick={closeMenu}>Sign Up</Link>
+              <Link to="/login" className="mobile-link" onClick={closeMenu}>Login</Link>
+            </>
           ) : (
-            <button
-              type="button"
-              className="mobile-link mobile-link--button"
-              onClick={handleLogout}
-            >
-              Logout
-            </button>
-          )}
+            <>
+              <Link to="/profile" className="mobile-link" onClick={closeMenu}>
+                My Dashboard
+              </Link>
 
-          <Link
-            to="/fundraisers/new"
-            className="mobile-link mobile-cta"
-            onClick={closeMenu}
-          >
-            Create Festival
-          </Link>
+              <button
+                type="button"
+                className="mobile-link mobile-link--button"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+
+              <Link
+                to="/fundraisers/new"
+                className="mobile-link mobile-cta"
+                onClick={closeMenu}
+              >
+                Create Festival
+              </Link>
+            </>
+          )}
         </nav>
       </div>
     </header>
