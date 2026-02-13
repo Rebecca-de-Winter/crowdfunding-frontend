@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import useFundraisers from "../hooks/use-fundraisers";
 import FundraiserCard from "../components/FundraiserCard";
+import HeroCarousel from "../components/HeroCarousel";
 import "./HomePage.css";
 
 function HomePage() {
@@ -33,7 +34,7 @@ function HomePage() {
 
       {flash && (
         <div
-          onAnimationEnd={() => setFlash(null)} //  state update via event handler, not effect
+          onAnimationEnd={() => setFlash(null)} // state update via event handler, not effect
           style={{
             margin: "12px auto 0",
             maxWidth: 1100,
@@ -50,22 +51,8 @@ function HomePage() {
         </div>
       )}
 
-      <section className="home-hero">
-        <h1 className="home-title">Backyard Festival</h1>
-        <p className="home-subtitle">
-          Fundraise for small, magical community events — money, time, and items.
-        </p>
-
-        <div className="home-cta">
-          <Link className="home-button" to="/fundraisers">
-            Browse Fundraisers
-          </Link>
-
-          <Link className="home-button home-button--ghost" to="/fundraisers/new">
-            Create Festival
-          </Link>
-        </div>
-      </section>
+      {/* ✅ New Hero Carousel */}
+      <HeroCarousel />
 
       <section className="home-featured">
         <div className="home-sectionHeader">
