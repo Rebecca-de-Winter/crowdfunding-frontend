@@ -349,7 +349,7 @@ export default function PledgeNeedPage() {
         need: Number(needId),
         comment,
         anonymous,
-        status: "approved",
+        // status: "approved",
       };
 
       const pledgeRes = await authFetch(`${import.meta.env.VITE_API_URL}pledges/`, {

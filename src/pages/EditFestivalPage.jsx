@@ -115,6 +115,11 @@ export default function EditFestivalPage() {
       end_date: toDateInputValue(fundraiser.end_date),
       status: fundraiser.status ?? "draft",
       enable_rewards: Boolean(fundraiser.enable_rewards),
+      require_pledge_approval:
+      typeof fundraiser.require_pledge_approval === "boolean"
+      ? fundraiser.require_pledge_approval
+      : true,
+
     });
 
     setTiers(fundraiser.reward_tiers ?? []);
@@ -184,6 +189,7 @@ export default function EditFestivalPage() {
         end_date: form.end_date || null,
         status: form.status,
         enable_rewards: form.enable_rewards,
+        require_pledge_approval: Boolean(form.require_pledge_approval),
       });
 
       navigate(`/fundraisers/${updated.id}`);
@@ -561,33 +567,60 @@ export default function EditFestivalPage() {
           {/* RIGHT COLUMN */}
           <aside className="rightRewardsCol">
             <div className="panel enablePanel">
-              <div className="enablePanel__head">
-                <h3 className="panel__title enablePanel__title">Enable rewards</h3>
-              </div>
+  <div className="enablePanel__head">
+    <h3 className="panel__title enablePanel__title">Festival settings</h3>
+  </div>
 
-              <div className="sidebarRow">
-                <div className="blockBox">
-                  <label className="toggle__label">
-                    <span className="toggle__text">Enable rewards</span>
+  {/* ENABLE REWARDS */}
+  <div className="sidebarRow">
+    <div className="blockBox">
+      <label className="toggle__label">
+        <span className="toggle__text">Enable rewards</span>
 
-                    <input
-                      id="enable_rewards"
-                      type="checkbox"
-                      checked={!!form.enable_rewards}
-                      onChange={handleChange}
-                      disabled={isSaving}
-                    />
+        <input
+          id="enable_rewards"
+          type="checkbox"
+          checked={!!form.enable_rewards}
+          onChange={handleChange}
+          disabled={isSaving}
+        />
 
-                    <span className="toggle__slider" aria-hidden="true" />
-                  </label>
-                </div>
-              </div>
+        <span className="toggle__slider" aria-hidden="true" />
+      </label>
+    </div>
+  </div>
 
-              <p className="muted enablePanel__note">
-                {!form.enable_rewards
-                  ? "Rewards are off. Turn this on to add reward tiers."
-                  : "Rewards enabled — add/edit/delete reward tiers below."}
-              </p>
+  <p className="muted enablePanel__note">
+    {!form.enable_rewards
+      ? "Rewards are off. Turn this on to add reward tiers."
+      : "Rewards enabled — add/edit/delete reward tiers below."}
+  </p>
+
+  {/* REQUIRE APPROVAL */}
+  <div className="sidebarRow">
+    <div className="blockBox">
+      <label className="toggle__label">
+        <span className="toggle__text">Require approval for pledges</span>
+
+        <input
+          id="require_pledge_approval"
+          type="checkbox"
+          checked={!!form.require_pledge_approval}
+          onChange={handleChange}
+          disabled={isSaving}
+        />
+
+        <span className="toggle__slider" aria-hidden="true" />
+      </label>
+    </div>
+  </div>
+
+  <p className="muted enablePanel__note">
+    {form.require_pledge_approval
+      ? "Pledges will start as Pending. You’ll approve or decline them."
+      : "Pledges will be auto-approved immediately."}
+  </p>
+
 
               {form.enable_rewards && (
                 <div className="rewardTierBox">

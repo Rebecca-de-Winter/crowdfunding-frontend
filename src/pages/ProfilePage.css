@@ -1,19 +1,90 @@
 /* src/pages/ProfilePage.css */
+
 .profilePage {
-  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 22px 16px 60px;
+  color: var(--text);
 }
 
 .profilePage__header {
   margin-bottom: 18px;
 }
 
+.profilePage__headerTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
 .profilePage__title {
   margin: 0 0 6px 0;
+  font-weight: 900;
+  font-size: 40px;
+  line-height: 1.05;
 }
 
 .profilePage__subtitle {
   margin: 0;
   opacity: 0.85;
+  max-width: 60ch;
+}
+
+.profilePage__badgeArea {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.profileBadge {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.20);
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.profileBadge--warn {
+  border-color: rgba(250, 187, 76, 0.35);
+  background: rgba(250, 187, 76, 0.14);
+  color: rgba(253, 244, 225, 0.98);
+}
+
+.roleToggle {
+  display: inline-flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 6px;
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.roleToggle__btn {
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 900;
+  cursor: pointer;
+  opacity: 0.92;
+}
+
+.roleToggle__btn.is-active {
+  background: linear-gradient(180deg, var(--accent), var(--accent2));
+  color: #183b2c;
+  border-color: rgba(0, 0, 0, 0.15);
+  opacity: 1;
+}
+
+.profileHeaderDivider {
+  height: 1px;
+  background: rgba(245, 232, 205, 0.14);
+  margin-top: 14px;
 }
 
 .profilePage__state {
@@ -24,24 +95,70 @@
   padding: 14px;
   border: 1px solid rgba(250, 187, 76, 0.35);
   border-radius: 12px;
+  background: rgba(0, 0, 0, 0.14);
 }
 
+/* Totals strip */
+.profileStats {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 900px) {
+  .profileStats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.profileStat {
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  border-radius: 18px;
+  padding: 14px;
+  background: var(--panel);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
+}
+
+.profileStat__label {
+  font-weight: 900;
+  opacity: 0.9;
+  margin-bottom: 8px;
+}
+
+/* Pill-style values */
+.profileStat__value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.20);
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  width: fit-content;
+}
+
+/* Layout grid */
 .profileGrid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 18px;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 980px) {
   .profileGrid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
 }
 
 .profileCard {
   border: 1px solid rgba(245, 232, 205, 0.18);
-  border-radius: 16px;
+  border-radius: 22px;
   padding: 16px;
+  background: var(--panel);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
 }
 
 .profileCard__top {
@@ -52,17 +169,67 @@
   margin-bottom: 10px;
 }
 
+.profileCard__topLeft {
+  display: grid;
+  gap: 8px;
+}
+
 .profileCard__title {
   margin: 0;
+  font-weight: 900;
+  font-size: 20px;
 }
 
 .profileCard__link {
   text-decoration: none;
+  color: var(--text);
+  opacity: 0.9;
+  font-weight: 900;
+}
+
+.profileCard__link:hover {
+  opacity: 1;
+  text-decoration: underline;
 }
 
 .profileCard__empty {
-  opacity: 0.8;
+  opacity: 0.85;
   padding: 10px 0;
+}
+
+.profileChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.16);
+  font-weight: 900;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.chip.is-pending {
+  border-color: rgba(250, 187, 76, 0.35);
+  background: rgba(250, 187, 76, 0.12);
+}
+
+.chip.is-approved {
+  border-color: rgba(60, 255, 180, 0.22);
+  background: rgba(60, 255, 180, 0.10);
+}
+
+.chip.is-cancelled,
+.chip.is-declined {
+  border-color: rgba(255, 120, 120, 0.25);
+  background: rgba(255, 120, 120, 0.10);
 }
 
 .profileList {
@@ -78,19 +245,30 @@
   justify-content: space-between;
   gap: 12px;
   border: 1px solid rgba(245, 232, 205, 0.12);
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 12px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.profileRow--pending {
+  border-color: rgba(250, 187, 76, 0.35);
+  box-shadow: 0 0 0 1px rgba(250, 187, 76, 0.10) inset;
 }
 
 .profileRow__title {
   text-decoration: none;
-  font-weight: 700;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.profileRow__title:hover {
+  text-decoration: underline;
 }
 
 .profileRow__meta {
-  margin-top: 4px;
+  margin-top: 6px;
   font-size: 0.92rem;
-  opacity: 0.9;
+  opacity: 0.92;
 }
 
 .muted {
@@ -100,22 +278,165 @@
 .profileRow__actions {
   display: flex;
   gap: 8px;
-  align-items: start;
+  align-items: flex-start;
+  flex-wrap: wrap;
 }
+
+/* =========================
+   Tiny Buttons (Unified System)
+   Applies to View / Cancel / Approve / Decline
+========================= */
 
 .btnTiny {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 10px;
+
+  height: 32px;              /* consistent height */
+  padding: 0 12px;           /* nicer spacing left/right */
+
+  font-size: 0.88rem;        /* slightly larger than before */
+  font-weight: 900;
+  line-height: 1;            /* prevents jumping on wrap */
+  white-space: nowrap;
+
   border-radius: 999px;
-  border: 1px solid rgba(245, 232, 205, 0.22);
+  border: 1px solid rgba(245, 232, 205, 0.28);
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--text);
+
+  cursor: pointer;
   text-decoration: none;
-  font-size: 0.88rem;
+
+  transition: 
+    transform 0.12s ease, 
+    filter 0.15s ease, 
+    box-shadow 0.15s ease;
 }
+
+.btnTiny:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.28);
+}
+
+.btnTiny:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* Approve variant */
+.btnTiny--approve {
+  background: linear-gradient(180deg, #49b37d, #2f9f67);
+  border-color: rgba(34, 176, 92, 0.6);
+  color: #083c2b;
+}
+
+/* Danger / decline / cancel */
 .btnTiny--danger {
-  border-color: rgba(255, 120, 120, 0.55);
+  background: rgba(255, 120, 120, 0.08);
+  border-color: rgba(255, 120, 120, 0.65);
+  color: rgba(255, 170, 170, 0.98);
 }
+
 .btnTiny--danger:hover {
-  filter: brightness(1.1);
+  background: rgba(255, 120, 120, 0.15);
+  filter: brightness(1.02);
+}
+
+/* Value badges */
+.valueBadge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 10px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  border: 1px solid rgba(245, 232, 205, 0.22);
+  background: rgba(0, 0, 0, 0.16);
+  white-space: nowrap;
+}
+
+.valueBadge.is-money {
+  border-color: rgba(250, 187, 76, 0.35);
+  background: rgba(250, 187, 76, 0.12);
+}
+
+.valueBadge.is-time {
+  border-color: rgba(60, 255, 180, 0.22);
+  background: rgba(60, 255, 180, 0.10);
+}
+
+.valueBadge.is-item {
+  border-color: rgba(185, 160, 255, 0.28);
+  background: rgba(185, 160, 255, 0.10);
+}
+
+/* Rewards */
+.rewardPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.rewardPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(250, 187, 76, 0.35);
+  background: rgba(250, 187, 76, 0.12);
+  font-weight: 900;
+  font-size: 0.85rem;
+}
+/* =========================
+   Pledge action buttons
+   ========================= */
+
+.profileRow__actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Base pledge button */
+.pledgeBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px; /* taller */
+  padding: 0 16px;
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: 0.9rem;
+  text-decoration: none;
+  border: 1px solid rgba(245, 232, 205, 0.25);
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--text);
+  transition: transform 0.12s ease, filter 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pledgeBtn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.35);
+}
+
+/* Approve button */
+.pledgeBtn--approve {
+  background: linear-gradient(180deg, #49b37d, #2f9f67);
+  border: none;
+  color: #083c2b;
+}
+
+/* Decline button */
+.pledgeBtn--decline {
+  border: 1px solid rgba(255, 120, 120, 0.6);
+  color: rgba(255, 170, 170, 0.95);
+}
+
+.pledgeBtn--decline:hover {
+  background: rgba(255, 120, 120, 0.1);
 }

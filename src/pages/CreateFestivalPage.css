@@ -378,3 +378,13 @@
 .cf-previewPanel .fundraiser--preview .needRow__meta {
   opacity: 1 !important;
 }
+.cf-checkRow {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.cf-checkRow input {
+  margin-top: 3px;
+}

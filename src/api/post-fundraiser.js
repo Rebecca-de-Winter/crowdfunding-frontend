@@ -10,7 +10,8 @@ async function postFundraiser(
   end_date,
   status,
   enable_rewards,
-  sort_order
+  sort_order,
+  require_pledge_approval
 ) {
   const url = `${import.meta.env.VITE_API_URL}fundraisers/`;
 
@@ -27,6 +28,7 @@ async function postFundraiser(
       status,
       enable_rewards,
       sort_order,
+      require_pledge_approval
     }),
   });
 

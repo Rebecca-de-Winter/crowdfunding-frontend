@@ -115,10 +115,10 @@ function TemplateNeedsPreview({ templateNeeds = [] }) {
 
                         {n.description ? <div className="needRow__desc">{n.description}</div> : null}
 
-                        <div className="needRow__desc needRow__desc--secondary">
+                        {/* <div className="needRow__desc needRow__desc--secondary">
                           <strong>Target:</strong>{" "}
                           {n.target_amount != null && n.target_amount !== "" ? `$${n.target_amount}` : "—"}
-                        </div>
+                        </div> */}
 
                         <div className="needRow__meta">
                           {/* status hidden in preview via CSS */}
@@ -321,6 +321,8 @@ export default function CreateFestivalPage() {
   const [openPreviews, setOpenPreviews] = useState(() => new Set());
 
   const tokenExists = Boolean(localStorage.getItem("token"));
+  const [requireApproval, setRequireApproval] = useState(true);
+
 
   useEffect(() => {
     async function fetchTemplates() {
@@ -366,7 +368,8 @@ export default function CreateFestivalPage() {
         end_date,
         status,
         enable_rewards,
-        sort_order
+        sort_order,
+        requireApproval
       );
 
       navigate(`/fundraisers/${created.id}/edit`);
@@ -378,6 +381,7 @@ export default function CreateFestivalPage() {
   }
 
   async function handleUseTemplate(template) {
+    console.log("🔥 handleUseTemplate fired", template?.id);
     setError(null);
     setIsSaving(true);
 
@@ -392,7 +396,8 @@ export default function CreateFestivalPage() {
         null,
         "draft",
         Boolean(template.enable_rewards),
-        0
+        0,
+        requireApproval
       );
 
       const applied = await applyTemplate(placeholder.id, template.id);
@@ -414,174 +419,184 @@ export default function CreateFestivalPage() {
   }
 
   return (
-    <div className="cf-page">
-      <header className="cf-header">
-        <h1 className="cf-title">Create a Festival</h1>
-        <p className="cf-subtitle">
-          Start from scratch or pick a template and tweak it before you publish.
+  <div className="cf-page">
+    <header className="cf-header">
+      <h1 className="cf-title">Create a Festival</h1>
+      <p className="cf-subtitle">
+        Start from scratch or pick a template and tweak it before you publish.
+      </p>
+
+      {!tokenExists && (
+        <div className="cf-banner cf-banner--warn">
+          You need to log in before creating a fundraiser.
+        </div>
+      )}
+
+      {error && <div className="cf-banner cf-banner--error">{error}</div>}
+    </header>
+
+    <section className="cf-section">
+      <div className="cf-sectionHeader">
+        <h2 className="cf-h2">Start blank</h2>
+        <p className="cf-help">
+          Create your festival as a Draft first, then set status to{" "}
+          <strong>Active</strong> from the edit screen when you’re ready to accept pledges.
         </p>
+      </div>
 
-        {!tokenExists && (
-          <div className="cf-banner cf-banner--warn">You need to log in before creating a fundraiser.</div>
-        )}
+      <div className="cf-card">
+        <FundraiserForm
+          onSubmit={handleCreateBlank}
+          isSaving={isSaving}
+          hideAdminFields
+          requireApproval={requireApproval}
+          onRequireApprovalChange={setRequireApproval}
+        />
+      </div>
+    </section>
 
-        {error && <div className="cf-banner cf-banner--error">{error}</div>}
-      </header>
+    <section className="cf-section">
+      <div className="cf-sectionHeader">
+        <h2 className="cf-h2">...Or use a template</h2>
+        <p className="cf-help">
+          Preview what you’ll get (needs + rewards), then click “Use this template”.
+        </p>
+      </div>
 
-      <section className="cf-section">
-        <div className="cf-sectionHeader">
-          <h2 className="cf-h2">Start blank</h2>
-          <p className="cf-help">
-            Create your festival as a Draft first, then set status to <strong>Active</strong> from the edit screen
-            when you’re ready to accept pledges.
-          </p>
-        </div>
+      {templatesLoading && <p className="cf-muted">Loading templates…</p>}
+      {templatesError && <p className="cf-errorText">{templatesError.message}</p>}
 
-        <div className="cf-card">
-          <FundraiserForm onSubmit={handleCreateBlank} isSaving={isSaving} hideAdminFields />
-        </div>
-      </section>
+      {!templatesLoading && !templatesError && (
+        <div className="cf-templateGrid">
+          {templates.map((t) => {
+            const previewOpen = openPreviews.has(t.id);
 
-      <section className="cf-section">
-        <div className="cf-sectionHeader">
-          <h2 className="cf-h2">...Or use a template</h2>
-          <p className="cf-help">Preview what you’ll get (needs + rewards), then click “Use this template”.</p>
-        </div>
+            const templateImg = t.image_url || "https://picsum.photos/900/500?blur=1";
+            const needs = t.template_needs || [];
+            const tiers = t.template_reward_tiers || [];
 
-        {templatesLoading && <p className="cf-muted">Loading templates…</p>}
-        {templatesError && <p className="cf-errorText">{templatesError.message}</p>}
+            const needsCount = needs.length;
+            const rewardsCount = tiers.length;
 
-        {!templatesLoading && !templatesError && (
-          <div className="cf-templateGrid">
-            {templates.map((t) => {
-              const previewOpen = openPreviews.has(t.id);
+            return (
+              <article key={t.id} className={`cf-templateCard ${isSaving ? "is-saving" : ""}`}>
+                <div className="cf-templateTop">
+                  <img className="cf-templateImg" src={templateImg} alt={t.name} />
 
-              const templateImg = t.image_url || "https://picsum.photos/900/500?blur=1";
-              const needs = t.template_needs || [];
-              const tiers = t.template_reward_tiers || [];
+                  <div className="cf-templateInfo">
+                    <div className="cf-templateHeaderRow">
+                      <h3 className="cf-templateName">{t.name}</h3>
+                      <span className="cf-templateCategory">{t.category || "—"}</span>
+                    </div>
 
-              const needsCount = needs.length;
-              const rewardsCount = tiers.length;
+                    <p className="cf-templateLine">
+                      <span className="cf-strong">Suggested title:</span> {t.title}
+                    </p>
 
-              return (
-                <article key={t.id} className={`cf-templateCard ${isSaving ? "is-saving" : ""}`}>
-                  <div className="cf-templateTop">
-                    <img className="cf-templateImg" src={templateImg} alt={t.name} />
+                    {t.description ? <p className="cf-templateDesc">{t.description}</p> : null}
 
-                    <div className="cf-templateInfo">
-                      <div className="cf-templateHeaderRow">
-                        <h3 className="cf-templateName">{t.name}</h3>
-                        <span className="cf-templateCategory">{t.category || "—"}</span>
+                    <div className="cf-templateMetaRow">
+                      <span>
+                        <span className="cf-strong">Goal:</span> {t.goal ?? "—"}
+                      </span>
+                      <span>
+                        <span className="cf-strong">Rewards:</span> {t.enable_rewards ? "On" : "Off"}
+                      </span>
+                      <span>
+                        <span className="cf-strong">Includes:</span> {needsCount} needs • {rewardsCount} rewards
+                      </span>
+                    </div>
+
+                    <div className="cf-templateActions">
+                      <button
+                        type="button"
+                        className="cf-btn cf-btn--ghost"
+                        onClick={() => togglePreview(t.id)}
+                        disabled={isSaving}
+                      >
+                        {previewOpen ? "Hide preview" : "Preview contents"}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="cf-btn"
+                        disabled={isSaving || !tokenExists}
+                        onClick={() => handleUseTemplate(t)}
+                      >
+                        {isSaving ? "Applying…" : "Use this template"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {previewOpen ? (
+                  <div className="cf-previewPanel">
+                    <div className="fundraiser fundraiser--preview">
+                      {/* TOP (Hero + Goal) */}
+                      <div className="fundraiser__topGrid">
+                        <div className="fundraiser__hero">
+                          <img
+                            className="fundraiser__heroImg"
+                            src={templateImg}
+                            alt={t.title || t.name || "Template preview"}
+                          />
+                        </div>
+
+                        <div className="fundraiser__sidebarTop">
+                          <div className="panel goalPanel">
+                            <div className="goalPanel__head">
+                              <div className="goalPanel__label">Goal (AUD)</div>
+                              <div className="goalPanel__value">{t.goal ?? "—"}</div>
+                            </div>
+
+                            <div className="goalPanel__divider" />
+
+                            <p className="muted" style={{ margin: 0 }}>
+                              Template preview (totals appear after you create the fundraiser).
+                            </p>
+                          </div>
+                        </div>
                       </div>
 
-                      <p className="cf-templateLine">
-                        <span className="cf-strong">Suggested title:</span> {t.title}
-                      </p>
+                      {/* BELOW (Title/Meta + Needs | Rewards) */}
+                      <div className="fundraiser__belowGrid">
+                        <div className="fundraiser__leftCol">
+                          <div className="panel headerMetaPanel">
+                            <h2 className="fundraiser__title" style={{ marginTop: 0 }}>
+                              {t.title || "Untitled festival"}
+                            </h2>
 
-                      {t.description ? <p className="cf-templateDesc">{t.description}</p> : null}
+                            {/* Keep meta minimal */}
+                            <div className="metaGrid">
+                              <div className="metaGrid__label">Location</div>
+                              <div className="metaGrid__value">{t.location || "—"}</div>
 
-                      <div className="cf-templateMetaRow">
-                        <span>
-                          <span className="cf-strong">Goal:</span> {t.goal ?? "—"}
-                        </span>
-                        <span>
-                          <span className="cf-strong">Rewards:</span> {t.enable_rewards ? "On" : "Off"}
-                        </span>
-                        <span>
-                          <span className="cf-strong">Includes:</span> {needsCount} needs • {rewardsCount} rewards
-                        </span>
-                      </div>
+                              <div className="metaGrid__label">Backyard Dates</div>
+                              <div className="metaGrid__value">TBA</div>
+                            </div>
+                          </div>
 
-                      <div className="cf-templateActions">
-                        <button
-                          type="button"
-                          className="cf-btn cf-btn--ghost"
-                          onClick={() => togglePreview(t.id)}
-                          disabled={isSaving}
-                        >
-                          {previewOpen ? "Hide preview" : "Preview contents"}
-                        </button>
+                          <div className="panel storyPanel">
+                            <h3 className="panel__title">Story / Description</h3>
+                            <p className="fundraiser__desc">{t.description || "—"}</p>
+                          </div>
 
-                        <button
-                          type="button"
-                          className="cf-btn"
-                          disabled={isSaving || !tokenExists}
-                          onClick={() => handleUseTemplate(t)}
-                        >
-                          {isSaving ? "Applying…" : "Use this template"}
-                        </button>
+                          <TemplateNeedsPreview templateNeeds={needs} />
+                        </div>
+
+                        <aside className="fundraiser__rightCol">
+                          <TemplateRewardsPreview enableRewards={Boolean(t.enable_rewards)} tiers={tiers} />
+                        </aside>
                       </div>
                     </div>
                   </div>
-
-                  {previewOpen ? (
-                    <div className="cf-previewPanel">
-                      <div className="fundraiser fundraiser--preview">
-                        {/* TOP (Hero + Goal) */}
-                        <div className="fundraiser__topGrid">
-                          <div className="fundraiser__hero">
-                            <img
-                              className="fundraiser__heroImg"
-                              src={templateImg}
-                              alt={t.title || t.name || "Template preview"}
-                            />
-                          </div>
-
-                          <div className="fundraiser__sidebarTop">
-                            <div className="panel goalPanel">
-                              <div className="goalPanel__head">
-                                <div className="goalPanel__label">Goal (AUD)</div>
-                                <div className="goalPanel__value">{t.goal ?? "—"}</div>
-                              </div>
-
-                              <div className="goalPanel__divider" />
-
-                              <p className="muted" style={{ margin: 0 }}>
-                                Template preview (totals appear after you create the fundraiser).
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* BELOW (Title/Meta + Needs | Rewards) */}
-                        <div className="fundraiser__belowGrid">
-                          <div className="fundraiser__leftCol">
-                            <div className="panel headerMetaPanel">
-                              <h2 className="fundraiser__title" style={{ marginTop: 0 }}>
-                                {t.title || "Untitled festival"}
-                              </h2>
-
-                              {/* Keep meta minimal */}
-                              <div className="metaGrid">
-                                <div className="metaGrid__label">Location</div>
-                                <div className="metaGrid__value">{t.location || "—"}</div>
-
-                                <div className="metaGrid__label">Backyard Dates</div>
-                                <div className="metaGrid__value">TBA</div>
-                              </div>
-                            </div>
-
-                            <div className="panel storyPanel">
-                              <h3 className="panel__title">Story / Description</h3>
-                              <p className="fundraiser__desc">{t.description || "—"}</p>
-                            </div>
-
-                            <TemplateNeedsPreview templateNeeds={needs} />
-                          </div>
-
-                          <aside className="fundraiser__rightCol">
-                            <TemplateRewardsPreview enableRewards={Boolean(t.enable_rewards)} tiers={tiers} />
-                          </aside>
-                        </div>
-                      </div>
-                    </div>
-                  ) : null}
-                </article>
-              );
-            })}
-          </div>
-        )}
-      </section>
-    </div>
-  );
+                ) : null}
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  </div>
+);
 }

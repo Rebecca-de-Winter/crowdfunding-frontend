@@ -10,7 +10,13 @@ import StatusDropdown from "./StatusDropdown";
  * - validates required fields (blank creation flow)
  * - calls `onSubmit(...)` with the long argument list
  */
-function FundraiserForm({ onSubmit, isSaving = false, hideAdminFields = false }) {
+function FundraiserForm({
+  onSubmit,
+  isSaving = false,
+  hideAdminFields = false,
+  requireApproval = false,
+  onRequireApprovalChange,
+}) {
   const [fundraiser, setFundraiser] = useState({
     title: "",
     description: "",
@@ -74,7 +80,8 @@ function FundraiserForm({ onSubmit, isSaving = false, hideAdminFields = false })
         fundraiser.end_date,
         statusToSend,
         fundraiser.enable_rewards,
-        sortOrderToSend
+        sortOrderToSend,
+        Boolean(requireApproval)
       );
     } else {
       console.warn("FundraiserForm: onSubmit prop not provided");
@@ -255,6 +262,30 @@ function FundraiserForm({ onSubmit, isSaving = false, hideAdminFields = false })
               id="enable_rewards"
               checked={fundraiser.enable_rewards}
               onChange={handleChange}
+              disabled={isSaving}
+            />
+            <span className="toggle__slider" aria-hidden="true" />
+          </label>
+        </div>
+
+        {/* Require approval toggle (NEW) */}
+        <div className="field field--full toggle">
+          <label className="toggle__label" htmlFor="require_pledge_approval">
+            <span className="toggle__text">
+              Require approval for pledges{" "}
+              <span className="muted">(turn off to auto-approve immediately)</span>
+            </span>
+
+            <input
+              type="checkbox"
+              id="require_pledge_approval"
+              checked={Boolean(requireApproval)}
+              onChange={(e) => {
+                const next = e.target.checked;
+                if (typeof onRequireApprovalChange === "function") {
+                  onRequireApprovalChange(next);
+                }
+              }}
               disabled={isSaving}
             />
             <span className="toggle__slider" aria-hidden="true" />

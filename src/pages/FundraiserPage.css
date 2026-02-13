@@ -643,3 +643,7 @@
   color: rgba(253, 244, 225, 0.95);
   white-space: nowrap;
 }
+/* Only affects the pledges box spacing under the pledge title */
+.pledgeRow__meta--spaced {
+  margin-top: 8px;
+}
