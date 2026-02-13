@@ -2,12 +2,13 @@
   --bg: #07492d;
   --text: #fdf4e1;
   --line: rgba(245, 232, 205, 0.18);
-
   --accent: #fabb4c;
   --accent2: #f6a551;
 }
 
-/* NAV */
+/* =========================
+   NAV BAR (base)
+   ========================= */
 .navbar {
   position: sticky;
   top: 0;
@@ -18,15 +19,15 @@
   overflow-x: clip;
 }
 
-/* Inner */
 .navbar-inner {
   max-width: 1100px;
   margin: 0 auto;
   padding: 12px 16px;
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 14px;
   box-sizing: border-box;
+  min-width: 0; /* allow flex children to shrink */
 }
 
 /* Logo */
@@ -35,6 +36,7 @@
   align-items: center;
   text-decoration: none;
   line-height: 1;
+  flex: 0 0 auto;
 }
 
 .navbar-logo-img {
@@ -43,14 +45,18 @@
   display: block;
 }
 
-/* Links */
+/* =========================
+   LINKS (desktop)
+   ========================= */
 .navbar-links {
   display: flex;
   align-items: center;
-  gap: 18px;
-  margin-left: 10px;
+  gap: 16px;
+  margin-left: 8px;
   white-space: nowrap;
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden; /* prevents pushing into actions when tight */
 }
 
 .navbar-link {
@@ -69,31 +75,20 @@
   transform: translateY(-1px);
 }
 
+/* Logout button styled like a link */
 .navbar-link--button {
   appearance: none;
   -webkit-appearance: none;
-
   background: transparent;
   border: none;
-
-  /* match the link exactly */
   color: var(--text);
   font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   font-size: 0.98rem;
   font-weight: 650;
-
   padding: 8px 10px;
   border-radius: 999px;
-
   cursor: pointer;
   line-height: 1;
-
-  /* match the “glow”/rendering */
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-shadow: 0 0 0.01px rgba(253, 244, 225, 0.35);
-
   transition: transform 0.12s ease, background 0.12s ease;
 }
 
@@ -102,16 +97,19 @@
   transform: translateY(-1px);
 }
 
-
-/* Actions */
+/* =========================
+   ACTIONS (icons + CTA)
+   ========================= */
 .navbar-actions {
   margin-left: auto;
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 0 0 auto;
+  min-width: 0;
 }
 
-/* Buttons + icons (desktop base) */
+/* Icon buttons */
 .icon-btn {
   border: 1px solid rgba(245, 232, 205, 0.18);
   background: rgba(0, 0, 0, 0.08);
@@ -144,24 +142,22 @@
   border: 1px solid rgba(0, 0, 0, 0.15);
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
   white-space: nowrap;
-  transition: transform 0.12s ease, background 0.12s ease;
+  flex: 0 0 auto;
+  transition: transform 0.12s ease, filter 0.12s ease;
 }
 
 .cta-btn:hover {
   transform: translateY(-1px);
-  background: linear-gradient(
-    180deg,
-    #ffd777,  /* slightly lighter yellow */
-    #f9b15e   /* slightly warmer orange */
-  );
-  filter: none;
+  filter: brightness(1.03);
 }
 
-/* SEARCH (default closed) */
+/* Search (default closed) */
 .search {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+  position: relative;
 }
 
 .search-input {
@@ -176,6 +172,7 @@
   font-weight: 700;
   font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   transition: width 0.18s ease, opacity 0.18s ease;
+  min-width: 0; /* iOS focus/click fix */
 }
 
 .search.open .search-input {
@@ -183,8 +180,11 @@
   opacity: 1;
 }
 
-/* Login icon hidden on desktop */
+/* Mobile-only icons are hidden by default (desktop) */
 .login-icon {
+  display: none;
+}
+.hamburger {
   display: none;
 }
 
@@ -218,8 +218,6 @@
   border-radius: 14px;
   background: rgba(245, 232, 205, 0.06);
   font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-
-  /* ✅ make it work for both <a> and <button> in mobile list */
   display: block;
   width: 100%;
   text-align: left;
@@ -235,38 +233,32 @@
   -webkit-appearance: none;
   border: none;
   background: rgba(245, 232, 205, 0.06);
-
-  /* match the link exactly */
   color: var(--text);
   font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   font-weight: 800;
-
   padding: 12px 12px;
   border-radius: 14px;
-
   display: block;
   width: 100%;
   text-align: left;
-
   cursor: pointer;
 }
+
 .mobile-link--button:hover {
   background: rgba(245, 232, 205, 0.10);
 }
 
-
-/* Keep your CTA styling */
 .mobile-cta {
   background: linear-gradient(180deg, var(--accent), var(--accent2));
   color: #183b2c;
 }
 .mobile-cta:hover {
   color: #183b2c;
-  background: linear-gradient(180deg, #fadf72, #fabb4c);
+  filter: brightness(1.03);
 }
 
 /* =========================
-   SEARCH MODE (ALL SIZES)
+   SEARCH MODE (all sizes)
    ========================= */
 .navbar.search-mode .navbar-links,
 .navbar.search-mode .cta-btn {
@@ -274,64 +266,30 @@
 }
 
 .navbar.search-mode .navbar-actions {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .navbar.search-mode .search {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.navbar.search-mode .search-btn,
-.navbar.search-mode .search-close {
-  flex: 0 0 auto;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .navbar.search-mode .search-input {
-  flex: 1 1 auto;
-  min-width: 0;
   width: auto !important;
   opacity: 1 !important;
-  pointer-events: auto !important;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 /* =========================
-   MEDIA QUERIES
+   DESKTOP ONLY (>=1081px)
    ========================= */
-
-/* Tablet squeeze */
-@media (max-width: 1100px) and (min-width: 901px) {
-  .navbar-inner {
-    max-width: none;
-    padding: 12px 14px;
-  }
-
-  .navbar-links {
-    gap: 12px;
-  }
-
-  .navbar-link {
-    padding: 6px 8px;
-    font-size: 0.95rem;
-  }
-}
-
-/* Desktop hover behaviour */
-@media (min-width: 901px) {
+@media (min-width: 1081px) {
   .icon-btn:hover {
     transform: translateY(-1px);
     background: rgba(245, 232, 205, 0.08);
     border-color: rgba(245, 232, 205, 0.25);
-  }
-
-  .icon-btn:active {
-    transform: translateY(0);
-  }
-
-  .hamburger {
-    display: none;
   }
 
   .mobile-panel {
@@ -339,8 +297,10 @@
   }
 }
 
-/* Mobile */
-@media (max-width: 900px) {
+/* =========================
+   MOBILE (<=1080px)
+   ========================= */
+@media (max-width: 1080px) {
   .navbar-inner {
     max-width: none;
     width: 100%;
@@ -348,33 +308,34 @@
     justify-content: space-between;
   }
 
+  /* switch to hamburger menu sooner */
   .navbar-links {
     display: none;
   }
-
   .cta-btn {
     display: none;
   }
 
+  /* show mobile icons */
   .login-icon {
     display: grid;
   }
-
   .hamburger {
     display: grid;
   }
 
+  /* equal spacing between search / login / hamburger */
   .navbar-actions {
-    gap: 16px;
+    gap: 18px; /* <- this is what makes search sit nicely centered between the two */
   }
 
-  /* Bigger icon targets on mobile + no hover jump */
+  /* bigger tap targets on mobile */
   .icon-btn {
     width: 58px;
     height: 58px;
     border: none;
     background: transparent;
-    transition: background 0.12s ease; /* remove transform transition on mobile */
+    transition: background 0.12s ease;
   }
 
   .icon {
@@ -388,22 +349,13 @@
     background: rgba(245, 232, 205, 0.10);
   }
 
-  /* CLOSED mobile: move the whole search button (circle + icon) right by 26px */
-  .navbar:not(.search-mode) .search-btn {
-    transform: translateX(26px);
-  }
-  .navbar:not(.search-mode) .search-btn:hover,
-  .navbar:not(.search-mode) .search-btn:active {
-    transform: translateX(26px);
-  }
-
-  /* When NOT in search-mode, input expands smaller */
-  .navbar:not(.search-mode) .search.open .search-input {
+  /* input should be smaller when opened on mobile */
+  .search.open .search-input {
     width: 160px;
     opacity: 1;
   }
 
-  /* Search-mode on mobile: hide login + hamburger to give space */
+  /* search-mode on mobile: hide login + hamburger to give space */
   .navbar.search-mode .login-icon,
   .navbar.search-mode .hamburger {
     display: none !important;
@@ -411,5 +363,53 @@
 
   .navbar.search-mode .search-input {
     height: 44px;
+  }
+}
+/* =========================
+   MOBILE ICON ALIGNMENT FIX
+   (paste near bottom)
+   ========================= */
+
+/* 1) Make sure actions are a tight right-aligned group */
+.navbar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px; /* consistent spacing between the 3 icons */
+}
+
+/* 2) Ensure the search wrapper doesn't "reserve" space */
+.search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 3) CRITICAL: stop the CLOSED input from contributing padding/border width */
+.search-input {
+  box-sizing: border-box;
+}
+
+/* When search is CLOSED, remove padding/border so width:0 truly means 0 */
+.search:not(.open) .search-input {
+  width: 0;
+  opacity: 0;
+  padding: 0;
+  border-width: 0;
+}
+
+/* When search is OPEN, restore your normal input styling */
+.search.open .search-input {
+  width: 160px;      /* keep your mobile-friendly open width */
+  opacity: 1;
+  padding: 10px 12px;
+  border-width: 1px;
+}
+
+/* Optional: make the 3 icons feel perfectly even on mobile */
+@media (max-width: 1040px) {
+  .navbar-actions {
+    gap: 18px; /* slightly airier if you want */
   }
 }

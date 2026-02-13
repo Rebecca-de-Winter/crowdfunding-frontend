@@ -1,12 +1,13 @@
 // src/components/NavBar.jsx
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate} from "react-router-dom";
 import "./NavBar.css";
 
 import bfLogo from "../assets/backyard-festival-logo.png";
 
 function NavBar() {
   const navigate = useNavigate();
+
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -19,7 +20,10 @@ function NavBar() {
   );
 
   useEffect(() => {
-    if (searchOpen) searchInputRef.current?.focus();
+    if (searchOpen) {
+      // small delay helps iOS sometimes
+      setTimeout(() => searchInputRef.current?.focus(), 0);
+    }
   }, [searchOpen]);
 
   useEffect(() => {
@@ -30,22 +34,37 @@ function NavBar() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // ✅ Keep tokenExists in sync (other tabs + same-tab trigger)
-useEffect(() => {
-  const syncAuth = () => setTokenExists(Boolean(localStorage.getItem("token")));
+  // Keep tokenExists in sync
+  useEffect(() => {
+    const syncAuth = () => setTokenExists(Boolean(localStorage.getItem("token")));
 
-  window.addEventListener("storage", syncAuth);        // other tabs
-  window.addEventListener("auth-changed", syncAuth);   // same tab
+    window.addEventListener("storage", syncAuth);        // other tabs
+    window.addEventListener("auth-changed", syncAuth);   // same tab
 
-  syncAuth();
-  return () => {
-    window.removeEventListener("storage", syncAuth);
-    window.removeEventListener("auth-changed", syncAuth);
+    syncAuth();
+    return () => {
+      window.removeEventListener("storage", syncAuth);
+      window.removeEventListener("auth-changed", syncAuth);
+    };
+  }, []);
+
+  const closeMenu = () => setMenuOpen(false);
+
+  const toggleMenu = () => {
+    setMenuOpen((v) => !v);
+    // if opening menu, close search so UI doesn't fight
+    setSearchOpen(false);
   };
-}, []);
 
+  const openSearch = () => {
+    setSearchOpen(true);
+    setMenuOpen(false);
+  };
 
-  const toggleMenu = () => setMenuOpen((v) => !v);
+  const closeSearch = () => {
+    setSearchOpen(false);
+    setQuery("");
+  };
 
   const toggleSearch = () => {
     setSearchOpen((prev) => {
@@ -53,22 +72,34 @@ useEffect(() => {
       if (!next) setQuery("");
       return next;
     });
+    setMenuOpen(false);
   };
 
-  const closeMenu = () => setMenuOpen(false);
-
   const handleLogout = () => {
-  localStorage.removeItem("token");
-  window.dispatchEvent(new Event("auth-changed"));
-  setTokenExists(false);
-  closeMenu();
-  navigate("/");
-};
-
+    localStorage.removeItem("token");
+    window.dispatchEvent(new Event("auth-changed"));
+    setTokenExists(false);
+    closeMenu();
+    navigate("/");
+  };
 
   const onSubmitSearch = (e) => {
     e.preventDefault();
-    console.log("Search:", query);
+
+    const q = query.trim();
+    if (!q) {
+      // If empty, just go browse
+      navigate("/fundraisers");
+      closeSearch();
+      return;
+    }
+
+    // Navigate to browse page with query param
+    const params = new URLSearchParams();
+    params.set("q", q);
+
+    navigate(`/fundraisers?${params.toString()}`);
+    closeSearch();
   };
 
   return (
@@ -132,6 +163,7 @@ useEffect(() => {
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onFocus={openSearch}   // ✅ helps iPhone: tap opens + focuses reliably
               placeholder="Search festivals…"
               aria-label="Search festivals"
             />
@@ -140,7 +172,7 @@ useEffect(() => {
               <button
                 type="button"
                 className="icon-btn search-close"
-                onClick={toggleSearch}
+                onClick={closeSearch}
                 aria-label="Close search"
               >
                 <svg viewBox="0 0 24 24" aria-hidden="true" className="icon">
@@ -150,7 +182,7 @@ useEffect(() => {
             )}
           </form>
 
-          {/* ✅ Always visible; route itself is protected by RequireAuth */}
+          {/* Always visible; route itself is protected by RequireAuth */}
           <Link to="/fundraisers/new" className="cta-btn" onClick={closeMenu}>
             Create Festival
           </Link>
@@ -212,6 +244,13 @@ useEffect(() => {
             <>
               <Link to="/signup" className="mobile-link" onClick={closeMenu}>Sign Up</Link>
               <Link to="/login" className="mobile-link" onClick={closeMenu}>Login</Link>
+              <Link
+                to="/fundraisers/new"
+                className="mobile-link mobile-cta"
+                onClick={closeMenu}
+              >
+                Create Festival
+              </Link>
             </>
           ) : (
             <>
