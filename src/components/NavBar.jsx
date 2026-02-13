@@ -1,6 +1,7 @@
 // src/components/NavBar.jsx
-import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate} from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import getFundraisers from "../api/get-fundraisers";
 import "./NavBar.css";
 
 import bfLogo from "../assets/backyard-festival-logo.png";
@@ -8,24 +9,30 @@ import bfLogo from "../assets/backyard-festival-logo.png";
 function NavBar() {
   const navigate = useNavigate();
 
-
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Search UI
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const searchInputRef = useRef(null);
+
+  // Suggestions
+  const [allFundraisers, setAllFundraisers] = useState([]);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
 
   // Reactive auth check
   const [tokenExists, setTokenExists] = useState(
     Boolean(localStorage.getItem("token"))
   );
 
+  // Focus input when opening search
   useEffect(() => {
     if (searchOpen) {
-      // small delay helps iOS sometimes
       setTimeout(() => searchInputRef.current?.focus(), 0);
     }
   }, [searchOpen]);
 
+  // Close mobile menu if desktop
   useEffect(() => {
     const onResize = () => {
       if (window.innerWidth >= 900) setMenuOpen(false);
@@ -38,8 +45,8 @@ function NavBar() {
   useEffect(() => {
     const syncAuth = () => setTokenExists(Boolean(localStorage.getItem("token")));
 
-    window.addEventListener("storage", syncAuth);        // other tabs
-    window.addEventListener("auth-changed", syncAuth);   // same tab
+    window.addEventListener("storage", syncAuth); // other tabs
+    window.addEventListener("auth-changed", syncAuth); // same tab
 
     syncAuth();
     return () => {
@@ -48,28 +55,56 @@ function NavBar() {
     };
   }, []);
 
+  // Load fundraisers once for autocomplete suggestions
+  useEffect(() => {
+    let isMounted = true;
+
+    async function load() {
+      try {
+        const data = await getFundraisers();
+        if (isMounted) setAllFundraisers(Array.isArray(data) ? data : []);
+      } catch {
+        // Not fatal — the search still works by navigating to /fundraisers?q=
+        if (isMounted) setAllFundraisers([]);
+      }
+    }
+
+    load();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const closeMenu = () => setMenuOpen(false);
 
   const toggleMenu = () => {
     setMenuOpen((v) => !v);
-    // if opening menu, close search so UI doesn't fight
-    setSearchOpen(false);
+    setSearchOpen(false); // don't fight with search UI
+    setSuggestionsOpen(false);
   };
 
   const openSearch = () => {
     setSearchOpen(true);
     setMenuOpen(false);
+    setSuggestionsOpen(true);
   };
 
   const closeSearch = () => {
     setSearchOpen(false);
+    setSuggestionsOpen(false);
     setQuery("");
   };
 
   const toggleSearch = () => {
     setSearchOpen((prev) => {
       const next = !prev;
-      if (!next) setQuery("");
+      if (!next) {
+        setQuery("");
+        setSuggestionsOpen(false);
+      } else {
+        setSuggestionsOpen(true);
+        setTimeout(() => searchInputRef.current?.focus(), 0);
+      }
       return next;
     });
     setMenuOpen(false);
@@ -83,18 +118,38 @@ function NavBar() {
     navigate("/");
   };
 
+  const suggestions = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+
+    return allFundraisers
+      .filter((f) => {
+        const haystack = [f.title, f.description, f.location, f.category]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+
+        return haystack.includes(q);
+      })
+      .slice(0, 7);
+  }, [query, allFundraisers]);
+
+  const onPickSuggestion = (fundraiserId) => {
+    // Adjust this if your detail route is different:
+    navigate(`/fundraisers/${fundraiserId}`);
+    closeSearch();
+  };
+
   const onSubmitSearch = (e) => {
     e.preventDefault();
 
     const q = query.trim();
     if (!q) {
-      // If empty, just go browse
       navigate("/fundraisers");
       closeSearch();
       return;
     }
 
-    // Navigate to browse page with query param
     const params = new URLSearchParams();
     params.set("q", q);
 
@@ -117,19 +172,33 @@ function NavBar() {
 
         {/* Desktop navigation */}
         <nav className="navbar-links" aria-label="Primary navigation">
-          <Link to="/" className="navbar-link">Home</Link>
-          <Link to="/fundraisers" className="navbar-link">Browse Festivals</Link>
-          <Link to="/resources" className="navbar-link">Resources</Link>
-          <Link to="/how-it-works" className="navbar-link">How it Works</Link>
+          <Link to="/" className="navbar-link">
+            Home
+          </Link>
+          <Link to="/fundraisers" className="navbar-link">
+            Browse Festivals
+          </Link>
+          <Link to="/resources" className="navbar-link">
+            Resources
+          </Link>
+          <Link to="/how-it-works" className="navbar-link">
+            How it Works
+          </Link>
 
           {!tokenExists ? (
             <>
-              <Link to="/signup" className="navbar-link">Sign Up</Link>
-              <Link to="/login" className="navbar-link">Login</Link>
+              <Link to="/signup" className="navbar-link">
+                Sign Up
+              </Link>
+              <Link to="/login" className="navbar-link">
+                Login
+              </Link>
             </>
           ) : (
             <>
-              <Link to="/profile" className="navbar-link">My Dashboard</Link>
+              <Link to="/profile" className="navbar-link">
+                My Dashboard
+              </Link>
               <button
                 type="button"
                 className="navbar-link navbar-link--button"
@@ -162,11 +231,41 @@ function NavBar() {
               className="search-input"
               type="search"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onFocus={openSearch}   // ✅ helps iPhone: tap opens + focuses reliably
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setSuggestionsOpen(true);
+              }}
+              onFocus={() => {
+                openSearch();
+                setSuggestionsOpen(true);
+              }}
+              onBlur={() => {
+                // allow click on suggestion before blur closes it
+                setTimeout(() => setSuggestionsOpen(false), 120);
+              }}
               placeholder="Search festivals…"
               aria-label="Search festivals"
+              autoComplete="off"
             />
+
+            {/* Suggestions dropdown */}
+            {searchOpen && suggestionsOpen && suggestions.length > 0 && (
+              <div className="search-suggest" role="listbox" aria-label="Search suggestions">
+                {suggestions.map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    className="search-suggest__item"
+                    role="option"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => onPickSuggestion(f.id)}
+                  >
+                    <div className="search-suggest__title">{f.title}</div>
+                    {f.location && <div className="search-suggest__meta">{f.location}</div>}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {searchOpen && (
               <button
@@ -235,15 +334,27 @@ function NavBar() {
       {/* Mobile menu */}
       <div id="mobile-nav" className={`mobile-panel ${menuOpen ? "open" : ""}`}>
         <nav className="mobile-links" aria-label="Mobile navigation">
-          <Link to="/" className="mobile-link" onClick={closeMenu}>Home</Link>
-          <Link to="/fundraisers" className="mobile-link" onClick={closeMenu}>Browse Festivals</Link>
-          <Link to="/resources" className="mobile-link" onClick={closeMenu}>Resources</Link>
-          <Link to="/how-it-works" className="mobile-link" onClick={closeMenu}>How it Works</Link>
+          <Link to="/" className="mobile-link" onClick={closeMenu}>
+            Home
+          </Link>
+          <Link to="/fundraisers" className="mobile-link" onClick={closeMenu}>
+            Browse Festivals
+          </Link>
+          <Link to="/resources" className="mobile-link" onClick={closeMenu}>
+            Resources
+          </Link>
+          <Link to="/how-it-works" className="mobile-link" onClick={closeMenu}>
+            How it Works
+          </Link>
 
           {!tokenExists ? (
             <>
-              <Link to="/signup" className="mobile-link" onClick={closeMenu}>Sign Up</Link>
-              <Link to="/login" className="mobile-link" onClick={closeMenu}>Login</Link>
+              <Link to="/signup" className="mobile-link" onClick={closeMenu}>
+                Sign Up
+              </Link>
+              <Link to="/login" className="mobile-link" onClick={closeMenu}>
+                Login
+              </Link>
               <Link
                 to="/fundraisers/new"
                 className="mobile-link mobile-cta"
