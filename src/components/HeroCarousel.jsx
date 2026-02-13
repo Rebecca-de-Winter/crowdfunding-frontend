@@ -1,6 +1,9 @@
+// src/components/HeroCarousel.jsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import "./HeroCarousel.css";
+
+import logo from "../assets/backyard-festival-logo.png";
 
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false);
@@ -31,9 +34,17 @@ function clampIndex(i, len) {
 export default function HeroCarousel() {
   const prefersReducedMotion = usePrefersReducedMotion();
 
-  // ✅ Put images in /public/hero/... so these paths work
+  // Images live in /public/hero/...
   const slides = useMemo(
     () => [
+      {
+        key: "what",
+        image: "/hero/hero-belonging.png",
+        title: "",
+        subtitle: "Crowdfunding for grassroots festivals and community events.",
+        ctaLabel: "Start your event",
+        ctaTo: "/fundraisers/new",
+      },
       {
         key: "spark",
         image: "/hero/hero-spark.png",
@@ -46,16 +57,16 @@ export default function HeroCarousel() {
         key: "belonging",
         image: "/hero/hero-belonging.png",
         title: "A few dollars. Some hands. A spare speaker.",
-        subtitle: "Build the community you want to be part of.",
-        ctaLabel: "Show me what’s brewing",
+        subtitle: "Fund events with money, time, and shared resources.",
+        ctaLabel: "Browse festivals",
         ctaTo: "/fundraisers",
       },
       {
         key: "movement",
         image: "/hero/hero-movement.png",
-        title: "Make it real.",
-        subtitle: "From the ground up.",
-        ctaLabel: "Join in",
+        title: "Make it real. Together.",
+        subtitle: "From poetry slams to protest marches — if it matters, fund it.",
+        ctaLabel: "See what’s brewing",
         ctaTo: "/fundraisers",
       },
     ],
@@ -86,7 +97,7 @@ export default function HeroCarousel() {
     return () => window.clearInterval(id);
   }, [prefersReducedMotion, isPaused, slides.length]);
 
-  // keyboard arrows (optional but nice)
+  // keyboard arrows
   const rootRef = useRef(null);
   useEffect(() => {
     const el = rootRef.current;
@@ -108,6 +119,7 @@ export default function HeroCarousel() {
       className={`hero ${prefersReducedMotion ? "hero--reduced" : ""}`}
       aria-label="Backyard Festival hero"
       tabIndex={0}
+      data-slide={slides[index].key}
       onMouseEnter={pause}
       onMouseLeave={resume}
       onFocusCapture={pause}
@@ -129,7 +141,12 @@ export default function HeroCarousel() {
 
       <div className="hero__inner">
         <div className="hero__content">
-          <h1 className="hero__title">{slides[index].title}</h1>
+          {slides[index].key === "what" ? (
+            <img src={logo} alt="Backyard Festival" className="hero__logo" />
+          ) : (
+            <h1 className="hero__title">{slides[index].title}</h1>
+          )}
+
           <p className="hero__subtitle">{slides[index].subtitle}</p>
 
           <div className="hero__actions">
@@ -137,10 +154,20 @@ export default function HeroCarousel() {
               {slides[index].ctaLabel}
             </Link>
 
-            <button type="button" className="hero__arrow" onClick={goPrev} aria-label="Previous slide">
+            <button
+              type="button"
+              className="hero__arrow"
+              onClick={goPrev}
+              aria-label="Previous slide"
+            >
               ‹
             </button>
-            <button type="button" className="hero__arrow" onClick={goNext} aria-label="Next slide">
+            <button
+              type="button"
+              className="hero__arrow"
+              onClick={goNext}
+              aria-label="Next slide"
+            >
               ›
             </button>
           </div>
@@ -158,7 +185,6 @@ export default function HeroCarousel() {
             ))}
           </div>
 
-          {/* subtle helper line: optional */}
           {!prefersReducedMotion && (
             <div className="hero__hint" aria-hidden="true">
               Pauses on hover

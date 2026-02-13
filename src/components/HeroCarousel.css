@@ -174,3 +174,18 @@
     padding: 54px 14px;
   }
 }
+/* Slide-specific polish: clarity-first slide (logo version) */
+.hero[data-slide="what"] .hero__subtitle {
+  font-size: 1.05rem;
+  font-weight: 600;
+  max-width: 50ch;
+  line-height: 1.4;
+  opacity: 0.98;
+}
+
+.hero__logo {
+  width: clamp(240px, 40vw, 460px);
+  margin: 0 0 16px 0;
+  display: block;
+  filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.35));
+}
