@@ -8,8 +8,6 @@ function FundraisersPage() {
   const { fundraisers, isLoading, error } = useFundraisers();
   const { search } = useLocation();
 
-  const tokenExists = Boolean(window.localStorage.getItem("token"));
-
   // Read q from /fundraisers?q=...
   const q = useMemo(() => {
     const params = new URLSearchParams(search);
@@ -29,7 +27,6 @@ function FundraisersPage() {
         f.location,
         f.category,
         f.owner?.username,
-        f.owner?.email,
       ]
         .filter(Boolean)
         .join(" ")
@@ -39,49 +36,45 @@ function FundraisersPage() {
     });
   }, [fundraisers, q]);
 
-  if (isLoading) return <p>Loading fundraisers…</p>;
+  if (isLoading) return <p>Loading festivals…</p>;
   if (error) return <p>Error: {error.message}</p>;
-  if (!fundraisers || fundraisers.length === 0) return <p>No fundraisers yet.</p>;
+  if (!fundraisers || fundraisers.length === 0)
+    return <p>No festivals yet.</p>;
 
   return (
-    <div className="page">
-      <div
-        className="page-header"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-          marginBottom: 16,
-        }}
-      >
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <h1 className="page-title">Fundraisers</h1>
+    <div className="page fundraisers-page">
+      {/* Header */}
+      <div className="fundraisers-header">
+        <h1 className="fundraisers-title">Explore Festivals</h1>
+        <p className="fundraisers-subtitle">
+          Big ideas happening in backyards everywhere.
+        </p>
 
-          {/* Nice UX: show search context */}
-          {q && (
-            <div style={{ opacity: 0.9, fontSize: 14 }}>
-              Showing results for <strong>“{q}”</strong> ({filteredFundraisers.length})
-              {"  "}
-              <Link to="/fundraisers" style={{ marginLeft: 10 }}>
-                Clear
-              </Link>
-            </div>
-          )}
-        </div>
-
-        <Link className="home-button" to={tokenExists ? "/fundraisers/new" : "/login"}>
-          Create Festival
-        </Link>
+        {q && (
+          <div className="fundraisers-searchMeta">
+            Showing results for <strong>“{q}”</strong>{" "}
+            <span className="fundraisers-count">
+              ({filteredFundraisers.length})
+            </span>
+            <Link to="/fundraisers" className="fundraisers-clear">
+              Clear
+            </Link>
+          </div>
+        )}
       </div>
 
-      {/* If there are fundraisers overall, but none match the search */}
+      {/* Results */}
       {q && filteredFundraisers.length === 0 ? (
-        <p>No results for “{q}”.</p>
+        <div className="fundraisers-empty">
+          No results for “{q}”.
+        </div>
       ) : (
         <div className="fundraiser-grid">
           {filteredFundraisers.map((fundraiserData) => (
-            <FundraiserCard key={fundraiserData.id} fundraiserData={fundraiserData} />
+            <FundraiserCard
+              key={fundraiserData.id}
+              fundraiserData={fundraiserData}
+            />
           ))}
         </div>
       )}
