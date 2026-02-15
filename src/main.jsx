@@ -1,3 +1,4 @@
+// src/main.jsx
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
@@ -13,10 +14,11 @@ import EditFestivalPage from "./pages/EditFestivalPage.jsx";
 import PledgeNeedPage from "./pages/PledgeNeedPage.jsx";
 import RequireAuth from "./components/RequireAuth.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import NotFoundPage from "./pages/NotFoundPage.jsx";
 
 import "./index.css";
 
-const MyRouter = createBrowserRouter([
+const router = createBrowserRouter([
   {
     path: "/",
     element: <Layout />,
@@ -62,7 +64,6 @@ const MyRouter = createBrowserRouter([
         ),
       },
 
-
       // pledge a specific need (protected)
       {
         path: "fundraisers/:id/needs/:needId/pledge",
@@ -72,12 +73,15 @@ const MyRouter = createBrowserRouter([
           </RequireAuth>
         ),
       },
+
+      // ✅ 404 catch-all (must be last)
+      { path: "*", element: <NotFoundPage /> },
     ],
   },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <RouterProvider router={MyRouter} />
+    <RouterProvider router={router} />
   </React.StrictMode>
 );

@@ -1,0 +1,232 @@
+/* =========================
+   404 Page – Clean Final
+   ========================= */
+
+.nf {
+  min-height: calc(100dvh - 64px);
+  background: var(--bg);
+  color: var(--text);
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  padding: 20px 16px 48px;
+}
+
+/* Card */
+.nfCard {
+  width: 100%;
+  max-width: 1100px;
+
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: rgba(12, 18, 14, 0.55);
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.25);
+
+  /* tighter + more balanced */
+  padding: 22px 18px 26px;
+  gap: 16px;
+
+  display: grid;
+  grid-template-areas:
+    "header"
+    "art"
+    "actions";
+}
+
+/* Header */
+.nfHeader {
+  grid-area: header;
+  text-align: center;
+
+  /* move the whole header down a touch */
+  margin-top: 10px;
+}
+
+.nfCode {
+  margin: 0;
+  font-weight: 900;
+  line-height: 0.95;
+  font-size: clamp(64px, 14vw, 120px);
+  color: var(--accent);
+}
+
+.nfTitle {
+  margin: 12px 0 10px;
+  font-weight: 900;
+  font-size: clamp(20px, 4vw, 28px);
+  line-height: 1.2;
+}
+
+.nfTagline {
+  margin: 0;
+  opacity: 0.9;
+  line-height: 1.6;
+  font-size: clamp(14px, 3vw, 18px);
+  max-width: 56ch;
+  margin-inline: auto;
+}
+
+/* Art */
+.nfArt {
+  grid-area: art;
+  display: flex;
+  justify-content: center;
+
+  /* reduce space between text and image */
+  margin-top: -6px;
+}
+
+.nfArtWrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+
+  width: 100%;
+  max-width: 460px;
+}
+
+/* Glow on all sizes */
+.nfArtWrap::before {
+  content: "";
+  position: absolute;
+  width: 90%;
+  height: 90%;
+  border-radius: 999px;
+  background: radial-gradient(
+    closest-side,
+    rgba(250, 187, 76, 0.28),
+    rgba(246, 165, 81, 0.14),
+    rgba(0, 0, 0, 0)
+  );
+  filter: blur(10px);
+  z-index: 0;
+}
+
+.nfImg {
+  width: 100%;
+  height: auto;
+  max-height: 42dvh;
+  object-fit: contain;
+  display: block;
+  position: relative;
+  z-index: 1;
+
+  filter: drop-shadow(0 24px 36px rgba(0, 0, 0, 0.35));
+}
+
+/* Actions */
+.nfActions {
+  grid-area: actions;
+  display: flex;
+  justify-content: center;
+
+  /* pull button upward */
+  margin-top: -4px;
+  padding-top: 0;
+}
+
+/* Button */
+.nfBtn {
+  border-radius: 999px;
+  padding: 14px 22px;
+  font-weight: 900;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.nfBtnPrimary {
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  background: linear-gradient(180deg, #fabb4c, #f6a551);
+  color: #183b2c;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+}
+
+.nfBtnPrimary:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.04);
+}
+
+.nfBtnPrimary:active {
+  transform: translateY(0);
+  filter: brightness(0.98);
+}
+
+.nfBtnPrimary:focus-visible {
+  outline: 3px solid rgba(250, 187, 76, 0.45);
+  outline-offset: 3px;
+}
+
+/* Small phones */
+@media (max-width: 380px) {
+  .nf {
+    padding: 16px 12px 32px;
+  }
+
+  .nfCard {
+    padding: 18px 14px 22px;
+    gap: 14px;
+  }
+
+  .nfHeader {
+    margin-top: 6px;
+  }
+
+  .nfImg {
+    max-height: 38dvh;
+  }
+}
+
+/* Desktop hero layout */
+@media (min-width: 900px) {
+  .nf {
+    align-items: flex-start; /* keep card up top */
+    padding: 36px 18px 56px;
+  }
+
+  .nfCard {
+    grid-template-columns: 1.05fr 0.95fr;
+    grid-template-areas:
+      "header art"
+      "actions art";
+    align-items: center;
+
+    gap: 28px;
+    min-height: 440px;
+    padding: clamp(24px, 2.5vw, 40px);
+  }
+
+  /* shift left column in slightly */
+  .nfHeader {
+    text-align: left;
+    padding-left: 18px;
+    margin-top: 0;
+  }
+
+  .nfTagline {
+    margin-inline: 0;
+  }
+
+  .nfActions {
+    justify-content: flex-start;
+    padding-left: 18px;
+    margin-top: -6px;
+  }
+
+  .nfArt {
+    justify-content: flex-end;
+    margin-top: 0;
+  }
+
+  .nfArtWrap {
+    max-width: 520px;
+  }
+
+  .nfImg {
+    max-height: 440px;
+    transform: translateY(8px);
+  }
+}

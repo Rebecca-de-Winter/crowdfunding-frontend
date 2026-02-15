@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useFundraisers from "../hooks/use-fundraisers";
+import getCurrentUser from "../api/get-current-user";
 import FundraiserCard from "../components/FundraiserCard";
 import "./FundraisersPage.css";
 
@@ -8,19 +9,51 @@ function FundraisersPage() {
   const { fundraisers, isLoading, error } = useFundraisers();
   const { search } = useLocation();
 
-  // Read q from /fundraisers?q=...
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Load current user (if logged in)
+  useEffect(() => {
+    const token = window.localStorage.getItem("token");
+    if (!token) return;
+
+    getCurrentUser()
+      .then(setCurrentUser)
+      .catch(() => setCurrentUser(null));
+  }, []);
+
   const q = useMemo(() => {
     const params = new URLSearchParams(search);
     return (params.get("q") || "").trim();
   }, [search]);
 
-  const filteredFundraisers = useMemo(() => {
+  const visibleFundraisers = useMemo(() => {
     if (!fundraisers) return [];
-    if (!q) return fundraisers;
+
+    const viewerId = currentUser?.id ?? null;
+
+    return fundraisers.filter((f) => {
+      const status = String(f.status ?? "").toLowerCase();
+      const ownerId =
+        f.owner?.id ??
+        f.owner?.pk ??
+        f.owner;
+
+      const isDraft = status === "draft";
+      const isOwner = viewerId != null && Number(ownerId) === Number(viewerId);
+
+      // Hide draft unless owner
+      if (isDraft && !isOwner) return false;
+
+      return true;
+    });
+  }, [fundraisers, currentUser]);
+
+  const filteredFundraisers = useMemo(() => {
+    if (!q) return visibleFundraisers;
 
     const needle = q.toLowerCase();
 
-    return fundraisers.filter((f) => {
+    return visibleFundraisers.filter((f) => {
       const haystack = [
         f.title,
         f.description,
@@ -34,16 +67,15 @@ function FundraisersPage() {
 
       return haystack.includes(needle);
     });
-  }, [fundraisers, q]);
+  }, [visibleFundraisers, q]);
 
   if (isLoading) return <p>Loading festivals…</p>;
   if (error) return <p>Error: {error.message}</p>;
-  if (!fundraisers || fundraisers.length === 0)
+  if (!filteredFundraisers.length)
     return <p>No festivals yet.</p>;
 
   return (
     <div className="page fundraisers-page">
-      {/* Header */}
       <div className="fundraisers-header">
         <h1 className="fundraisers-title">Explore Festivals</h1>
         <p className="fundraisers-subtitle">
@@ -63,21 +95,14 @@ function FundraisersPage() {
         )}
       </div>
 
-      {/* Results */}
-      {q && filteredFundraisers.length === 0 ? (
-        <div className="fundraisers-empty">
-          No results for “{q}”.
-        </div>
-      ) : (
-        <div className="fundraiser-grid">
-          {filteredFundraisers.map((fundraiserData) => (
-            <FundraiserCard
-              key={fundraiserData.id}
-              fundraiserData={fundraiserData}
-            />
-          ))}
-        </div>
-      )}
+      <div className="fundraiser-grid">
+        {filteredFundraisers.map((fundraiserData) => (
+          <FundraiserCard
+            key={fundraiserData.id}
+            fundraiserData={fundraiserData}
+          />
+        ))}
+      </div>
     </div>
   );
 }
