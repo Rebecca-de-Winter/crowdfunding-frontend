@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { authFetch } from "../api/auth-fetch";
-
+import LoadingPanel from "../components/LoadingPanel";
 import findNeedDetailId from "../api/find-need-detail-id";
 import getNeedDetail from "../api/get-need-detail";
 import ItemModeDropdown from "../components/ItemModeDropdown";
@@ -420,7 +420,7 @@ export default function PledgeNeedPage() {
     }
   }
 
-  if (isLoading) return <p>Loading…</p>;
+  if (isLoading) return <LoadingPanel label="Hanging up the fairy lights…" />;
   if (error) return <p>{String(error.message ?? error)}</p>;
   if (!need) return <p>Need not found.</p>;
 

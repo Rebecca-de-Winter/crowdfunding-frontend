@@ -1,4 +1,3 @@
-// src/components/HeroCarousel.jsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import "./HeroCarousel.css";
@@ -27,19 +26,47 @@ function usePrefersReducedMotion() {
   return reduced;
 }
 
+function useIsMobile(breakpointPx = 640) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia?.(`(max-width: ${breakpointPx}px)`);
+    if (!mql) return;
+
+    const onChange = () => setIsMobile(Boolean(mql.matches));
+    onChange();
+
+    if (mql.addEventListener) mql.addEventListener("change", onChange);
+    else mql.addListener(onChange);
+
+    return () => {
+      if (mql.removeEventListener) mql.removeEventListener("change", onChange);
+      else mql.removeListener(onChange);
+    };
+  }, [breakpointPx]);
+
+  return isMobile;
+}
+
 function clampIndex(i, len) {
   return (i + len) % len;
 }
 
+function resolveTitle(title, isMobile) {
+  if (!title) return "";
+  if (typeof title === "string") return title;
+  return (isMobile ? title.mobile : title.desktop) ?? title.desktop ?? "";
+}
+
 export default function HeroCarousel() {
   const prefersReducedMotion = usePrefersReducedMotion();
+  const isMobile = useIsMobile(640);
 
-  // Images live in /public/hero/...
   const slides = useMemo(
     () => [
       {
         key: "what",
-        image: "/hero/hero-belonging.png",
+        image: "/hero/hero-rock.png",
         title: "",
         subtitle: "Crowdfunding for grassroots festivals and community events.",
         ctaLabel: "Start your event",
@@ -47,7 +74,7 @@ export default function HeroCarousel() {
       },
       {
         key: "spark",
-        image: "/hero/hero-spark.png",
+        image: "/hero/hero-charities2.png",
         title: "Big ideas. Tiny budgets.",
         subtitle: "Start the thing you wish existed.",
         ctaLabel: "Let’s build it",
@@ -55,17 +82,20 @@ export default function HeroCarousel() {
       },
       {
         key: "belonging",
-        image: "/hero/hero-belonging.png",
-        title: "A few dollars. Some hands. A spare speaker.",
-        subtitle: "Fund events with money, time, and shared resources.",
+        image: "/hero/hero-cables.png",
+        title: {
+          desktop: "A few dollars. Some hands.\nA spare\u00A0speaker.",
+          mobile: "A few dollars.\nSome hands.\nA spare\u00A0speaker.",
+        },
+        subtitle: "Fund events with money, time,\nand shared resources.",
         ctaLabel: "Browse festivals",
         ctaTo: "/fundraisers",
       },
       {
         key: "movement",
-        image: "/hero/hero-movement.png",
+        image: "/hero/hero-belonging1.png",
         title: "Make it real. Together.",
-        subtitle: "From poetry slams to protest marches — if it matters, fund it.",
+        subtitle: "From poetry slams to protest marches:\nIf it matters, fund it.",
         ctaLabel: "See what’s brewing",
         ctaTo: "/fundraisers",
       },
@@ -74,30 +104,52 @@ export default function HeroCarousel() {
   );
 
   const AUTO_MS = 7000;
+  const FADE_MS = 240;
 
   const [index, setIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [isFading, setIsFading] = useState(false);
 
   const pause = () => setIsPaused(true);
   const resume = () => setIsPaused(false);
 
-  const goPrev = () => setIndex((i) => clampIndex(i - 1, slides.length));
-  const goNext = () => setIndex((i) => clampIndex(i + 1, slides.length));
-  const goTo = (i) => setIndex(clampIndex(i, slides.length));
+  const jumpTo = (nextIndex) => setIndex(clampIndex(nextIndex, slides.length));
 
-  // auto-rotate (disabled if reduced motion)
+  const goTo = (next) => {
+    const nextIndex = clampIndex(next, slides.length);
+
+    // Desktop (or reduced motion): keep normal behavior
+    if (!isMobile || prefersReducedMotion) {
+      jumpTo(nextIndex);
+      return;
+    }
+
+    // Mobile: fade-through to avoid double-image / crop jump
+    setIsFading(true);
+
+    window.setTimeout(() => {
+      jumpTo(nextIndex);
+
+      window.setTimeout(() => {
+        setIsFading(false);
+      }, FADE_MS);
+    }, FADE_MS);
+  };
+
+  const goPrev = () => goTo(index - 1);
+  const goNext = () => goTo(index + 1);
+
   useEffect(() => {
-    if (prefersReducedMotion) return;
-    if (isPaused) return;
+  if (prefersReducedMotion || isPaused) return;
 
-    const id = window.setInterval(() => {
-      setIndex((i) => clampIndex(i + 1, slides.length));
-    }, AUTO_MS);
+  const id = window.setInterval(() => {
+    setIndex((i) => clampIndex(i + 1, slides.length));
+  }, AUTO_MS);
 
-    return () => window.clearInterval(id);
-  }, [prefersReducedMotion, isPaused, slides.length]);
+  return () => window.clearInterval(id);
+}, [prefersReducedMotion, isPaused, slides.length]);
 
-  // keyboard arrows
+
   const rootRef = useRef(null);
   useEffect(() => {
     const el = rootRef.current;
@@ -111,7 +163,10 @@ export default function HeroCarousel() {
     el.addEventListener("keydown", onKeyDown);
     return () => el.removeEventListener("keydown", onKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slides.length]);
+  }, [slides.length, index, isMobile, prefersReducedMotion]);
+
+  const active = slides[index];
+  const isLogoSlide = active.key === "what";
 
   return (
     <section
@@ -119,13 +174,12 @@ export default function HeroCarousel() {
       className={`hero ${prefersReducedMotion ? "hero--reduced" : ""}`}
       aria-label="Backyard Festival hero"
       tabIndex={0}
-      data-slide={slides[index].key}
+      data-slide={active.key}
       onMouseEnter={pause}
       onMouseLeave={resume}
       onFocusCapture={pause}
       onBlurCapture={resume}
     >
-      {/* Backgrounds (stacked for fade) */}
       <div className="hero__bgStack" aria-hidden="true">
         {slides.map((s, i) => (
           <div
@@ -136,60 +190,60 @@ export default function HeroCarousel() {
         ))}
       </div>
 
-      {/* Overlay for readability */}
       <div className="hero__overlay" aria-hidden="true" />
+      <div className="hero__scrim" aria-hidden="true" />
+      <div className="hero__tone" aria-hidden="true" />
+
+      {/* Mobile-only fade cover (driven by state, harmless on desktop) */}
+      <div className={`hero__fade ${isFading ? "is-on" : ""}`} aria-hidden="true" />
 
       <div className="hero__inner">
         <div className="hero__content">
-          {slides[index].key === "what" ? (
-            <img src={logo} alt="Backyard Festival" className="hero__logo" />
-          ) : (
-            <h1 className="hero__title">{slides[index].title}</h1>
-          )}
-
-          <p className="hero__subtitle">{slides[index].subtitle}</p>
-
-          <div className="hero__actions">
-            <Link to={slides[index].ctaTo} className="hero__cta">
-              {slides[index].ctaLabel}
-            </Link>
-
-            <button
-              type="button"
-              className="hero__arrow"
-              onClick={goPrev}
-              aria-label="Previous slide"
-            >
-              ‹
-            </button>
-            <button
-              type="button"
-              className="hero__arrow"
-              onClick={goNext}
-              aria-label="Next slide"
-            >
-              ›
-            </button>
-          </div>
-
-          <div className="hero__dots" role="tablist" aria-label="Select hero slide">
-            {slides.map((s, i) => (
-              <button
-                key={s.key}
-                type="button"
-                className={`hero__dot ${i === index ? "is-active" : ""}`}
-                onClick={() => goTo(i)}
-                aria-label={`Go to slide ${i + 1}`}
-                aria-current={i === index ? "true" : "false"}
-              />
-            ))}
-          </div>
-
-          {!prefersReducedMotion && (
-            <div className="hero__hint" aria-hidden="true">
-              Pauses on hover
+          {isLogoSlide && (
+            <div className="hero__logoWrap">
+              <img src={logo} alt="Backyard Festival" className="hero__logo" />
             </div>
           )}
+
+          <div className={`hero__contentBlock ${isLogoSlide ? "hero__contentBlock--what" : ""}`}>
+            {!isLogoSlide && (
+              <h1 className="hero__title">{resolveTitle(active.title, isMobile)}</h1>
+            )}
+
+            <p className="hero__subtitle">{active.subtitle}</p>
+
+            <div className="hero__actions">
+              <Link to={active.ctaTo} className="hero__cta">
+                {active.ctaLabel}
+              </Link>
+
+              <button type="button" className="hero__arrow" onClick={goPrev} aria-label="Previous slide">
+                ‹
+              </button>
+              <button type="button" className="hero__arrow" onClick={goNext} aria-label="Next slide">
+                ›
+              </button>
+            </div>
+
+            <div className="hero__dots" role="tablist" aria-label="Select hero slide">
+              {slides.map((s, i) => (
+                <button
+                  key={s.key}
+                  type="button"
+                  className={`hero__dot ${i === index ? "is-active" : ""}`}
+                  onClick={() => goTo(i)}
+                  aria-label={`Go to slide ${i + 1}`}
+                  aria-current={i === index ? "true" : "false"}
+                />
+              ))}
+            </div>
+
+            {!prefersReducedMotion && (
+              <div className="hero__hint" aria-hidden="true">
+                Pauses on hover
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </section>

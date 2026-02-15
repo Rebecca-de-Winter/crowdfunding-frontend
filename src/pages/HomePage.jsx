@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import useFundraisers from "../hooks/use-fundraisers";
 import FundraiserCard from "../components/FundraiserCard";
 import HeroCarousel from "../components/HeroCarousel";
+import LoadingPanel from "../components/LoadingPanel";
 import "./HomePage.css";
 
 function safeLower(v) {
@@ -54,7 +55,7 @@ export default function HomePage() {
   }, [fundraisers]);
 
   // ✅ Now it's safe to do early returns
-  if (isLoading) return <p>Loading fundraisers…</p>;
+  if (isLoading) return <LoadingPanel label="Hanging up the fairy lights…" />;
   if (error) return <p>Error: {error.message}</p>;
 
   return (
@@ -91,7 +92,7 @@ export default function HomePage() {
 
       <section className="home-featured">
         <div className="home-sectionHeader">
-          <h2>Featured fundraisers</h2>
+          <h2>Featured festivals</h2>
           <Link className="home-link" to="/fundraisers">
             See all
           </Link>

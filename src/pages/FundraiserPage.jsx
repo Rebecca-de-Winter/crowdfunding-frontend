@@ -14,6 +14,7 @@ import getMoneyNeedByNeedId from "../api/get-money-need-by-need-id";
 import postPledgeApprove from "../api/post-pledge-approve";
 import postPledgeDecline from "../api/post-pledge-decline";
 import postPledgeCancel from "../api/post-pledge-cancel";
+import LoadingPanel from "../components/LoadingPanel";
 
 import "./FundraiserPage.css";
 
@@ -484,7 +485,7 @@ export default function FundraiserPage() {
      Early returns
      ========================= */
 
-  if (isLoading) return <p className="fundraiser__state">Loading…</p>;
+  if (isLoading) return <LoadingPanel label="Hanging up the fairy lights…" />;
   if (error) return <p className="fundraiser__state">{error.message}</p>;
   if (!fundraiser) return <p className="fundraiser__state">Fundraiser not found.</p>;
 

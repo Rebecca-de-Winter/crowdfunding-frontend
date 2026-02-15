@@ -1,15 +1,8 @@
-:root {
-  --bg: #07492d;
-  --text: #fdf4e1;
-  --line: rgba(245, 232, 205, 0.18);
-  --accent: #fabb4c;
-  --accent2: #f6a551;
-  --panel: rgba(12, 18, 14, 0.55);
-  --font: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-}
-
 /* =========================
-   HERO CAROUSEL
+   HERO CAROUSEL – CLEAN FINAL
+   Desktop preserved.
+   Mobile: content pinned to bottom + face-friendly crops.
+   Mobile transition: fade-through (no double-image jump).
    ========================= */
 
 .hero {
@@ -17,17 +10,18 @@
   overflow: hidden;
   outline: none;
 
-  /* smaller + more homepage-friendly */
   height: clamp(360px, 58vh, 560px);
 
-  /* make it feel "placed" on the page */
   border: 1px solid var(--line);
   border-radius: 18px;
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
   margin: 18px auto 22px;
   max-width: 1100px;
+
+  background: #06150f;
 }
 
+/* Background stack */
 .hero__bgStack {
   position: absolute;
   inset: 0;
@@ -36,38 +30,224 @@
 .hero__bg {
   position: absolute;
   inset: 0;
+
   background-size: cover;
-  background-position: center;
+  background-position: var(--bg-pos, center);
   background-repeat: no-repeat;
 
-  /* tiny scale gives a cinematic feel */
   transform: scale(1.03);
   opacity: 0;
+
+  /* IMPORTANT: do NOT animate background-position (causes jarring “jump”) */
   transition: opacity 650ms ease;
+
+  overflow: hidden;
 }
 
-/* Fade in active */
 .hero__bg.is-active {
   opacity: 1;
 }
 
-/* Reduced motion: no fades / no scaling */
 .hero--reduced .hero__bg {
   transition: none;
   transform: none;
 }
 
-/* Overlay gradient for text readability */
+/* Optional per-slide wash */
+.hero__bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 650ms ease;
+  mix-blend-mode: multiply;
+}
+
+/* what = ROCK: no green wash */
+.hero[data-slide="what"] .hero__bg.is-active::after {
+  opacity: 0;
+}
+
+/* spark = GIRLS: tiny wash */
+.hero[data-slide="spark"] .hero__bg.is-active::after {
+  opacity: 1;
+  background: rgba(7, 73, 45, 0.06);
+}
+
+/* belonging = CABLES: tiny wash */
+.hero[data-slide="belonging"] .hero__bg.is-active::after {
+  opacity: 1;
+  background: rgba(7, 73, 45, 0.08);
+}
+
+/* movement = COUPLE: a bit more */
+.hero[data-slide="movement"] .hero__bg.is-active::after {
+  opacity: 1;
+  background: rgba(7, 73, 45, 0.16);
+}
+
+/* =========================
+   Overlay system (DESKTOP)
+   ========================= */
+
 .hero__overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    90deg,
-    rgba(7, 32, 22, 0.88) 0%,
-    rgba(7, 32, 22, 0.62) 55%,
-    rgba(7, 32, 22, 0.20) 100%
-  );
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      120% 110% at 70% 35%,
+      rgba(0, 0, 0, 0.16) 0%,
+      rgba(0, 0, 0, 0.20) 42%,
+      rgba(0, 0, 0, 0.34) 72%,
+      rgba(0, 0, 0, 0.50) 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(7, 18, 12, 0.88) 0%,
+      rgba(7, 18, 12, 0.74) 30%,
+      rgba(7, 18, 12, 0.48) 52%,
+      rgba(7, 18, 12, 0.24) 68%,
+      rgba(7, 18, 12, 0.10) 82%,
+      rgba(7, 18, 12, 0.00) 94%
+    );
 }
+
+/* what = ROCK (slightly lighter) */
+.hero[data-slide="what"] .hero__overlay {
+  background:
+    radial-gradient(
+      120% 110% at 70% 35%,
+      rgba(0, 0, 0, 0.14) 0%,
+      rgba(0, 0, 0, 0.18) 40%,
+      rgba(0, 0, 0, 0.30) 74%,
+      rgba(0, 0, 0, 0.44) 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(7, 18, 12, 0.84) 0%,
+      rgba(7, 18, 12, 0.70) 30%,
+      rgba(7, 18, 12, 0.44) 52%,
+      rgba(7, 18, 12, 0.22) 68%,
+      rgba(7, 18, 12, 0.08) 82%,
+      rgba(7, 18, 12, 0.00) 94%
+    );
+}
+
+/* spark = GIRLS */
+.hero[data-slide="spark"] .hero__overlay {
+  background:
+    radial-gradient(
+      110% 100% at 75% 40%,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.00) 55%
+    ),
+    radial-gradient(
+      120% 110% at 70% 35%,
+      rgba(0, 0, 0, 0.12) 0%,
+      rgba(0, 0, 0, 0.16) 42%,
+      rgba(0, 0, 0, 0.28) 72%,
+      rgba(0, 0, 0, 0.42) 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(7, 18, 12, 0.86) 0%,
+      rgba(7, 18, 12, 0.72) 30%,
+      rgba(7, 18, 12, 0.46) 52%,
+      rgba(7, 18, 12, 0.24) 68%,
+      rgba(7, 18, 12, 0.09) 82%,
+      rgba(7, 18, 12, 0.00) 94%
+    );
+}
+
+/* belonging = CABLES */
+.hero[data-slide="belonging"] .hero__overlay {
+  background:
+    radial-gradient(
+      110% 100% at 78% 38%,
+      rgba(255, 255, 255, 0.06) 0%,
+      rgba(255, 255, 255, 0.00) 58%
+    ),
+    radial-gradient(
+      120% 110% at 70% 35%,
+      rgba(0, 0, 0, 0.14) 0%,
+      rgba(0, 0, 0, 0.18) 42%,
+      rgba(0, 0, 0, 0.32) 72%,
+      rgba(0, 0, 0, 0.46) 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(7, 18, 12, 0.88) 0%,
+      rgba(7, 18, 12, 0.74) 30%,
+      rgba(7, 18, 12, 0.48) 52%,
+      rgba(7, 18, 12, 0.26) 68%,
+      rgba(7, 18, 12, 0.10) 82%,
+      rgba(7, 18, 12, 0.00) 94%
+    );
+}
+
+/* movement = COUPLE */
+.hero[data-slide="movement"] .hero__overlay {
+  background:
+    radial-gradient(
+      120% 110% at 70% 35%,
+      rgba(0, 0, 0, 0.18) 0%,
+      rgba(0, 0, 0, 0.22) 44%,
+      rgba(0, 0, 0, 0.38) 78%,
+      rgba(0, 0, 0, 0.54) 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(7, 18, 12, 0.90) 0%,
+      rgba(7, 18, 12, 0.76) 32%,
+      rgba(7, 18, 12, 0.52) 54%,
+      rgba(7, 18, 12, 0.28) 70%,
+      rgba(7, 18, 12, 0.12) 84%,
+      rgba(7, 18, 12, 0.00) 95%
+    );
+}
+
+/* Extra layers referenced by JSX */
+.hero__scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.00);
+}
+
+.hero__tone {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      80% 70% at 30% 20%,
+      rgba(250, 187, 76, 0.10) 0%,
+      rgba(250, 187, 76, 0.00) 58%
+    );
+  opacity: 0.35;
+}
+
+/* Mobile fade cover to avoid double-image overlap */
+.hero__fade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: rgba(0, 0, 0, 0.0);
+  transition: opacity 240ms ease;
+}
+
+.hero__fade.is-on {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+/* =========================
+   Inner layout
+   ========================= */
 
 .hero__inner {
   position: relative;
@@ -79,25 +259,53 @@
 }
 
 .hero__content {
+  position: relative;
+  z-index: 2;
   max-width: 680px;
-  font-family: var(--font);
   color: var(--text);
+  font-family: var(--font);
 }
 
+.hero__contentBlock {
+  margin-top: 0;
+}
+
+/* Type */
 .hero__title {
   margin: 0 0 10px;
   font-size: clamp(2rem, 3.6vw, 3.1rem);
   line-height: 1.05;
   letter-spacing: -0.02em;
+  white-space: pre-line;
+
+  text-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.55),
+    0 18px 38px rgba(0, 0, 0, 0.22);
 }
 
 .hero__subtitle {
   margin: 0 0 18px;
-  font-size: 1.08rem;
+  font-size: 1.10rem;
   line-height: 1.45;
-  opacity: 0.95;
+  font-weight: 700;
+  opacity: 0.98;
+
+  white-space: pre-line;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.70);
 }
 
+/* Logo */
+.hero__logo {
+  width: clamp(240px, 40vw, 460px);
+  margin: 0 0 14px 0;
+  display: block;
+
+  filter:
+    drop-shadow(0 2px 8px rgba(0, 0, 0, 0.55))
+    drop-shadow(0 18px 40px rgba(0, 0, 0, 0.28));
+}
+
+/* Actions */
 .hero__actions {
   display: flex;
   align-items: center;
@@ -132,6 +340,7 @@
   place-items: center;
 }
 
+/* Dots */
 .hero__dots {
   margin-top: 14px;
   display: flex;
@@ -139,16 +348,19 @@
   gap: 10px;
 }
 
-/* ✅ perfectly round dots (no stretching / no button default weirdness) */
 .hero__dot {
+  appearance: none;
   flex: 0 0 auto;
   width: 10px;
   height: 10px;
   padding: 0;
-  border-radius: 999px;
+  aspect-ratio: 1 / 1;
+
+  border-radius: 50%;
   border: 1px solid var(--line);
   background: rgba(245, 232, 205, 0.18);
   cursor: pointer;
+
   display: block;
   line-height: 0;
   font-size: 0;
@@ -165,6 +377,7 @@
   opacity: 0.7;
 }
 
+/* Responsive */
 @media (max-width: 900px) {
   .hero {
     height: clamp(380px, 62vh, 560px);
@@ -173,19 +386,96 @@
   .hero__inner {
     padding: 54px 14px;
   }
-}
-/* Slide-specific polish: clarity-first slide (logo version) */
-.hero[data-slide="what"] .hero__subtitle {
-  font-size: 1.05rem;
-  font-weight: 600;
-  max-width: 50ch;
-  line-height: 1.4;
-  opacity: 0.98;
+
+  .hero__subtitle {
+    font-size: 1.04rem;
+  }
 }
 
-.hero__logo {
-  width: clamp(240px, 40vw, 460px);
-  margin: 0 0 16px 0;
-  display: block;
-  filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.35));
+/* =========================
+   MOBILE ONLY
+   ========================= */
+@media (max-width: 640px) {
+  /* Make content fill hero so we can push content block down */
+  .hero__content {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .hero__logoWrap {
+    margin-top: 6px;
+  }
+
+  /* Pin text/buttons/dots/hint to bottom */
+  .hero__contentBlock {
+    margin-top: auto;
+    padding-bottom: 14px;
+    max-width: 36ch;
+  }
+
+  .hero__contentBlock--what {
+    max-width: 40ch;
+  }
+
+  /* Slightly smaller UI on mobile */
+  .hero__title {
+    font-size: clamp(1.7rem, 7.2vw, 2.15rem);
+    line-height: 1.06;
+    margin: 0 0 8px;
+  }
+
+  .hero__subtitle {
+    font-size: 0.98rem;
+    line-height: 1.42;
+    margin: 0 0 14px;
+    max-width: 34ch;
+  }
+
+  .hero__cta {
+    padding: 10px 14px;
+    font-size: 0.95rem;
+  }
+
+  .hero__arrow {
+    width: 42px;
+    height: 42px;
+    font-size: 24px;
+  }
+
+  .hero__dots {
+    margin-top: 12px;
+  }
+
+  .hero__hint {
+    margin-top: 8px;
+  }
+
+  /* Mobile: keep fade cover, and make bg “switch” effectively instant
+     so you NEVER see two crops blended together */
+  .hero__bg {
+    transition: opacity 1ms linear;
+    transform: scale(1.01);
+  }
+
+  /* Mobile focal points (faces in view; nudged left) */
+  .hero[data-slide="what"] {
+    --bg-pos: 62% 42%;
+  }
+  .hero[data-slide="spark"] {
+    --bg-pos: 66% 42%;
+  }
+  .hero[data-slide="belonging"] {
+    --bg-pos: 84% 38%;
+  }
+  .hero[data-slide="movement"] {
+    --bg-pos: 80% 46%;
+  }
+
+  /* If any earlier “content box” scrim exists, kill it */
+  .hero__content::before {
+    content: none !important;
+  }
 }

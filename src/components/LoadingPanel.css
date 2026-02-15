@@ -1,0 +1,67 @@
+.loadingWrap {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  padding: 18px 12px;
+}
+
+.loadingCard {
+  position: relative;
+  width: min(520px, 100%);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(12, 18, 14, 0.55);
+  box-shadow: 0 14px 44px rgba(0,0,0,0.22);
+  padding: 16px 18px;
+  overflow: hidden;
+}
+
+.loadingGlow {
+  position: absolute;
+  inset: -40px;
+  background: radial-gradient(
+    closest-side,
+    rgba(250, 187, 76, 0.22),
+    rgba(246, 165, 81, 0.10),
+    rgba(0,0,0,0)
+  );
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+.loadingRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.loadingText {
+  margin: 0;
+  color: rgba(253, 244, 225, 0.92);
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.loadingDots {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.loadingDots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #fabb4c, #f6a551);
+  box-shadow: 0 10px 18px rgba(0,0,0,0.25);
+  transform: translateY(0);
+  animation: dotBounce 900ms ease-in-out infinite;
+}
+
+.loadingDots span:nth-child(2) { animation-delay: 120ms; }
+.loadingDots span:nth-child(3) { animation-delay: 240ms; }
+
+@keyframes dotBounce {
+  0%, 100% { transform: translateY(0); filter: brightness(1); }
+  50% { transform: translateY(-6px); filter: brightness(1.05); }
+}

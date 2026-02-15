@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import useFundraisers from "../hooks/use-fundraisers";
 import getCurrentUser from "../api/get-current-user";
 import FundraiserCard from "../components/FundraiserCard";
+import LoadingPanel from "../components/LoadingPanel";
 import "./FundraisersPage.css";
 
 function FundraisersPage() {
@@ -69,7 +70,7 @@ function FundraisersPage() {
     });
   }, [visibleFundraisers, q]);
 
-  if (isLoading) return <p>Loading festivals…</p>;
+  if (isLoading) return <LoadingPanel label="Hanging up the fairy lights…" />;
   if (error) return <p>Error: {error.message}</p>;
   if (!filteredFundraisers.length)
     return <p>No festivals yet.</p>;

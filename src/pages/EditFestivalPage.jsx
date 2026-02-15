@@ -13,6 +13,7 @@ import NeedsPanel from "../components/NeedsPanel";
 import getCurrentUser from "../api/get-current-user";
 import getFundraiser from "../api/get-fundraiser";
 import StatusDropdown from "../components/StatusDropdown";
+import LoadingPanel from "../components/LoadingPanel";
 
 import "./EditFestivalPage.css";
 
@@ -147,7 +148,7 @@ export default function EditFestivalPage() {
   if (checkingOwner) return <p>Checking permissions…</p>;
   if (!canEdit) return <p>You don’t have permission to edit this fundraiser.</p>;
 
-  if (isLoading) return <p>Loading…</p>;
+  if (isLoading) return <LoadingPanel label="Hanging up the fairy lights…" />;
   if (error) return <p>{error.message}</p>;
   if (!fundraiser || !form) return <p>Preparing form…</p>;
 
