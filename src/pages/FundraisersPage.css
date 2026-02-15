@@ -1,88 +1,45 @@
-.page {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 24px 16px 48px;
-}
-
-.page-title {
-  margin: 10px 0 18px;
-}
-
-.fundraiser-grid {
-  display: grid;
-  gap: 18px;
-  grid-template-columns: repeat(1, minmax(0, 1fr));
-}
-
-@media (min-width: 640px) {
-  .fundraiser-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 980px) {
-  .fundraiser-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
 /* =========================
-   Fundraisers Page Header
-   ========================= */
+   Fundraisers Page (CLEAN + ALIGNED)
+   Keeps header perfectly aligned with cards
+========================= */
 
+.page.fundraisers-page {
+  max-width: 1080px;               /* match dashboard */
+  margin: 0 auto;
+  padding: 34px 26px 60px;         /* desktop spacing like dashboard */
+}
+
+/* Header uses the SAME padding context as .page (no double padding) */
 .fundraisers-header {
-  max-width: 1100px;
-  margin: 44px auto 26px;
-  padding: 0 16px;
+  margin: 0 0 12px 0;              /* space before cards */
+  padding: 0;                      /* IMPORTANT: prevents misalignment */
 }
 
 .fundraisers-title {
   margin: 0;
   color: rgba(253, 244, 225, 0.98);
-  font-size: clamp(2.2rem, 4.2vw, 3.2rem);
+  font-size: clamp(2.1rem, 3.0vw, 2.8rem);  /* slightly smaller than before */
   font-weight: 900;
   letter-spacing: -0.02em;
   line-height: 1.05;
-
-  /* hero-like depth */
-  text-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  text-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
 }
 
 .fundraisers-subtitle {
-   margin: 10px 0 14px;
-  color: rgba(253, 244, 225, 0.92);
-  font-size: 1.05rem;
+  margin: 10px 0 12px;             /* <-- THIS is the “room under Big ideas…” */
+  color: rgba(253, 244, 225, 0.90);
+  font-size: 1.02rem;
   line-height: 1.45;
   opacity: 0.92;
-
-  /* slight shadow like the hero */
-  text-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
-}
-/* =========================
-   Fundraisers Page
-   ========================= */
-
-.fundraisers-header {
-  max-width: 1100px;
-  margin: 36px auto 28px;
-  padding: 0 16px;
+  text-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
 }
 
-.fundraisers-title {
-  margin: 0;
-  color: var(--text);
-  font-size: clamp(2rem, 3.2vw, 2.6rem);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.fundraisers-subtitle {
-  margin: 6px 0 12px;
-  color: var(--text);
-  opacity: 0.8;
-  font-size: 1rem;
-}
+/* Optional: if you want the gap to be controlled here instead, use this:
+.fundraiser-grid { margin-top: 12px; }
+*/
 
 .fundraisers-searchMeta {
+  margin-top: 8px;
   font-size: 0.95rem;
   color: rgba(253, 244, 225, 0.9);
   text-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
@@ -104,11 +61,65 @@
   text-decoration: underline;
 }
 
-.fundraisers-empty {
-  max-width: 1100px;
-  margin: 40px auto;
-  padding: 0 16px;
-  color: var(--text);
-  opacity: 0.8;
-  font-size: 1rem;
+/* Grid stays as you had it */
+.fundraiser-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+@media (min-width: 640px) {
+  .fundraiser-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 980px) {
+  .fundraiser-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Mobile: keep your existing mobile look */
+@media (max-width: 720px) {
+  .page.fundraisers-page {
+    padding: 24px 16px 48px;
+  }
+
+  .fundraisers-subtitle {
+    margin-bottom: 10px; /* still a little breathing room */
+  }
+  
+}
+/* =========================
+   Explore Festivals — Micro spacing polish
+========================= */
+
+.page.fundraisers-page {
+  padding-top: 40px; /* was ~34px — gives more space from navbar */
+}
+
+/* Slightly larger title */
+.fundraisers-title {
+  font-size: clamp(2.4rem, 3.4vw, 3rem); /* subtle bump up */
+  margin: 0;
+}
+
+/* Add breathing room under subtitle */
+.fundraisers-subtitle {
+  margin: 10px 0 24px; /* <-- bottom space controls distance to cards */
+}
+/* =========================
+   Mobile: Nudge Explore title up 2px
+========================= */
+
+@media (max-width: 720px) {
+  .fundraisers-title {
+    transform: translateY(-4px);
+  }
+}
+@media (max-width: 720px) {
+  .fundraisers-header {
+    transform: translateX(2px);
+  }
 }
