@@ -84,3 +84,29 @@
 
   display: block !important;
 }
+/* =========================
+   AddNeedForm — mobile responsiveness for Time rows
+   Paste at VERY BOTTOM of AddNeedForm.css
+   ========================= */
+
+.needAdd__row {
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* prevents overflow */
+}
+
+.needAdd__field {
+  min-width: 0; /* lets grid items shrink instead of forcing overflow */
+}
+
+.needAdd__input,
+.needAdd__textarea,
+.needAdd .needsDD__select {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+/* Stack the two-column rows on narrow screens */
+@media (max-width: 520px) {
+  .needAdd__row {
+    grid-template-columns: 1fr;
+  }
+}

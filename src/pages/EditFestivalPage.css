@@ -601,3 +601,61 @@
 .rtBtn--danger {
   white-space: nowrap;
 }
+/* =========================
+   EditFestivalPage – Needs accordion header collision fix
+   (Money needs / 1 / Collapse running into each other)
+   Paste at VERY BOTTOM of EditFestivalPage.css
+   ========================= */
+
+/* The NeedsPanel accordion header button */
+.editfundraiser .needAcc__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0; /* critical */
+}
+
+/* Left cluster: icon + title + count */
+.editfundraiser .needAcc__left {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;            /* critical */
+  flex: 1 1 auto;          /* let it shrink */
+}
+
+/* Title should be allowed to shrink instead of smashing into count/hint */
+.editfundraiser .needAcc__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Count pill: never collapse, never overlap */
+.editfundraiser .needAcc__count {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* "Collapse/Expand" hint: keep on one line and aligned right */
+.editfundraiser .needAcc__hint {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  margin-left: 10px;
+}
+
+/* Ultra narrow: move hint to new line so nothing collides */
+@media (max-width: 420px) {
+  .editfundraiser .needAcc__head {
+    flex-wrap: wrap;
+  }
+
+  .editfundraiser .needAcc__hint {
+    width: 100%;
+    text-align: left;
+    opacity: 0.75;
+    margin-left: 28px; /* lines up under title after chevron */
+  }
+}

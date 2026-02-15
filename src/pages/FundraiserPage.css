@@ -48,10 +48,6 @@
   text-decoration: underline;
 }
 
-/* .muted {
-  opacity: 0.78;
-} */
-
 /* Panels */
 .panel {
   background: var(--panel);
@@ -85,8 +81,8 @@
   border-radius: 22px;
   overflow: hidden;
   border: 1px solid var(--line);
-  background: rgba(0, 0, 0, 0.20);
-  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.30);
+  background: rgba(0, 0, 0, 0.2);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.3);
   min-height: 320px;
 }
 
@@ -96,8 +92,6 @@
   display: block;
   object-fit: cover;
 }
-
-
 
 /* Make Goal panel match hero height */
 .fundraiser__sidebarTop {
@@ -136,7 +130,7 @@
   padding: 6px 12px;
   border-radius: 999px;
   border: 1px solid rgba(245, 232, 205, 0.22);
-  background: rgba(0, 0, 0, 0.20);
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .goalPanel__divider {
@@ -170,7 +164,7 @@
 .progressBar {
   height: 10px;
   border-radius: 999px;
-  background: rgba(245, 232, 205, 0.10);
+  background: rgba(245, 232, 205, 0.1);
   overflow: hidden;
   margin-top: 6px;
 }
@@ -233,15 +227,14 @@
   opacity: 0.9;
 }
 
-/* ✅ FIX: do NOT center value cells with flex (breaks multi-line values) */
 .metaGrid__value {
   font-weight: 800;
   opacity: 0.98;
   min-height: 28px;
-  display: block; /* was flex */
+  display: block;
 }
 
-/* Base status pill (used for Open/Closed etc.) */
+/* Base status pill */
 .statusPill {
   display: inline-flex;
   align-items: center;
@@ -249,7 +242,7 @@
   padding: 6px 10px;
   border-radius: 999px;
   border: 1px solid rgba(245, 232, 205, 0.22);
-  background: rgba(0, 0, 0, 0.20);
+  background: rgba(0, 0, 0, 0.2);
   font-weight: 900;
   white-space: nowrap;
 }
@@ -258,20 +251,6 @@
   width: 9px;
   height: 9px;
   border-radius: 50%;
-}
-
-.statusPill--open {
-  box-shadow: 0 0 0 1px rgba(35, 255, 170, 0.12) inset;
-}
-.statusPill--closed {
-  box-shadow: 0 0 0 1px rgba(255, 115, 115, 0.12) inset;
-}
-
-.statusDot--open {
-  background: rgba(60, 255, 180, 0.95);
-}
-.statusDot--closed {
-  background: rgba(255, 120, 120, 0.95);
 }
 
 .headerMetaPanel__actions {
@@ -324,6 +303,7 @@
   font-weight: 900;
   cursor: pointer;
   transition: transform 0.12s ease, filter 0.15s ease, box-shadow 0.15s ease;
+  white-space: nowrap;
 }
 
 .fundraiser .btn:hover {
@@ -345,15 +325,27 @@
   display: none !important;
 }
 
-/* FundraiserPage only: soften reward tier card darkness */
 .fundraiser .rewardsPanel .rewardTierCard,
 .fundraiser .rewardsPanel .rewardCard {
   background: linear-gradient(
       to bottom,
-      rgba(8, 110, 73, 0.10),
+      rgba(8, 110, 73, 0.1),
       rgba(0, 0, 0, 0) 55%
     ),
     var(--cardDark);
+}
+
+/* Rewards card title bar styling */
+.fundraiser .rewardsPanel .rewardTierCard h3:first-of-type,
+.fundraiser .rewardsPanel .rewardTierCard h4:first-of-type,
+.fundraiser .rewardsPanel .rewardCard h3:first-of-type,
+.fundraiser .rewardsPanel .rewardCard h4:first-of-type {
+  background: rgba(12, 18, 14, 0.4);
+  border-bottom: 1px solid rgba(245, 232, 205, 0.12);
+  padding: 12px 14px;
+  margin: -16px -16px 12px;
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
 }
 
 /* NEEDS PANEL */
@@ -367,7 +359,7 @@
 
 .fundraiser .panel.needsPanel .needAcc {
   border: 1px solid rgba(245, 232, 205, 0.14);
-  background: rgba(12, 18, 14, 0.40);
+  background: rgba(12, 18, 14, 0.4);
   border-radius: 16px;
   overflow: hidden;
 }
@@ -381,6 +373,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
 
   padding: 14px 16px 14px 20px;
 
@@ -406,6 +400,7 @@
   align-items: center;
   gap: 10px;
   font-weight: 900;
+  min-width: 0;
 }
 
 .needAcc__chev {
@@ -426,12 +421,14 @@
   padding: 4px 10px;
   font-weight: 900;
   font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 .needAcc__hint {
   opacity: 0.65;
   font-weight: 800;
   font-size: 0.9rem;
+  white-space: nowrap;
 }
 
 .needAcc__body {
@@ -452,6 +449,27 @@
   border-radius: 14px;
 }
 
+/* Need row mini badges */
+.needRow__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.needMiniBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  border: 1px solid rgba(250, 187, 76, 0.35);
+  background: rgba(250, 187, 76, 0.14);
+  color: rgba(253, 244, 225, 0.95);
+  white-space: nowrap;
+}
+
 /* Pledges */
 .pledgeList {
   list-style: none;
@@ -464,7 +482,7 @@
 .pledgeRow {
   border: 1px solid rgba(245, 232, 205, 0.18);
   border-radius: 16px;
-  padding: 10px 12px;              /* was 12px */
+  padding: 10px 12px;
   background: rgba(0, 0, 0, 0.14);
   display: flex;
   flex-direction: column;
@@ -473,8 +491,9 @@
 .pledgeRow__top {
   display: flex;
   justify-content: space-between;
-  /* gap: 10px; */
   align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .pledgeRow__need {
@@ -491,57 +510,45 @@
   opacity: 0.9;
 }
 
-.pledgeRow__actions {
+.pledgeRow__meta--spaced {
+  margin-top: 8px;
+  margin-bottom: 2px;
+}
+
+/* PLEDGES ONLY: action button layout */
+.pledgesPanel .pledgeRow__actions {
   display: flex;
-  justify-content: flex-end;   /* pushes buttons to right */
-  /* gap: 8px;
-  margin-top: 8px; */
-}
-
-
-/* FORCE Needs outer box to match Story exactly */
-.fundraiser .panel.needsPanel {
-  background: var(--panel) !important;
-}
-
-/* Rewards card title bar styling */
-.fundraiser .rewardsPanel .rewardTierCard h3:first-of-type,
-.fundraiser .rewardsPanel .rewardTierCard h4:first-of-type,
-.fundraiser .rewardsPanel .rewardCard h3:first-of-type,
-.fundraiser .rewardsPanel .rewardCard h4:first-of-type {
-  background: rgba(12, 18, 14, 0.40);
-  border-bottom: 1px solid rgba(245, 232, 205, 0.12);
-  padding: 12px 14px;
-  margin: -16px -16px 12px;
-  border-top-left-radius: 18px;
-  border-top-right-radius: 18px;
-}
-
-/* NEW: stack item action buttons nicely */
-.needRow__actions--stack {
-  display: flex;
-  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
   gap: 10px;
-  align-items: stretch;
-}
-.needRow__actions--stack .btn {
-  width: 100%;
+  flex-wrap: wrap;
+  margin-top: 8px;
 }
 
-/* =========================
-   Fundraiser status (lifecycle)
-   ========================= */
+.pledgesPanel .btn.btn--small {
+  padding: 8px 14px;
+  font-size: 0.92rem;
+  line-height: 1;
+}
 
+.pledgesPanel .pledgeRow__actions .btn {
+  white-space: nowrap;
+}
+
+/* Fundraiser lifecycle status */
 .metaGrid__label--top {
   align-self: flex-start;
   padding-top: 2px;
 }
 
 .metaGrid__value--status {
+  width: 100%;
+  justify-self: stretch;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
+  text-align: left;
 }
 
 .statusRow {
@@ -585,96 +592,244 @@
 .statusDot--lifecycle.is-cancelled {
   background: rgba(180, 180, 180, 0.85);
 }
-/* =========================
-   FORCE status subline to left edge (override any centering)
-   Paste at very bottom of file
-   ========================= */
 
-.metaGrid > .metaGrid__value.metaGrid__value--status {
-  width: 100%;
-  justify-self: stretch;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start !important;
-  text-align: left !important;
-}
-
-.metaGrid > .metaGrid__value.metaGrid__value--status .statusSub {
-  width: 100%;
-  margin: 0;
-  text-align: left !important;
-  align-self: stretch;
-}
-/* =========================
-   TEMPLATE PREVIEW: fix wasted space (scoped)
-   Paste at VERY BOTTOM
-   ========================= */
-
+/* TEMPLATE PREVIEW layout */
 @media (min-width: 980px) {
-  /* Make the sidebar a fixed width so it can't become a giant empty column */
   .fundraiser--preview .fundraiser__topGrid,
   .fundraiser--preview .fundraiser__belowGrid {
     grid-template-columns: minmax(0, 1fr) 420px;
     align-items: start;
   }
 
-  /* Ensure the sidebar actually stretches to fill its grid column */
   .fundraiser--preview .fundraiser__sidebarTop,
   .fundraiser--preview .fundraiser__rightCol {
     width: 100%;
   }
 
-  /* Ensure the Goal panel fills the sidebar column (no dead space) */
   .fundraiser--preview .fundraiser__sidebarTop .panel {
     width: 100%;
   }
 }
+
 /* =========================
-   Need row mini badges (Fundraiser ID page)
+   ✅ NEED ROW LAYOUT + RESPONSIVE BUTTON FIX
+   (matches FundraiserPage.jsx structure)
    ========================= */
 
-.needRow__title {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-/* Small badge (Qty / Vols / etc.) */
-.needMiniBadge {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 900;
-  border: 1px solid rgba(250, 187, 76, 0.35);
-  background: rgba(250, 187, 76, 0.14);
-  color: rgba(253, 244, 225, 0.95);
-  white-space: nowrap;
-}
-/* Only affects the pledges box spacing under the pledge title */
-.pledgeRow__meta--spaced {
-  margin-top: 8px;
-  margin-bottom: 2px;
-}
-
-/* PLEDGES ONLY: nicer action button layout */
-.pledgesPanel .pledgeRow__actions {
+.needRow {
   display: flex;
-  justify-content: flex-end;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(245, 232, 205, 0.16);
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.needRow > div:first-child,
+.needRow__left {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.needRow__desc {
+  margin-top: 6px;
+  opacity: 0.92;
+  line-height: 1.45;
+}
+
+.needRow__meta {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.needRow__actions {
+  flex: 0 0 auto;
+  display: flex;
   align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.needRow__actions .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  min-width: 160px;
+}
+
+.needRow__actions.needRow__actions--stack {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.needRow__actions.needRow__actions--stack .btn {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 520px) {
+  .needRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .needRow__actions {
+    width: 100%;
+    justify-content: stretch;
+    margin-top: 10px;
+  }
+
+  .needRow__actions .btn {
+    width: 100%;
+    min-width: 0;
+    padding: 12px 16px;
+  }
+
+  .needAcc__hint {
+    width: 100%;
+    text-align: left;
+    opacity: 0.6;
+  }
+}
+/* =========================
+   NEED ROW FINAL FIX (layout + pills + buttons)
+   Paste at VERY BOTTOM of FundraiserPage.css
+   ========================= */
+
+.needRow {
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  border-radius: 16px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.14);
+
+  /* stable 2-col layout: content | actions */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+}
+
+/* left column must be shrinkable so pills wrap instead of breaking layout */
+.needRow__left {
+  min-width: 0;
+}
+
+/* pills: wrap safely */
+.needRow__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.needPill {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* actions: top-right, hug text */
+.needRow__actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
   gap: 10px;
   flex-wrap: wrap;
-  margin-top: 8px; /* slightly tighter than 10 */
+  padding-top: 2px;
 }
 
-.pledgesPanel .btn.btn--small {
-  padding: 8px 14px;
-  font-size: 0.92rem;
-  line-height: 1;
-}
-
-.pledgesPanel .pledgeRow__actions .btn {
+.needRow__actions .btn {
+  width: fit-content;
+  min-width: 0 !important;
+  max-width: 100%;
   white-space: nowrap;
+}
+
+/* two-button item rows stack */
+.needRow__actions--stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.needRow__actions--stack .btn {
+  width: 100%;
+}
+
+/* ultra-narrow: stack pills vertically */
+@media (max-width: 360px) {
+  .needRow__meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .needRow__meta .needPill {
+    width: fit-content;
+    max-width: 100%;
+  }
+}
+/* =========================
+   MOBILE FUNDAMENTAL FIX:
+   On small screens, stack the action button under the content
+   Paste at VERY BOTTOM
+   ========================= */
+
+/* Keep desktop/tablet as 2 columns */
+.panel.needsPanel .needRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+}
+
+.panel.needsPanel .needRow__left {
+  min-width: 0;
+}
+
+.panel.needsPanel .needRow__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Buttons hug content on wide screens */
+.panel.needsPanel .needRow__actions {
+  justify-self: end;
+  align-self: start;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.panel.needsPanel .needRow__actions .btn {
+  width: fit-content;
+  min-width: 0 !important;
+  white-space: nowrap;
+}
+
+/* ✅ The real fix: stack on small screens so nothing gets squeezed */
+@media (max-width: 520px) {
+  .panel.needsPanel .needRow {
+    grid-template-columns: 1fr;   /* single column */
+  }
+
+  .panel.needsPanel .needRow__actions {
+    justify-self: stretch;        /* fill the row */
+    margin-top: 10px;
+  }
+
+  .panel.needsPanel .needRow__actions .btn {
+    width: 100%;                  /* clean mobile CTA */
+  }
+
+  /* If item has 2 buttons (Donate/Loan), keep them stacked */
+  .panel.needsPanel .needRow__actions--stack .btn {
+    width: 100%;
+  }
 }
