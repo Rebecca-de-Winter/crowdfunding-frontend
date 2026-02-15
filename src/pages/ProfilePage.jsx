@@ -286,54 +286,64 @@ function ProfilePage() {
   const incomingPendingCount = incomingByStatus.pending || 0;
 
   return (
-    <div className="profilePage">
-      <header className="profilePage__header">
-        <div className="profilePage__headerTop">
-          <div>
-            <h1 className="profilePage__title">My Dashboard</h1>
-            <p className="profilePage__subtitle">
-              Switch between <strong>Supporter</strong> and <strong>Organizer</strong> so it’s always clear which world you’re in.
-            </p>
+  <div className="profilePage">
+    <header className="profilePage__header">
+  <div className="profilePage__headerTop">
+    <div className="profilePage__headerLeft">
+      <h1 className="profilePage__title">My Dashboard</h1>
 
-            <div className="roleToggle" role="tablist" aria-label="Dashboard role">
-              <button
-                type="button"
-                className={`roleToggle__btn ${activeRole === "supporter" ? "is-active" : ""}`}
-                onClick={() => setActiveRole("supporter")}
-              >
-                Supporter
-              </button>
+      <p className="profilePage__subtitle">
+        Switch between <strong>Supporter</strong> and <strong>Organizer</strong> so it’s always clear which world you’re in.
+      </p>
 
-              <button
-                type="button"
-                className={`roleToggle__btn ${activeRole === "organizer" ? "is-active" : ""}`}
-                onClick={() => setActiveRole("organizer")}
-              >
-                Organizer
-              </button>
-            </div>
-          </div>
+      <div className="profilePage__roleRow" role="tablist" aria-label="Dashboard role">
+        <div className="roleToggle">
+          <button
+            type="button"
+            className={`roleToggle__btn ${activeRole === "supporter" ? "is-active" : ""}`}
+            onClick={() => setActiveRole("supporter")}
+            aria-selected={activeRole === "supporter"}
+          >
+            Supporter
+          </button>
 
-          <div className="profilePage__badgeArea">
-            {supporter?.username && (
-              <div className="profileBadge">
-                Signed in as <strong>{supporter.username}</strong>
-              </div>
-            )}
-
-            {activeRole === "organizer" && incomingPendingCount > 0 && (
-              <div className="profileBadge profileBadge--warn">
-                {incomingPendingCount} incoming pending
-              </div>
-            )}
-
-            {activeRole === "supporter" && myPendingCount > 0 && (
-              <div className="profileBadge profileBadge--warn">
-                {myPendingCount} of my pledges pending
-              </div>
-            )}
-          </div>
+          <button
+            type="button"
+            className={`roleToggle__btn ${activeRole === "organizer" ? "is-active" : ""}`}
+            onClick={() => setActiveRole("organizer")}
+            aria-selected={activeRole === "organizer"}
+          >
+            Organizer
+          </button>
         </div>
+
+        <div
+          className={`roleMode ${activeRole === "organizer" ? "is-organizer" : "is-supporter"}`}
+          aria-live="polite"
+        >
+          Viewing as:{" "}
+          <strong>{activeRole === "organizer" ? "Organizer / Fundraiser owner" : "Supporter"}</strong>
+        </div>
+      </div>
+    </div>
+
+    <div className="profilePage__badgeArea">
+      {supporter?.username && (
+        <div className="profileBadge">
+          Signed in as <strong>{supporter.username}</strong>
+        </div>
+      )}
+
+      {activeRole === "organizer" && incomingPendingCount > 0 && (
+        <div className="profileBadge profileBadge--warn">{incomingPendingCount} incoming pending</div>
+      )}
+
+      {activeRole === "supporter" && myPendingCount > 0 && (
+        <div className="profileBadge profileBadge--warn">{myPendingCount} of my pledges pending</div>
+      )}
+    </div>
+  </div>
+
 
         {/* Totals strip changes depending on role */}
         <div className={`profileStats ${activeRole === "organizer" ? "profileStats--organizer" : ""}`}>

@@ -1,25 +1,38 @@
 /* src/pages/ProfilePage.css */
 
+/* =========================
+   Base layout
+========================= */
+
 .profilePage {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 22px 16px 60px;
+  padding: 18px 16px 56px;
   color: var(--text);
 }
 
 .profilePage__header {
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
 
+/* Header top row: title/controls left, badges right */
 .profilePage__headerTop {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
   align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.profilePage__headerLeft {
+  display: grid;
+  gap: 8px;
+  flex: 1 1 520px;
+  min-width: 0;
 }
 
 .profilePage__title {
-  margin: 0 0 6px 0;
+  margin: 0 0 2px 0;
   font-weight: 900;
   font-size: 40px;
   line-height: 1.05;
@@ -29,13 +42,16 @@
   margin: 0;
   opacity: 0.85;
   max-width: 60ch;
+  line-height: 1.4;
 }
 
+/* Badges area */
 .profilePage__badgeArea {
   display: flex;
   flex-direction: column;
   gap: 10px;
   align-items: flex-end;
+  flex: 0 0 auto;
 }
 
 .profileBadge {
@@ -53,40 +69,14 @@
   color: rgba(253, 244, 225, 0.98);
 }
 
-.roleToggle {
-  display: inline-flex;
-  gap: 8px;
-  margin-top: 12px;
-  padding: 6px;
-  border: 1px solid rgba(245, 232, 205, 0.18);
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.12);
-}
-
-.roleToggle__btn {
-  border: 1px solid rgba(245, 232, 205, 0.18);
-  background: rgba(0, 0, 0, 0.18);
-  color: var(--text);
-  padding: 8px 14px;
-  border-radius: 999px;
-  font-weight: 900;
-  cursor: pointer;
-  opacity: 0.92;
-}
-
-.roleToggle__btn.is-active {
-  background: linear-gradient(180deg, var(--accent), var(--accent2));
-  color: #183b2c;
-  border-color: rgba(0, 0, 0, 0.15);
-  opacity: 1;
-}
-
+/* Divider under header */
 .profileHeaderDivider {
   height: 1px;
   background: rgba(245, 232, 205, 0.14);
-  margin-top: 14px;
+  margin-top: 10px;
 }
 
+/* Loading / error */
 .profilePage__state {
   padding: 16px;
 }
@@ -98,9 +88,94 @@
   background: rgba(0, 0, 0, 0.14);
 }
 
-/* Totals strip */
+/* =========================
+   Role controls (Supporter/Organizer + Viewing as)
+   Goal: identical pill system + PERFECT baseline alignment
+========================= */
+
+.profilePage__roleRow {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: stretch; /* key: no “Viewing as” sitting higher */
+  margin-top: 6px;
+}
+
+/* Outer pill containers match */
+.roleToggle,
+.roleMode {
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 999px;
+  padding: 4px;
+  min-height: 46px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: stretch; /* key */
+  gap: 8px;
+}
+
+/* Toggle always equal buttons */
+.roleToggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* Buttons inside toggle */
+.roleToggle__btn {
+  width: 100%;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  box-sizing: border-box;
+
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--text);
+
+  font-weight: 900;
+  cursor: pointer;
+  opacity: 0.92;
+  line-height: 1;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.roleToggle__btn.is-active {
+  background: linear-gradient(180deg, var(--accent), var(--accent2));
+  color: #183b2c;
+  border-color: rgba(0, 0, 0, 0.15);
+  opacity: 1;
+}
+
+/* Viewing pill */
+.roleMode {
+  padding: 0 16px;      /* no extra vertical padding */
+  justify-content: center;
+  align-items: center;  /* inner centering */
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.roleMode.is-supporter {
+  border-color: rgba(250, 187, 76, 0.28);
+  background: rgba(250, 187, 76, 0.10);
+}
+
+.roleMode.is-organizer {
+  border-color: rgba(60, 255, 180, 0.20);
+  background: rgba(60, 255, 180, 0.08);
+}
+
+/* =========================
+   Totals strip
+========================= */
+
 .profileStats {
-  margin-top: 14px;
+  margin-top: 10px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
@@ -126,7 +201,6 @@
   margin-bottom: 8px;
 }
 
-/* Pill-style values */
 .profileStat__value {
   display: inline-flex;
   align-items: center;
@@ -140,17 +214,14 @@
   width: fit-content;
 }
 
-/* Layout grid */
+/* =========================
+   Main grid + cards
+========================= */
+
 .profileGrid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 18px;
-}
-
-@media (min-width: 980px) {
-  .profileGrid {
-    grid-template-columns: 1fr;
-  }
 }
 
 .profileCard {
@@ -197,6 +268,7 @@
   padding: 10px 0;
 }
 
+/* Chips */
 .profileChips {
   display: flex;
   flex-wrap: wrap;
@@ -232,6 +304,7 @@
   background: rgba(255, 120, 120, 0.10);
 }
 
+/* List rows */
 .profileList {
   list-style: none;
   margin: 0;
@@ -275,6 +348,7 @@
   opacity: 0.75;
 }
 
+/* Actions (single definition only) */
 .profileRow__actions {
   display: flex;
   gap: 8px;
@@ -282,22 +356,16 @@
   flex-wrap: wrap;
 }
 
-/* =========================
-   Tiny Buttons (Unified System)
-   Applies to View / Cancel / Approve / Decline
-========================= */
-
+/* Tiny Buttons */
 .btnTiny {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
-  height: 32px;              /* consistent height */
-  padding: 0 12px;           /* nicer spacing left/right */
-
-  font-size: 0.88rem;        /* slightly larger than before */
+  height: 32px;
+  padding: 0 12px;
+  font-size: 0.88rem;
   font-weight: 900;
-  line-height: 1;            /* prevents jumping on wrap */
+  line-height: 1;
   white-space: nowrap;
 
   border-radius: 999px;
@@ -308,10 +376,7 @@
   cursor: pointer;
   text-decoration: none;
 
-  transition: 
-    transform 0.12s ease, 
-    filter 0.15s ease, 
-    box-shadow 0.15s ease;
+  transition: transform 0.12s ease, filter 0.15s ease, box-shadow 0.15s ease;
 }
 
 .btnTiny:hover {
@@ -325,14 +390,12 @@
   box-shadow: none;
 }
 
-/* Approve variant */
 .btnTiny--approve {
   background: linear-gradient(180deg, #49b37d, #2f9f67);
   border-color: rgba(34, 176, 92, 0.6);
   color: #083c2b;
 }
 
-/* Danger / decline / cancel */
 .btnTiny--danger {
   background: rgba(255, 120, 120, 0.08);
   border-color: rgba(255, 120, 120, 0.65);
@@ -391,52 +454,457 @@
   font-weight: 900;
   font-size: 0.85rem;
 }
-/* =========================
-   Pledge action buttons
-   ========================= */
 
-.profileRow__actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
+/* =========================
+   Mobile: REMOVE GREEN VOID
+========================= */
+@media (max-width: 720px) {
+  .profilePage {
+    padding: 10px 16px 28px;
+  }
+
+  .profilePage__headerTop {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .profilePage__title {
+    font-size: 32px;
+    margin-bottom: 2px;
+  }
+
+  .profilePage__subtitle {
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+  }
+
+  /* stack controls tight */
+  .profilePage__roleRow {
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .roleToggle,
+  .roleMode {
+    width: 100%;
+  }
+
+  .roleMode {
+    justify-content: center;
+  }
+
+  /* bring badges up + keep them compact */
+  .profilePage__badgeArea {
+    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .profileBadge {
+    white-space: normal;
+  }
+
+  .profileStats {
+    margin-top: 10px;
+    gap: 10px;
+  }
+
+  .profileHeaderDivider {
+    margin-top: 10px;
+  }
+}
+/* =========================
+   PATCH: comfy desktop + tight mobile + equal pills
+   Paste at VERY BOTTOM
+========================= */
+
+/* ---------- DESKTOP / TABLET: restore breathing room ---------- */
+@media (min-width: 721px) {
+  .profilePage {
+    padding: 22px 16px 60px;
+  }
+
+  .profilePage__header {
+    margin-bottom: 18px;
+  }
+
+  .profilePage__headerLeft {
+    gap: 10px;
+  }
+
+  .profilePage__title {
+    margin: 0 0 6px 0;
+    font-size: 40px;
+    line-height: 1.05;
+  }
+
+  .profilePage__subtitle {
+    margin: 0;
+    line-height: 1.45;
+    max-width: 62ch;
+  }
+
+  .profilePage__roleRow {
+    margin-top: 10px;
+    gap: 12px;
+  }
+
+  .profileStats {
+    margin-top: 14px;
+    gap: 12px;
+  }
+
+  .profileHeaderDivider {
+    margin-top: 14px;
+  }
 }
 
-/* Base pledge button */
-.pledgeBtn {
+/* ---------- ALL SIZES: role pills MUST match ---------- */
+.profilePage__roleRow {
+  align-items: stretch; /* stops the “Viewing as” pill sitting higher */
+}
+
+.roleToggle,
+.roleMode {
+  min-height: 52px;          /* same outer height */
+  padding: 6px;              /* same outer padding */
+  display: inline-flex;
+  align-items: stretch;       /* same baseline */
+  box-sizing: border-box;
+}
+
+/* Force Supporter/Organizer to be EXACTLY equal width */
+.roleToggle {
+  display: inline-grid;       /* important: grid sizing is stable */
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  min-width: 320px;           /* gives them breathing room on desktop */
+}
+
+.roleToggle__btn {
+  height: 40px;               /* same inner height */
+  padding: 0 14px;            /* same inner padding */
+  width: 100%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 38px; /* taller */
-  padding: 0 16px;
-  border-radius: 999px;
-  font-weight: 900;
-  font-size: 0.9rem;
-  text-decoration: none;
-  border: 1px solid rgba(245, 232, 205, 0.25);
-  background: rgba(0, 0, 0, 0.18);
-  color: var(--text);
-  transition: transform 0.12s ease, filter 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
 }
 
-.pledgeBtn:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.05);
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.35);
+/* Viewing pill matches the toggle’s total height */
+.roleMode {
+  padding: 0 18px;            /* no vertical padding (outer already has it) */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;           /* same as roleToggle outer */
 }
 
-/* Approve button */
-.pledgeBtn--approve {
-  background: linear-gradient(180deg, #49b37d, #2f9f67);
-  border: none;
-  color: #083c2b;
+/* ---------- MOBILE: ACTUALLY remove the green void ---------- */
+@media (max-width: 720px) {
+  .profilePage {
+    padding: 10px 16px 28px;
+  }
+
+  .profilePage__headerTop {
+    gap: 8px;
+  }
+
+  .profilePage__headerLeft {
+    gap: 6px;
+  }
+
+  .profilePage__title {
+    margin: 0 0 2px 0;
+    font-size: 32px;
+    line-height: 1.05;
+  }
+
+  .profilePage__subtitle {
+    margin: 0;
+    line-height: 1.35;
+    max-width: 46ch;
+  }
+
+  /* pull controls up closer to subtitle */
+  .profilePage__roleRow {
+    margin-top: 6px;
+    gap: 8px;
+  }
+
+  .roleToggle,
+  .roleMode {
+    width: 100%;
+  }
+
+  .roleToggle {
+    min-width: 0;             /* don’t force 320px on mobile */
+  }
+
+  /* badges: bring them right up */
+  .profilePage__badgeArea {
+    margin-top: 6px;
+    gap: 8px;
+  }
+
+  .profileHeaderDivider {
+    margin-top: 10px;
+  }
+
+  .profileStats {
+    margin-top: 10px;
+    gap: 10px;
+  }
+}
+/* =========================
+   DESKTOP: restore breathing room
+========================= */
+@media (min-width: 721px) {
+  .profilePage { padding: 34px 24px 70px; }   /* more top/side padding */
+  .profilePage__header { margin-bottom: 22px; }
+
+  .profilePage__title { margin-bottom: 10px; }
+  .profilePage__subtitle { margin-top: 6px; line-height: 1.55; }
+
+  .profilePage__roleRow { margin-top: 18px; gap: 16px; }
+  .profileStats { margin-top: 18px; gap: 14px; }
+
+  .profileHeaderDivider { margin-top: 18px; }
+}
+/* =========================
+   Pills: force identical height
+========================= */
+.roleToggle,
+.roleMode {
+  height: 52px;
+  padding: 6px;
+  box-sizing: border-box;
+  align-items: center;
 }
 
-/* Decline button */
-.pledgeBtn--decline {
-  border: 1px solid rgba(255, 120, 120, 0.6);
-  color: rgba(255, 170, 170, 0.95);
+.roleToggle__btn {
+  height: 40px;
+  padding: 0 14px;
+}
+/* =========================
+   DESKTOP breathing room (>= 900px)
+========================= */
+@media (min-width: 900px) {
+  .profilePage {
+    padding-top: 38px;       /* pushes the whole dashboard down */
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-bottom: 70px;
+  }
+
+  .profilePage__header {
+    margin-bottom: 22px;
+  }
+
+  .profilePage__title {
+    margin-bottom: 10px;
+  }
+
+  .profilePage__subtitle {
+    margin-top: 6px;
+    line-height: 1.55;
+  }
+
+  .profilePage__roleRow {
+    margin-top: 16px;
+    gap: 16px;
+  }
+
+  .profileStats {
+    margin-top: 18px;
+    gap: 14px;
+  }
+}
+/* =========================
+   MOBILE: remove header void
+========================= */
+@media (max-width: 720px) {
+  /* page top spacing */
+  .profilePage {
+    padding-top: 10px;
+    padding-bottom: 28px;
+  }
+
+  /* the title is often the main culprit */
+  .profilePage__title {
+    margin: 0 !important;
+    line-height: 1.05;
+  }
+
+  /* subtitle: remove any sneaky margin + tighten line-height */
+  .profilePage__subtitle {
+    margin: 6px 0 0 0 !important;  /* small gap under title */
+    line-height: 1.35;
+  }
+
+  /* role row: pull it up close to subtitle */
+  .profilePage__roleRow {
+    margin-top: 10px !important;
+    gap: 8px !important;
+  }
+
+  /* badges: pull them up too */
+  .profilePage__badgeArea {
+    margin-top: 6px !important;
+    gap: 8px !important;
+  }
+}
+.roleMode {
+  background: rgba(0,0,0,0.10); /* closer to toggle’s container feel */
+}
+@media (max-width: 720px) {
+  .profilePage {
+    outline: 6px solid hotpink !important;
+  }
+}
+/* Force identical pill heights + reduce visual weight on roleMode */
+.profilePage__roleRow {
+  align-items: stretch !important;
 }
 
-.pledgeBtn--decline:hover {
-  background: rgba(255, 120, 120, 0.1);
+.roleToggle,
+.roleMode {
+  height: 52px !important;
+  min-height: 52px !important;
+  padding: 6px !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.roleToggle__btn {
+  height: 40px !important;
+  padding: 0 14px !important;
+  box-sizing: border-box !important;
+}
+
+/* Make "Viewing as" feel like the same system (less solid, less “big”) */
+.roleMode {
+  background: rgba(0, 0, 0, 0.12) !important;
+  border-color: rgba(245, 232, 205, 0.18) !important;
+}
+/* Make "Viewing as" text match toggle button text */
+.roleMode {
+  font-size: 0.88rem !important; /* matches btn sizing vibe */
+  line-height: 1 !important;
+  font-weight: 900 !important;
+}
+
+.roleToggle__btn {
+  font-size: 0.88rem !important;
+  line-height: 1 !important;
+}
+/* =========================
+   MOBILE HEADER: remove the green void (REAL FIX)
+   Paste at VERY BOTTOM
+========================= */
+@media (max-width: 720px) {
+  /* 1) Stop the header-left grid from creating big vertical gaps */
+  .profilePage__headerLeft {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+
+  /* 2) Tight, predictable spacing */
+  .profilePage__title {
+    margin: 0 0 8px 0 !important;
+    line-height: 1.05 !important;
+  }
+
+  .profilePage__subtitle {
+    margin: 0 0 14px 0 !important; /* this is the main “void killer” */
+    line-height: 1.35 !important;
+  }
+
+  .profilePage__roleRow {
+    margin: 0 0 12px 0 !important;
+    gap: 10px !important;
+  }
+
+  /* roleToggle has margin-top: 12px in your base CSS — kill it on mobile */
+  .roleToggle {
+    margin-top: 0 !important;
+  }
+
+  /* 3) Bring badges up closer (so they don’t feel like a separate block) */
+  .profilePage__badgeArea {
+    margin-top: 0 !important;
+    gap: 10px !important;
+  }
+
+  /* 4) Make “Viewing as” feel the same size as the toggle */
+  .roleMode {
+    font-size: 0.88rem !important; /* match the buttons */
+    line-height: 1 !important;
+    font-weight: 900 !important;
+
+    /* reduce visual mass so it doesn’t read “bigger” */
+    background: rgba(0, 0, 0, 0.12) !important;
+    border-color: rgba(245, 232, 205, 0.18) !important;
+  }
+
+  .roleToggle__btn {
+    font-size: 0.88rem !important;
+    line-height: 1 !important;
+  }
+}
+/* =========================
+   MOBILE: add gentle top breathing room
+========================= */
+@media (max-width: 720px) {
+  .profilePage {
+    padding-top: 20px !important;  /* was 10px earlier */
+  }
+
+  .profilePage__title {
+    margin-bottom: 10px !important; /* small cushion under title */
+  }
+
+  .profilePage__subtitle {
+    margin-bottom: 18px !important; /* space before pills */
+  }
+}
+.profilePage__subtitle {
+  line-height: 1.45 !important;
+}
+/* =========================
+   FORCE IDENTICAL PILL TYPOGRAPHY
+========================= */
+
+.roleToggle__btn,
+.roleMode {
+  font-family: inherit !important;
+  font-size: 0.9rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  line-height: 1 !important;
+}
+.roleMode {
+  padding: 0 22px !important;  /* more horizontal space */
+  height: 52px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+/* =========================
+   DESKTOP: extra top breathing room
+========================= */
+@media (min-width: 900px) {
+  .profilePage {
+    padding-top: 48px !important;  /* increase top air */
+  }
+
+  .profilePage__title {
+    margin-top: 10px !important;   /* small cushion above H1 */
+  }
 }
