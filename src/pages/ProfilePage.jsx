@@ -11,8 +11,6 @@ import postPledgeApprove from "../api/post-pledge-approve";
 import postPledgeDecline from "../api/post-pledge-decline";
 import postPledgeCancel from "../api/post-pledge-cancel";
 
-
-
 import "./ProfilePage.css";
 
 /* -------------------------
@@ -75,7 +73,8 @@ function getFundraiserId(obj) {
 
 function pledgeValueLabel(p) {
   if (p?.money_detail?.amount != null) return formatAUD(p.money_detail.amount);
-  if (p?.time_detail?.hours_committed != null) return `${p.time_detail.hours_committed} hrs`;
+  if (p?.time_detail?.hours_committed != null)
+    return `${p.time_detail.hours_committed} hrs`;
   if (p?.item_detail?.quantity != null) return `Qty ${p.item_detail.quantity}`;
   return "—";
 }
@@ -156,7 +155,7 @@ function ProfilePage() {
         setPledgeTotals(pledgesReport?.totals ?? null);
         setSupporter(pledgesReport?.supporter ?? null);
 
-        // 2) Incoming pledges (fan-out using your existing report endpoint)
+        // 2) Incoming pledges
         const fundraiserIds = fundraisersList
           .map((f) => getFundraiserId(f))
           .filter(Boolean);
@@ -171,7 +170,9 @@ function ProfilePage() {
             if (r.status !== "fulfilled") return [];
 
             const report = r.value;
-            const list = Array.isArray(report?.pledges) ? report.pledges : safeArray(report);
+            const list = Array.isArray(report?.pledges)
+              ? report.pledges
+              : safeArray(report);
 
             return list.map((p) => ({
               ...p,
@@ -225,7 +226,9 @@ function ProfilePage() {
   async function handleCancelPledge(id) {
     try {
       const updated = await postPledgeCancel(id);
-      setMyPledges((prev) => prev.map((p) => (p.id === id ? { ...p, ...updated } : p)));
+      setMyPledges((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, ...updated } : p))
+      );
     } catch (err) {
       console.error(err);
       setError(err?.message || "Could not cancel pledge.");
@@ -235,7 +238,13 @@ function ProfilePage() {
   async function handleApproveIncoming(id) {
     try {
       const updated = await postPledgeApprove(id);
-      setIncomingPledges((prev) => prev.map((p) => (p.id === id ? { ...p, ...updated } : p)));
+      setIncomingPledges((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, ...updated } : p))
+      );
+      // optional: recompute totals (keeps organizer totals accurate)
+      setIncomingTotals((prev) =>
+        prev ? sumIncomingTotals(incomingPledges.map((p) => (p.id === id ? { ...p, ...updated } : p))) : prev
+      );
     } catch (err) {
       console.error(err);
       setError(err?.message || "Could not approve pledge.");
@@ -245,7 +254,13 @@ function ProfilePage() {
   async function handleDeclineIncoming(id) {
     try {
       const updated = await postPledgeDecline(id);
-      setIncomingPledges((prev) => prev.map((p) => (p.id === id ? { ...p, ...updated } : p)));
+      setIncomingPledges((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, ...updated } : p))
+      );
+      // optional: recompute totals (keeps organizer totals accurate)
+      setIncomingTotals((prev) =>
+        prev ? sumIncomingTotals(incomingPledges.map((p) => (p.id === id ? { ...p, ...updated } : p))) : prev
+      );
     } catch (err) {
       console.error(err);
       setError(err?.message || "Could not decline pledge.");
@@ -286,67 +301,96 @@ function ProfilePage() {
   const incomingPendingCount = incomingByStatus.pending || 0;
 
   return (
-  <div className="profilePage">
-    <header className="profilePage__header">
-  <div className="profilePage__headerTop">
-    <div className="profilePage__headerLeft">
-      <h1 className="profilePage__title">My Dashboard</h1>
+    <div className="profilePage">
+      <header className="profilePage__header">
+        <div className="profilePage__headerTop">
+          <div className="profilePage__headerLeft">
+            <h1 className="profilePage__title">My Dashboard</h1>
 
-      <p className="profilePage__subtitle">
-        Switch between <strong>Supporter</strong> and <strong>Organizer</strong> so it’s always clear which world you’re in.
-      </p>
+            <p className="profilePage__subtitle">
+              Switch between <strong>Supporter</strong> and{" "}
+              <strong>Organiser</strong> to see your festivals and pledges.
+            </p>
 
-      <div className="profilePage__roleRow" role="tablist" aria-label="Dashboard role">
-        <div className="roleToggle">
-          <button
-            type="button"
-            className={`roleToggle__btn ${activeRole === "supporter" ? "is-active" : ""}`}
-            onClick={() => setActiveRole("supporter")}
-            aria-selected={activeRole === "supporter"}
-          >
-            Supporter
-          </button>
+            <div className="profilePage__roleRow">
+              <div
+                className={`roleToggle ${
+                  activeRole === "supporter" ? "is-supporter" : "is-organizer"
+                }`}
+                role="tablist"
+                aria-label="Dashboard role"
+              >
+                <span className="roleToggle__indicator" aria-hidden="true" />
 
-          <button
-            type="button"
-            className={`roleToggle__btn ${activeRole === "organizer" ? "is-active" : ""}`}
-            onClick={() => setActiveRole("organizer")}
-            aria-selected={activeRole === "organizer"}
-          >
-            Organizer
-          </button>
+                <button
+                  type="button"
+                  className={`roleToggle__btn ${
+                    activeRole === "supporter" ? "is-active" : ""
+                  }`}
+                  onClick={() => setActiveRole("supporter")}
+                  role="tab"
+                  aria-selected={activeRole === "supporter"}
+                >
+                  Supporter
+                </button>
+
+                <button
+                  type="button"
+                  className={`roleToggle__btn ${
+                    activeRole === "organizer" ? "is-active" : ""
+                  }`}
+                  onClick={() => setActiveRole("organizer")}
+                  role="tab"
+                  aria-selected={activeRole === "organizer"}
+                >
+                  Organiser
+                </button>
+              </div>
+
+             <div
+  className={`roleMode ${
+    activeRole === "organizer" ? "is-organizer" : "is-supporter"
+  }`}
+  aria-live="polite"
+>
+  <span className="roleMode__label">Viewing as:</span>
+  <strong className="roleMode__value">
+    {activeRole === "organiser"
+      ? "Organiser / Fundraiser owner"
+      : "Supporter"}
+  </strong>
+</div>
+
+
+            </div>
+          </div>
+
+          <div className="profilePage__badgeArea">
+            {supporter?.username && (
+              <div className="profileBadge">
+                Signed in as <strong>{supporter.username}</strong>
+              </div>
+            )}
+
+            {activeRole === "organizer" && incomingPendingCount > 0 && (
+              <div className="profileBadge profileBadge--warn">
+                {incomingPendingCount} incoming pending
+              </div>
+            )}
+
+            {activeRole === "supporter" && myPendingCount > 0 && (
+              <div className="profileBadge profileBadge--warn">
+                {myPendingCount} of my pledges pending
+              </div>
+            )}
+          </div>
         </div>
 
         <div
-          className={`roleMode ${activeRole === "organizer" ? "is-organizer" : "is-supporter"}`}
-          aria-live="polite"
+          className={`profileStats ${
+            activeRole === "organizer" ? "profileStats--organizer" : ""
+          }`}
         >
-          Viewing as:{" "}
-          <strong>{activeRole === "organizer" ? "Organizer / Fundraiser owner" : "Supporter"}</strong>
-        </div>
-      </div>
-    </div>
-
-    <div className="profilePage__badgeArea">
-      {supporter?.username && (
-        <div className="profileBadge">
-          Signed in as <strong>{supporter.username}</strong>
-        </div>
-      )}
-
-      {activeRole === "organizer" && incomingPendingCount > 0 && (
-        <div className="profileBadge profileBadge--warn">{incomingPendingCount} incoming pending</div>
-      )}
-
-      {activeRole === "supporter" && myPendingCount > 0 && (
-        <div className="profileBadge profileBadge--warn">{myPendingCount} of my pledges pending</div>
-      )}
-    </div>
-  </div>
-
-
-        {/* Totals strip changes depending on role */}
-        <div className={`profileStats ${activeRole === "organizer" ? "profileStats--organizer" : ""}`}>
           {activeRole === "supporter" ? (
             <>
               <div className="profileStat">
@@ -430,11 +474,13 @@ function ProfilePage() {
                       <span className="chip">
                         Total: <strong>{myPledges.length}</strong>
                       </span>
-                      {Object.keys(myPledgesByStatus).slice(0, 3).map((k) => (
-                        <span key={k} className={`chip is-${k}`}>
-                          {toTitleCase(k)}: <strong>{myPledgesByStatus[k]}</strong>
-                        </span>
-                      ))}
+                      {Object.keys(myPledgesByStatus)
+                        .slice(0, 3)
+                        .map((k) => (
+                          <span key={k} className={`chip is-${k}`}>
+                            {toTitleCase(k)}: <strong>{myPledgesByStatus[k]}</strong>
+                          </span>
+                        ))}
                     </div>
                   </div>
 
@@ -470,13 +516,17 @@ function ProfilePage() {
                                 {p.fundraiser_title || "Fundraiser"}
                               </Link>
                             ) : (
-                              <span className="profileRow__title">{p.fundraiser_title || "Fundraiser"}</span>
+                              <span className="profileRow__title">
+                                {p.fundraiser_title || "Fundraiser"}
+                              </span>
                             )}
 
                             <div className="profileRow__meta">
                               Need: <strong>{p.need_title || "—"}</strong>{" "}
                               <span className="muted">({p.need_type || "—"})</span>
-                              <span className={`valueBadge is-${pledgeValueKind(p)}`}>{pledgeValueLabel(p)}</span>
+                              <span className={`valueBadge is-${pledgeValueKind(p)}`}>
+                                {pledgeValueLabel(p)}
+                              </span>
                             </div>
 
                             {p.reward_tier_name && (
@@ -514,7 +564,6 @@ function ProfilePage() {
                 )}
               </section>
 
-              {/* Supporter rewards */}
               <section className="profileCard">
                 <div className="profileCard__top">
                   <div className="profileCard__topLeft">
@@ -554,8 +603,7 @@ function ProfilePage() {
                             )}
 
                             <div className="profileRow__meta">
-                              Totals:{" "}
-                              <strong>{formatAUD(r?.totals?.total_money_pledged)}</strong>{" "}
+                              Totals: <strong>{formatAUD(r?.totals?.total_money_pledged)}</strong>{" "}
                               <span className="muted">/</span>{" "}
                               <strong>{r?.totals?.total_time_hours_pledged ?? 0} hrs</strong>{" "}
                               <span className="muted">/</span>{" "}
@@ -615,11 +663,13 @@ function ProfilePage() {
                       <span className="chip">
                         Total: <strong>{myFundraisers.length}</strong>
                       </span>
-                      {Object.keys(fundraisersByStatus).slice(0, 3).map((k) => (
-                        <span key={k} className={`chip is-${k}`}>
-                          {toTitleCase(k)}: <strong>{fundraisersByStatus[k]}</strong>
-                        </span>
-                      ))}
+                      {Object.keys(fundraisersByStatus)
+                        .slice(0, 3)
+                        .map((k) => (
+                          <span key={k} className={`chip is-${k}`}>
+                            {toTitleCase(k)}: <strong>{fundraisersByStatus[k]}</strong>
+                          </span>
+                        ))}
                     </div>
                   </div>
 
@@ -651,7 +701,9 @@ function ProfilePage() {
                                 {f.title || f.name || `Fundraiser #${fundraiserId}`}
                               </Link>
                             ) : (
-                              <span className="profileRow__title">{f.title || f.name || "Fundraiser"}</span>
+                              <span className="profileRow__title">
+                                {f.title || f.name || "Fundraiser"}
+                              </span>
                             )}
 
                             <div className="profileRow__meta">
@@ -689,11 +741,13 @@ function ProfilePage() {
                       <span className="chip">
                         Total: <strong>{incomingPledges.length}</strong>
                       </span>
-                      {Object.keys(incomingByStatus).slice(0, 3).map((k) => (
-                        <span key={k} className={`chip is-${k}`}>
-                          {toTitleCase(k)}: <strong>{incomingByStatus[k]}</strong>
-                        </span>
-                      ))}
+                      {Object.keys(incomingByStatus)
+                        .slice(0, 3)
+                        .map((k) => (
+                          <span key={k} className={`chip is-${k}`}>
+                            {toTitleCase(k)}: <strong>{incomingByStatus[k]}</strong>
+                          </span>
+                        ))}
                     </div>
                   </div>
 
@@ -703,9 +757,7 @@ function ProfilePage() {
                 </div>
 
                 {incomingPledges.length === 0 ? (
-                  <div className="profileCard__empty">
-                    No one has pledged to your fundraisers yet.
-                  </div>
+                  <div className="profileCard__empty">No one has pledged to your fundraisers yet.</div>
                 ) : (
                   <ul className="profileList">
                     {incomingSorted.map((p, idx) => {
@@ -728,7 +780,9 @@ function ProfilePage() {
                                 {p.fundraiser_title || "Fundraiser"}
                               </Link>
                             ) : (
-                              <span className="profileRow__title">{p.fundraiser_title || "Fundraiser"}</span>
+                              <span className="profileRow__title">
+                                {p.fundraiser_title || "Fundraiser"}
+                              </span>
                             )}
 
                             <div className="profileRow__meta">
@@ -738,7 +792,9 @@ function ProfilePage() {
                             <div className="profileRow__meta">
                               Need: <strong>{p.need_title || "—"}</strong>{" "}
                               <span className="muted">({p.need_type || "—"})</span>
-                              <span className={`valueBadge is-${pledgeValueKind(p)}`}>{pledgeValueLabel(p)}</span>
+                              <span className={`valueBadge is-${pledgeValueKind(p)}`}>
+                                {pledgeValueLabel(p)}
+                              </span>
                             </div>
 
                             {p.reward_tier_name && (

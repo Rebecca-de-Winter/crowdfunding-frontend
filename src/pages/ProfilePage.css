@@ -7,15 +7,15 @@
 .profilePage {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 18px 16px 56px;
+  padding: 22px 16px 60px;
   color: var(--text);
 }
 
 .profilePage__header {
-  margin-bottom: 12px;
+  margin-bottom: 18px;
 }
 
-/* Header top row: title/controls left, badges right */
+/* Header top row */
 .profilePage__headerTop {
   display: flex;
   justify-content: space-between;
@@ -25,14 +25,15 @@
 }
 
 .profilePage__headerLeft {
-  display: grid;
-  gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   flex: 1 1 520px;
   min-width: 0;
 }
 
 .profilePage__title {
-  margin: 0 0 2px 0;
+  margin: 0;
   font-weight: 900;
   font-size: 40px;
   line-height: 1.05;
@@ -42,7 +43,7 @@
   margin: 0;
   opacity: 0.85;
   max-width: 60ch;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 /* Badges area */
@@ -69,11 +70,11 @@
   color: rgba(253, 244, 225, 0.98);
 }
 
-/* Divider under header */
+/* Divider */
 .profileHeaderDivider {
   height: 1px;
   background: rgba(245, 232, 205, 0.14);
-  margin-top: 10px;
+  margin-top: 14px;
 }
 
 /* Loading / error */
@@ -89,74 +90,100 @@
 }
 
 /* =========================
-   Role controls (Supporter/Organizer + Viewing as)
-   Goal: identical pill system + PERFECT baseline alignment
+   Role controls
 ========================= */
 
 .profilePage__roleRow {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  align-items: stretch; /* key: no “Viewing as” sitting higher */
-  margin-top: 6px;
+  align-items: stretch;
+  margin-top: 10px;
 }
 
-/* Outer pill containers match */
-.roleToggle,
-.roleMode {
+/* Segmented Role Toggle (sliding indicator) */
+.roleToggle {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 0;
+
   border: 1px solid rgba(245, 232, 205, 0.18);
   background: rgba(0, 0, 0, 0.12);
   border-radius: 999px;
+
   padding: 4px;
-  min-height: 46px;
-  box-sizing: border-box;
-  display: inline-flex;
-  align-items: stretch; /* key */
-  gap: 8px;
+  min-height: 52px;
+  width: 360px;
+  max-width: 100%;
+  overflow: hidden;
 }
 
-/* Toggle always equal buttons */
-.roleToggle {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-/* Buttons inside toggle */
-.roleToggle__btn {
-  width: 100%;
-  height: 38px;
-  padding: 0 14px;
+.roleToggle__indicator {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  height: calc(100% - 8px);
   border-radius: 999px;
-  box-sizing: border-box;
 
-  border: 1px solid rgba(245, 232, 205, 0.18);
-  background: rgba(0, 0, 0, 0.18);
+  background: linear-gradient(180deg, var(--accent), var(--accent2));
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
+
+  transform: translateX(0%);
+  transition: transform 180ms ease;
+  z-index: 0;
+}
+
+.roleToggle.is-organizer .roleToggle__indicator {
+  transform: translateX(100%);
+}
+
+.roleToggle__btn {
+  position: relative;
+  z-index: 1;
+
+  height: 40px;
+  width: 100%;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+
   color: var(--text);
-
   font-weight: 900;
-  cursor: pointer;
-  opacity: 0.92;
+  font-size: 0.9rem;
   line-height: 1;
 
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
+  cursor: pointer;
+  opacity: 0.9;
+  transition: opacity 120ms ease;
 }
 
 .roleToggle__btn.is-active {
-  background: linear-gradient(180deg, var(--accent), var(--accent2));
   color: #183b2c;
-  border-color: rgba(0, 0, 0, 0.15);
   opacity: 1;
 }
 
-/* Viewing pill */
 .roleMode {
-  padding: 0 16px;      /* no extra vertical padding */
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 999px;
+
+  min-height: 52px;
+  padding: 0 16px;
+
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  align-items: center;  /* inner centering */
+
   font-weight: 900;
+  font-size: 0.9rem;
+  line-height: 1;
   white-space: nowrap;
 }
 
@@ -175,7 +202,7 @@
 ========================= */
 
 .profileStats {
-  margin-top: 10px;
+  margin-top: 14px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
@@ -348,7 +375,6 @@
   opacity: 0.75;
 }
 
-/* Actions (single definition only) */
 .profileRow__actions {
   display: flex;
   gap: 8px;
@@ -456,34 +482,48 @@
 }
 
 /* =========================
-   Mobile: REMOVE GREEN VOID
+   Mobile layout fixes (VOID FIX: stop space-between)
 ========================= */
+
 @media (max-width: 720px) {
   .profilePage {
-    padding: 10px 16px 28px;
+    padding: 14px 14px 22px;
   }
 
   .profilePage__headerTop {
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
+    margin-top:10px;
+
+    justify-content: flex-start; /* 🔥 THIS is the void-killer */
+  }
+
+  /* prevent headerLeft from expanding and pushing badges down */
+  .profilePage__headerLeft {
+    gap: 6px;
+    flex: 0 0 auto;             /* 🔥 important in column layout */
   }
 
   .profilePage__title {
-    font-size: 32px;
-    margin-bottom: 2px;
+    font-size: 30px;
+    margin: 0;
+    line-height: 1.05;
+    margin-top: 10px;
   }
 
   .profilePage__subtitle {
-    font-size: 0.95rem;
-    margin-bottom: 6px;
+    font-size: 0.93rem;
+    max-width: 48ch;
+    margin: 4px 0 6px 0;
+    line-height: 1.35;
+    margin-top: 10px; 
   }
 
-  /* stack controls tight */
   .profilePage__roleRow {
     flex-direction: column;
     gap: 8px;
-    margin-top: 4px;
+    margin-top: 10px;
   }
 
   .roleToggle,
@@ -491,420 +531,142 @@
     width: 100%;
   }
 
-  .roleMode {
-    justify-content: center;
-  }
-
-  /* bring badges up + keep them compact */
   .profilePage__badgeArea {
-    align-items: flex-start;
+    width: 100%;
+    margin-top: 15px;
+
+    display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     gap: 8px;
-    margin-top: 4px;
+    justify-content: flex-start;
+    align-items: center;
   }
 
   .profileBadge {
-    white-space: normal;
-  }
-
-  .profileStats {
-    margin-top: 10px;
-    gap: 10px;
-  }
-
-  .profileHeaderDivider {
-    margin-top: 10px;
-  }
-}
-/* =========================
-   PATCH: comfy desktop + tight mobile + equal pills
-   Paste at VERY BOTTOM
-========================= */
-
-/* ---------- DESKTOP / TABLET: restore breathing room ---------- */
-@media (min-width: 721px) {
-  .profilePage {
-    padding: 22px 16px 60px;
-  }
-
-  .profilePage__header {
-    margin-bottom: 18px;
-  }
-
-  .profilePage__headerLeft {
-    gap: 10px;
-  }
-
-  .profilePage__title {
-    margin: 0 0 6px 0;
-    font-size: 40px;
-    line-height: 1.05;
-  }
-
-  .profilePage__subtitle {
     margin: 0;
-    line-height: 1.45;
-    max-width: 62ch;
-  }
-
-  .profilePage__roleRow {
-    margin-top: 10px;
-    gap: 12px;
-  }
-
-  .profileStats {
-    margin-top: 14px;
-    gap: 12px;
-  }
-
-  .profileHeaderDivider {
-    margin-top: 14px;
-  }
-}
-
-/* ---------- ALL SIZES: role pills MUST match ---------- */
-.profilePage__roleRow {
-  align-items: stretch; /* stops the “Viewing as” pill sitting higher */
-}
-
-.roleToggle,
-.roleMode {
-  min-height: 52px;          /* same outer height */
-  padding: 6px;              /* same outer padding */
-  display: inline-flex;
-  align-items: stretch;       /* same baseline */
-  box-sizing: border-box;
-}
-
-/* Force Supporter/Organizer to be EXACTLY equal width */
-.roleToggle {
-  display: inline-grid;       /* important: grid sizing is stable */
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  min-width: 320px;           /* gives them breathing room on desktop */
-}
-
-.roleToggle__btn {
-  height: 40px;               /* same inner height */
-  padding: 0 14px;            /* same inner padding */
-  width: 100%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-}
-
-/* Viewing pill matches the toggle’s total height */
-.roleMode {
-  padding: 0 18px;            /* no vertical padding (outer already has it) */
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 52px;           /* same as roleToggle outer */
-}
-
-/* ---------- MOBILE: ACTUALLY remove the green void ---------- */
-@media (max-width: 720px) {
-  .profilePage {
-    padding: 10px 16px 28px;
-  }
-
-  .profilePage__headerTop {
-    gap: 8px;
-  }
-
-  .profilePage__headerLeft {
-    gap: 6px;
-  }
-
-  .profilePage__title {
-    margin: 0 0 2px 0;
-    font-size: 32px;
-    line-height: 1.05;
-  }
-
-  .profilePage__subtitle {
-    margin: 0;
-    line-height: 1.35;
-    max-width: 46ch;
-  }
-
-  /* pull controls up closer to subtitle */
-  .profilePage__roleRow {
-    margin-top: 6px;
-    gap: 8px;
-  }
-
-  .roleToggle,
-  .roleMode {
-    width: 100%;
-  }
-
-  .roleToggle {
-    min-width: 0;             /* don’t force 320px on mobile */
-  }
-
-  /* badges: bring them right up */
-  .profilePage__badgeArea {
-    margin-top: 6px;
-    gap: 8px;
-  }
-
-  .profileHeaderDivider {
-    margin-top: 10px;
-  }
-
-  .profileStats {
-    margin-top: 10px;
-    gap: 10px;
-  }
-}
-/* =========================
-   DESKTOP: restore breathing room
-========================= */
-@media (min-width: 721px) {
-  .profilePage { padding: 34px 24px 70px; }   /* more top/side padding */
-  .profilePage__header { margin-bottom: 22px; }
-
-  .profilePage__title { margin-bottom: 10px; }
-  .profilePage__subtitle { margin-top: 6px; line-height: 1.55; }
-
-  .profilePage__roleRow { margin-top: 18px; gap: 16px; }
-  .profileStats { margin-top: 18px; gap: 14px; }
-
-  .profileHeaderDivider { margin-top: 18px; }
-}
-/* =========================
-   Pills: force identical height
-========================= */
-.roleToggle,
-.roleMode {
-  height: 52px;
-  padding: 6px;
-  box-sizing: border-box;
-  align-items: center;
-}
-
-.roleToggle__btn {
-  height: 40px;
-  padding: 0 14px;
-}
-/* =========================
-   DESKTOP breathing room (>= 900px)
-========================= */
-@media (min-width: 900px) {
-  .profilePage {
-    padding-top: 38px;       /* pushes the whole dashboard down */
-    padding-left: 24px;
-    padding-right: 24px;
-    padding-bottom: 70px;
-  }
-
-  .profilePage__header {
-    margin-bottom: 22px;
-  }
-
-  .profilePage__title {
-    margin-bottom: 10px;
-  }
-
-  .profilePage__subtitle {
-    margin-top: 6px;
-    line-height: 1.55;
-  }
-
-  .profilePage__roleRow {
-    margin-top: 16px;
-    gap: 16px;
+    padding: 7px 10px;
+    font-size: 0.86rem;
+    line-height: 1;
+    white-space: nowrap;
+    border-radius: 999px;
   }
 
   .profileStats {
     margin-top: 18px;
-    gap: 14px;
+    gap: 10px;
   }
+
+  .profileHeaderDivider {
+    margin-top: 10px;
+  }
+}
+
+/* Viewing as spacing */
+.roleMode {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
 }
 /* =========================
-   MOBILE: remove header void
-========================= */
-@media (max-width: 720px) {
-  /* page top spacing */
-  .profilePage {
-    padding-top: 10px;
-    padding-bottom: 28px;
-  }
-
-  /* the title is often the main culprit */
-  .profilePage__title {
-    margin: 0 !important;
-    line-height: 1.05;
-  }
-
-  /* subtitle: remove any sneaky margin + tighten line-height */
-  .profilePage__subtitle {
-    margin: 6px 0 0 0 !important;  /* small gap under title */
-    line-height: 1.35;
-  }
-
-  /* role row: pull it up close to subtitle */
-  .profilePage__roleRow {
-    margin-top: 10px !important;
-    gap: 8px !important;
-  }
-
-  /* badges: pull them up too */
-  .profilePage__badgeArea {
-    margin-top: 6px !important;
-    gap: 8px !important;
-  }
-}
-.roleMode {
-  background: rgba(0,0,0,0.10); /* closer to toggle’s container feel */
-}
-@media (max-width: 720px) {
-  .profilePage {
-    outline: 6px solid hotpink !important;
-  }
-}
-/* Force identical pill heights + reduce visual weight on roleMode */
-.profilePage__roleRow {
-  align-items: stretch !important;
-}
-
-.roleToggle,
-.roleMode {
-  height: 52px !important;
-  min-height: 52px !important;
-  padding: 6px !important;
-  box-sizing: border-box !important;
-  display: inline-flex !important;
-  align-items: center !important;
-}
-
-.roleToggle__btn {
-  height: 40px !important;
-  padding: 0 14px !important;
-  box-sizing: border-box !important;
-}
-
-/* Make "Viewing as" feel like the same system (less solid, less “big”) */
-.roleMode {
-  background: rgba(0, 0, 0, 0.12) !important;
-  border-color: rgba(245, 232, 205, 0.18) !important;
-}
-/* Make "Viewing as" text match toggle button text */
-.roleMode {
-  font-size: 0.88rem !important; /* matches btn sizing vibe */
-  line-height: 1 !important;
-  font-weight: 900 !important;
-}
-
-.roleToggle__btn {
-  font-size: 0.88rem !important;
-  line-height: 1 !important;
-}
-/* =========================
-   MOBILE HEADER: remove the green void (REAL FIX)
+   DESKTOP: refined spacing (matches Explore rhythm)
    Paste at VERY BOTTOM
 ========================= */
-@media (max-width: 720px) {
-  /* 1) Stop the header-left grid from creating big vertical gaps */
-  .profilePage__headerLeft {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 0 !important;
-  }
-
-  /* 2) Tight, predictable spacing */
-  .profilePage__title {
-    margin: 0 0 8px 0 !important;
-    line-height: 1.05 !important;
-  }
-
-  .profilePage__subtitle {
-    margin: 0 0 14px 0 !important; /* this is the main “void killer” */
-    line-height: 1.35 !important;
-  }
-
-  .profilePage__roleRow {
-    margin: 0 0 12px 0 !important;
-    gap: 10px !important;
-  }
-
-  /* roleToggle has margin-top: 12px in your base CSS — kill it on mobile */
-  .roleToggle {
-    margin-top: 0 !important;
-  }
-
-  /* 3) Bring badges up closer (so they don’t feel like a separate block) */
-  .profilePage__badgeArea {
-    margin-top: 0 !important;
-    gap: 10px !important;
-  }
-
-  /* 4) Make “Viewing as” feel the same size as the toggle */
-  .roleMode {
-    font-size: 0.88rem !important; /* match the buttons */
-    line-height: 1 !important;
-    font-weight: 900 !important;
-
-    /* reduce visual mass so it doesn’t read “bigger” */
-    background: rgba(0, 0, 0, 0.12) !important;
-    border-color: rgba(245, 232, 205, 0.18) !important;
-  }
-
-  .roleToggle__btn {
-    font-size: 0.88rem !important;
-    line-height: 1 !important;
-  }
-}
-/* =========================
-   MOBILE: add gentle top breathing room
-========================= */
-@media (max-width: 720px) {
-  .profilePage {
-    padding-top: 20px !important;  /* was 10px earlier */
-  }
-
-  .profilePage__title {
-    margin-bottom: 10px !important; /* small cushion under title */
-  }
-
-  .profilePage__subtitle {
-    margin-bottom: 18px !important; /* space before pills */
-  }
-}
-.profilePage__subtitle {
-  line-height: 1.45 !important;
-}
-/* =========================
-   FORCE IDENTICAL PILL TYPOGRAPHY
-========================= */
-
-.roleToggle__btn,
-.roleMode {
-  font-family: inherit !important;
-  font-size: 0.9rem !important;
-  font-weight: 900 !important;
-  letter-spacing: 0 !important;
-  line-height: 1 !important;
-}
-.roleMode {
-  padding: 0 22px !important;  /* more horizontal space */
-  height: 52px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-/* =========================
-   DESKTOP: extra top breathing room
-========================= */
 @media (min-width: 900px) {
+
+  /* Hero-style top breathing room */
   .profilePage {
-    padding-top: 48px !important;  /* increase top air */
+    max-width: 1080px;
+    padding: 48px 24px 80px;   /* ↑ more top air */
+  }
+
+  .profilePage__header {
+    margin-bottom: 25px;
+  }
+
+  .profilePage__headerTop {
+    gap: 28px;                 /* more separation between left + badges */
+    align-items: flex-start;
+  }
+
+  .profilePage__headerLeft {
+    gap: 14px;
   }
 
   .profilePage__title {
-    margin-top: 10px !important;   /* small cushion above H1 */
+    font-size: 44px;
+    margin: 0 0 14px 0;        /* bigger space under H1 */
+    line-height: 1.02;
   }
+
+  .profilePage__subtitle {
+    margin-bottom: 16px;       /* creates hero-like pause */
+    max-width: 72ch;
+    line-height: 1.55;
+  }
+
+  /* Pills row sits cleanly under subtitle */
+  .profilePage__roleRow {
+    margin-top: 0;
+    gap: 18px;
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+
+  .roleToggle {
+    min-width: 380px;          /* slightly more comfortable */
+  }
+
+  .roleMode {
+    padding: 0 24px;
+  }
+
+  /* Badge column softened slightly */
+  .profilePage__badgeArea {
+    gap: 14px;
+    margin-top: 2px;           /* lowers badges slightly */
+    align-items: flex-end;
+  }
+
+  /* Stats separation */
+  .profileStats {
+    margin-top: 32px;
+    gap: 18px;
+  }
+
+  .profileStat {
+    padding: 20px;
+  }
+
+  .profileStat__label {
+    margin-bottom: 12px;
+  }
+
+  /* Divider transition to content */
+  .profileHeaderDivider {
+    margin-top: 32px;
+  }
+
+  /* Main content rhythm */
+  .profileGrid {
+    gap: 26px;
+  }
+
+  .profileCard {
+    padding: 22px;
+  }
+
+  .profileCard__top {
+    margin-bottom: 16px;
+  }
+
+  .profileList {
+    gap: 14px;
+  }
+
+  .profileRow {
+    padding: 16px;
+  }
+  
 }
