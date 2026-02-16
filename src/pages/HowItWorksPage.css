@@ -1,0 +1,411 @@
+/* src/pages/HowItWorksPage.css */
+
+/* =========================
+   HOW IT WORKS — FUNDRAISERS BASELINE
+   Header + content share the same container (hit-shell)
+========================= */
+
+.hit-page {
+  min-height: calc(100vh - 90px);
+  color: var(--text);
+  font-family: var(--font);
+  background: var(--bg);
+}
+
+/* The single source of truth for alignment */
+.hit-shell {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 40px 26px 60px; /* matches fundraisers */
+}
+
+/* Hero/header: no extra padding, no drift */
+.hit-hero {
+  margin: 0 0 12px 0;
+  padding: 0;
+}
+
+.hit-hero__inner {
+  padding: 0;
+}
+
+/* Title + subtitle match Fundraisers */
+.hit-title {
+  margin: 0;
+  color: rgba(253, 244, 225, 0.98);
+  font-size: clamp(2.4rem, 3.4vw, 3rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  text-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+
+.hit-subtitle {
+  margin: 10px 0 24px;
+  color: rgba(253, 244, 225, 0.90);
+  font-size: 1.02rem;
+  line-height: 1.45;
+  opacity: 0.92;
+  text-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+  max-width: 85ch;
+}
+
+/* main does NOT own padding anymore (shell does) */
+.hit-main {
+  padding: 0;
+}
+
+/* =========================
+   SECTIONS
+========================= */
+
+.hit-section {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 20px;
+  background: rgba(12, 18, 14, 0.26);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
+  margin-bottom: 16px;
+}
+
+.hit-section--lite {
+  background: rgba(12, 18, 14, 0.22);
+}
+
+.hit-h2 {
+  margin: 0 0 10px 0;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.hit-h3 {
+  margin: 0 0 10px 0;
+  font-weight: 900;
+  font-size: 18px;
+}
+
+.hit-h3--mini {
+  font-size: 16px;
+  margin: 0;
+}
+
+.hit-text {
+  margin: 0;
+  line-height: 1.55;
+  opacity: 0.92;
+}
+
+/* Lead copy */
+.hit-leadBlock {
+  margin-top: 8px;
+  display: grid;
+  gap: 12px;
+  max-width: 85ch;
+}
+
+.hit-lead {
+  margin: 0;
+  opacity: 0.93;
+  line-height: 1.65;
+}
+
+/* Paragraphs */
+.hit-p {
+  margin: 0 0 12px 0;
+  line-height: 1.65;
+  opacity: 0.93;
+}
+
+.hit-p:last-child {
+  margin-bottom: 0;
+}
+
+/* Tips */
+.hit-tip {
+  margin: 0;
+  opacity: 0.80;
+  line-height: 1.55;
+}
+
+/* Lists */
+.hit-list {
+  margin: 0 0 12px 18px;
+  padding: 0;
+  line-height: 1.65;
+  opacity: 0.93;
+}
+
+/* =========================
+   TABS
+========================= */
+
+.hit-tabsWrap {
+  margin-top: 18px;
+}
+
+.hit-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.hit-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px 10px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 232, 205, 0.18);
+  background: rgba(0, 0, 0, 0.12);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 800;
+
+  transition:
+    transform 120ms ease,
+    background 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.hit-tab:hover {
+  transform: translateY(-2px);
+  background: rgba(0, 0, 0, 0.22);
+  border-color: rgba(250, 187, 76, 0.35);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+.hit-tab.is-active {
+  background: rgba(250, 187, 76, 0.18);
+  border-color: rgba(250, 187, 76, 0.55);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+}
+
+.hit-tab.is-active .hit-tab__icon {
+  border-color: rgba(250, 187, 76, 0.45);
+  background: rgba(250, 187, 76, 0.18);
+}
+
+.hit-tab__label {
+  font-weight: 900;
+  font-size: 14px;
+  line-height: 1.1;
+  opacity: 0.96;
+}
+
+/* =========================
+   PANEL
+========================= */
+
+.hit-panel {
+  border: 1px solid rgba(245, 232, 205, 0.14);
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.16);
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.hit-panel__media {
+  position: relative;
+  min-height: 180px;
+}
+
+.hit-panel__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: saturate(1.02) contrast(1.02);
+}
+
+.hit-panel__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.10), rgba(0, 0, 0, 0.55));
+}
+
+.hit-panel__content {
+  padding: 16px;
+}
+
+/* Split pills */
+.hit-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.hit-pill {
+  border: 1px solid rgba(245, 232, 205, 0.14);
+  border-radius: 14px;
+  padding: 12px 12px 10px;
+  background: rgba(12, 18, 14, 0.22);
+}
+
+.hit-pill__title {
+  margin: 0 0 6px 0;
+  font-weight: 900;
+}
+
+.hit-pill__text {
+  margin: 0;
+  opacity: 0.92;
+  line-height: 1.55;
+}
+
+/* Mini grid */
+.hit-grid3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.hit-mini {
+  border: 1px solid rgba(245, 232, 205, 0.14);
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.14);
+  padding: 14px;
+}
+
+.hit-mini__top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.hit-mini__badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1;
+  border: 1px solid rgba(245, 232, 205, 0.16);
+  background: rgba(0, 0, 0, 0.18);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+}
+
+/* Bottom CTA */
+.hit-cta {
+  border: 1px solid rgba(245, 232, 205, 0.16);
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.16);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
+  padding: 18px;
+  margin-top: 4px;
+}
+
+.hit-cta__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.hit-cta__title {
+  margin: 0 0 6px 0;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.hit-cta__subtitle {
+  margin: 0;
+  opacity: 0.90;
+  line-height: 1.55;
+  max-width: 70ch;
+}
+
+.hit-cta__buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Desktop */
+@media (min-width: 820px) {
+  .hit-section {
+    padding: 22px;
+  }
+
+  .hit-panel {
+    grid-template-columns: 0.95fr 1.05fr;
+  }
+
+  .hit-panel__media {
+    min-height: 320px;
+  }
+
+  .hit-panel__content {
+    padding: 18px 18px 16px;
+  }
+
+  .hit-split {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .hit-grid3 {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+/* Mobile = match Fundraisers mobile padding */
+@media (max-width: 720px) {
+  .hit-shell {
+    padding: 24px 16px 48px;
+  }
+}
+/* =========================
+   CTA BUTTON (defensive)
+   Ensures "Create Festival" is visible on mobile
+========================= */
+
+.hit-cta {
+  overflow: visible;
+}
+
+.hit-cta__buttons {
+  position: relative;
+  z-index: 2;
+}
+
+.hit-cta__buttons .cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 900;
+  font-family: var(--font);
+  cursor: pointer;
+
+  /* your yellow gradient button system */
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #183b2c;
+  text-decoration: none;
+
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+
+  /* mobile-proofing */
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.hit-cta__buttons .cta-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
+}

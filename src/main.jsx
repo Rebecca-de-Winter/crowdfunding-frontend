@@ -15,6 +15,8 @@ import PledgeNeedPage from "./pages/PledgeNeedPage.jsx";
 import RequireAuth from "./components/RequireAuth.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
+import HowItWorksPage from "./pages/HowItWorksPage.jsx";
+import ResourcesPage from "./pages/ResourcesPage.jsx";   // 👈 added
 
 import "./index.css";
 
@@ -24,6 +26,10 @@ const router = createBrowserRouter([
     element: <Layout />,
     children: [
       { index: true, element: <HomePage /> },
+
+      // public info pages
+      { path: "how-it-works", element: <HowItWorksPage /> },
+      { path: "resources", element: <ResourcesPage /> },  // 👈 added
 
       { path: "login", element: <LoginPage /> },
       { path: "signup", element: <SignUpPage /> },
@@ -74,7 +80,7 @@ const router = createBrowserRouter([
         ),
       },
 
-      // ✅ 404 catch-all (must be last)
+      // 404 catch-all (must be last)
       { path: "*", element: <NotFoundPage /> },
     ],
   },

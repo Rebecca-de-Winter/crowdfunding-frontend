@@ -1,32 +1,57 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import getFundraiserPledgesReport from "../api/get-fundraiser-pledges-report";
 
+const INITIAL = {
+  report: null,
+  isLoading: false,
+  error: null,
+};
+
 export default function useFundraiserPledgesReport(fundraiserId) {
-  const [report, setReport] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [state, setState] = useState(INITIAL);
+  const runIdRef = useRef(0);
 
   useEffect(() => {
-    if (!fundraiserId) return;
+    const id = fundraiserId ? String(fundraiserId) : "";
 
-    let isMounted = true; // guard against strict-mode double run
+    if (!id) {
+      queueMicrotask(() => setState(INITIAL));
+      return;
+    }
 
-    getFundraiserPledgesReport(fundraiserId)
-      .then((data) => {
-        if (!isMounted) return;
-        setReport(data);
-        setIsLoading(false);
-      })
-      .catch((err) => {
-        if (!isMounted) return;
-        setError(err);
-        setIsLoading(false);
-      });
+    // ✅ NEW: if logged out, never call the owner-only report
+    const token = window.localStorage.getItem("token");
+    if (!token) {
+      queueMicrotask(() => setState(INITIAL));
+      return;
+    }
 
-    return () => {
-      isMounted = false;
-    };
+    const runId = ++runIdRef.current;
+
+    queueMicrotask(() => {
+      if (runIdRef.current !== runId) return;
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
+    });
+
+    (async () => {
+      try {
+        const data = await getFundraiserPledgesReport(id);
+        if (runIdRef.current !== runId) return;
+
+        queueMicrotask(() => {
+          if (runIdRef.current !== runId) return;
+          setState({ report: data, isLoading: false, error: null });
+        });
+      } catch (err) {
+        if (runIdRef.current !== runId) return;
+
+        queueMicrotask(() => {
+          if (runIdRef.current !== runId) return;
+          setState({ report: null, isLoading: false, error: err });
+        });
+      }
+    })();
   }, [fundraiserId]);
 
-  return { report, isLoading, error };
+  return state ?? INITIAL;
 }

@@ -114,7 +114,7 @@ function sumIncomingTotals(pledges) {
    Component
 ------------------------- */
 function ProfilePage() {
-  const [activeRole, setActiveRole] = useState("supporter"); // "supporter" | "organizer"
+  const [activeRole, setActiveRole] = useState("supporter"); // supporter | organizer
 
   const [myFundraisers, setMyFundraisers] = useState([]);
   const [myPledges, setMyPledges] = useState([]);
@@ -155,7 +155,7 @@ function ProfilePage() {
         setPledgeTotals(pledgesReport?.totals ?? null);
         setSupporter(pledgesReport?.supporter ?? null);
 
-        // 2) Incoming pledges
+        // 2) Incoming pledges for my fundraisers
         const fundraiserIds = fundraisersList
           .map((f) => getFundraiserId(f))
           .filter(Boolean);
@@ -188,7 +188,7 @@ function ProfilePage() {
           setIncomingTotals(sumIncomingTotals([]));
         }
 
-        // 3) Supporter rewards per fundraiser I've pledged to
+        // 3) Supporter rewards per fundraiser I pledged to
         const supporterFundraiserIds = Array.from(
           new Set(
             pledgesList
@@ -241,10 +241,13 @@ function ProfilePage() {
       setIncomingPledges((prev) =>
         prev.map((p) => (p.id === id ? { ...p, ...updated } : p))
       );
-      // optional: recompute totals (keeps organizer totals accurate)
-      setIncomingTotals((prev) =>
-        prev ? sumIncomingTotals(incomingPledges.map((p) => (p.id === id ? { ...p, ...updated } : p))) : prev
-      );
+
+      // recompute totals using the next list
+      setIncomingTotals((prevTotals) => {
+        if (!prevTotals) return prevTotals;
+        const next = incomingPledges.map((p) => (p.id === id ? { ...p, ...updated } : p));
+        return sumIncomingTotals(next);
+      });
     } catch (err) {
       console.error(err);
       setError(err?.message || "Could not approve pledge.");
@@ -257,10 +260,12 @@ function ProfilePage() {
       setIncomingPledges((prev) =>
         prev.map((p) => (p.id === id ? { ...p, ...updated } : p))
       );
-      // optional: recompute totals (keeps organizer totals accurate)
-      setIncomingTotals((prev) =>
-        prev ? sumIncomingTotals(incomingPledges.map((p) => (p.id === id ? { ...p, ...updated } : p))) : prev
-      );
+
+      setIncomingTotals((prevTotals) => {
+        if (!prevTotals) return prevTotals;
+        const next = incomingPledges.map((p) => (p.id === id ? { ...p, ...updated } : p));
+        return sumIncomingTotals(next);
+      });
     } catch (err) {
       console.error(err);
       setError(err?.message || "Could not decline pledge.");
@@ -302,549 +307,575 @@ function ProfilePage() {
 
   return (
     <div className="profilePage">
-      <header className="profilePage__header">
-        <div className="profilePage__headerTop">
-          <div className="profilePage__headerLeft">
-            <h1 className="profilePage__title">My Dashboard</h1>
+      {/* ✅ THIS is the width-lock container.
+          Your CSS can keep using .profilePage for max-width if you want,
+          but if you already changed pages to use an inner wrapper, this keeps it consistent.
+      */}
+      <div className="profilePage__inner">
+        <header className="profilePage__header">
+          <div className="profilePage__headerTop">
+            <div className="profilePage__headerLeft">
+              <h1 className="profilePage__title">My Dashboard</h1>
 
-            <p className="profilePage__subtitle">
-              Switch between <strong>Supporter</strong> and{" "}
-              <strong>Organiser</strong> to see your festivals and pledges.
-            </p>
+              <p className="profilePage__subtitle">
+                Switch between <strong>Supporter</strong> and{" "}
+                <strong>Organiser</strong> to see your festivals and pledges.
+              </p>
 
-            <div className="profilePage__roleRow">
-              <div
-                className={`roleToggle ${
-                  activeRole === "supporter" ? "is-supporter" : "is-organizer"
-                }`}
-                role="tablist"
-                aria-label="Dashboard role"
-              >
-                <span className="roleToggle__indicator" aria-hidden="true" />
-
-                <button
-                  type="button"
-                  className={`roleToggle__btn ${
-                    activeRole === "supporter" ? "is-active" : ""
+              <div className="profilePage__roleRow">
+                <div
+                  className={`roleToggle ${
+                    activeRole === "supporter" ? "is-supporter" : "is-organizer"
                   }`}
-                  onClick={() => setActiveRole("supporter")}
-                  role="tab"
-                  aria-selected={activeRole === "supporter"}
+                  role="tablist"
+                  aria-label="Dashboard role"
                 >
-                  Supporter
-                </button>
+                  <span className="roleToggle__indicator" aria-hidden="true" />
 
-                <button
-                  type="button"
-                  className={`roleToggle__btn ${
-                    activeRole === "organizer" ? "is-active" : ""
+                  <button
+                    type="button"
+                    className={`roleToggle__btn ${
+                      activeRole === "supporter" ? "is-active" : ""
+                    }`}
+                    onClick={() => setActiveRole("supporter")}
+                    role="tab"
+                    aria-selected={activeRole === "supporter"}
+                  >
+                    Supporter
+                  </button>
+
+                  <button
+                    type="button"
+                    className={`roleToggle__btn ${
+                      activeRole === "organizer" ? "is-active" : ""
+                    }`}
+                    onClick={() => setActiveRole("organizer")}
+                    role="tab"
+                    aria-selected={activeRole === "organizer"}
+                  >
+                    Organiser
+                  </button>
+                </div>
+
+                <div
+                  className={`roleMode ${
+                    activeRole === "organizer" ? "is-organizer" : "is-supporter"
                   }`}
-                  onClick={() => setActiveRole("organizer")}
-                  role="tab"
-                  aria-selected={activeRole === "organizer"}
+                  aria-live="polite"
                 >
-                  Organiser
-                </button>
+                  <span className="roleMode__label">Viewing as:</span>
+                  <strong className="roleMode__value">
+                    {activeRole === "organizer"
+                      ? "Organiser / Fundraiser owner"
+                      : "Supporter"}
+                  </strong>
+                </div>
               </div>
+            </div>
 
-             <div
-  className={`roleMode ${
-    activeRole === "organizer" ? "is-organizer" : "is-supporter"
-  }`}
-  aria-live="polite"
->
-  <span className="roleMode__label">Viewing as:</span>
-  <strong className="roleMode__value">
-    {activeRole === "organiser"
-      ? "Organiser / Fundraiser owner"
-      : "Supporter"}
-  </strong>
-</div>
+            <div className="profilePage__badgeArea">
+              {supporter?.username && (
+                <div className="profileBadge">
+                  Signed in as <strong>{supporter.username}</strong>
+                </div>
+              )}
 
+              {activeRole === "organizer" && incomingPendingCount > 0 && (
+                <div className="profileBadge profileBadge--warn">
+                  {incomingPendingCount} incoming pending
+                </div>
+              )}
 
+              {activeRole === "supporter" && myPendingCount > 0 && (
+                <div className="profileBadge profileBadge--warn">
+                  {myPendingCount} of my pledges pending
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="profilePage__badgeArea">
-            {supporter?.username && (
-              <div className="profileBadge">
-                Signed in as <strong>{supporter.username}</strong>
-              </div>
-            )}
+          <div
+            className={`profileStats ${
+              activeRole === "organizer" ? "profileStats--organizer" : ""
+            }`}
+          >
+            {activeRole === "supporter" ? (
+              <>
+                <div className="profileStat">
+                  <div className="profileStat__label">Total pledges (I made)</div>
+                  <div className="profileStat__value">
+                    {pledgeTotals?.total_pledges ?? myPledges.length ?? "—"}
+                  </div>
+                </div>
 
-            {activeRole === "organizer" && incomingPendingCount > 0 && (
-              <div className="profileBadge profileBadge--warn">
-                {incomingPendingCount} incoming pending
-              </div>
-            )}
+                <div className="profileStat">
+                  <div className="profileStat__label">Money pledged</div>
+                  <div className="profileStat__value">
+                    {pledgeTotals ? formatAUD(pledgeTotals.total_money_pledged) : "—"}
+                  </div>
+                </div>
 
-            {activeRole === "supporter" && myPendingCount > 0 && (
-              <div className="profileBadge profileBadge--warn">
-                {myPendingCount} of my pledges pending
-              </div>
+                <div className="profileStat">
+                  <div className="profileStat__label">Volunteer hours</div>
+                  <div className="profileStat__value">
+                    {pledgeTotals?.total_time_hours_pledged ?? "—"}
+                  </div>
+                </div>
+
+                <div className="profileStat">
+                  <div className="profileStat__label">Items pledged</div>
+                  <div className="profileStat__value">
+                    {pledgeTotals?.total_item_quantity_pledged ?? "—"}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="profileStat">
+                  <div className="profileStat__label">Total pledges (received)</div>
+                  <div className="profileStat__value">
+                    {incomingTotals?.total_pledges ?? incomingPledges.length ?? "—"}
+                  </div>
+                </div>
+
+                <div className="profileStat">
+                  <div className="profileStat__label">Money pledged to me</div>
+                  <div className="profileStat__value">
+                    {incomingTotals ? formatAUD(incomingTotals.total_money_pledged) : "—"}
+                  </div>
+                </div>
+
+                <div className="profileStat">
+                  <div className="profileStat__label">Volunteer hours to me</div>
+                  <div className="profileStat__value">
+                    {incomingTotals?.total_time_hours_pledged ?? "—"}
+                  </div>
+                </div>
+
+                <div className="profileStat">
+                  <div className="profileStat__label">Items pledged to me</div>
+                  <div className="profileStat__value">
+                    {incomingTotals?.total_item_quantity_pledged ?? "—"}
+                  </div>
+                </div>
+              </>
             )}
           </div>
-        </div>
 
-        <div
-          className={`profileStats ${
-            activeRole === "organizer" ? "profileStats--organizer" : ""
-          }`}
-        >
-          {activeRole === "supporter" ? (
-            <>
-              <div className="profileStat">
-                <div className="profileStat__label">Total pledges (I made)</div>
-                <div className="profileStat__value">
-                  {pledgeTotals?.total_pledges ?? myPledges.length ?? "—"}
-                </div>
-              </div>
+          <div className="profileHeaderDivider" />
+        </header>
 
-              <div className="profileStat">
-                <div className="profileStat__label">Money pledged</div>
-                <div className="profileStat__value">
-                  {pledgeTotals ? formatAUD(pledgeTotals.total_money_pledged) : "—"}
-                </div>
-              </div>
+        {loading && <div className="profilePage__state">Loading…</div>}
+        {!loading && error && <div className="profilePage__error">{error}</div>}
 
-              <div className="profileStat">
-                <div className="profileStat__label">Volunteer hours</div>
-                <div className="profileStat__value">
-                  {pledgeTotals?.total_time_hours_pledged ?? "—"}
-                </div>
-              </div>
+        {!loading && !error && (
+          <div className="profileGrid">
+            {/* SUPPORTER VIEW */}
+            {activeRole === "supporter" && (
+              <>
+                <section className="profileCard">
+                  <div className="profileCard__top">
+                    <div className="profileCard__topLeft">
+                      <h2 className="profileCard__title">Pledges I’ve made</h2>
 
-              <div className="profileStat">
-                <div className="profileStat__label">Items pledged</div>
-                <div className="profileStat__value">
-                  {pledgeTotals?.total_item_quantity_pledged ?? "—"}
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="profileStat">
-                <div className="profileStat__label">Total pledges (received)</div>
-                <div className="profileStat__value">
-                  {incomingTotals?.total_pledges ?? incomingPledges.length ?? "—"}
-                </div>
-              </div>
-
-              <div className="profileStat">
-                <div className="profileStat__label">Money pledged to me</div>
-                <div className="profileStat__value">
-                  {incomingTotals ? formatAUD(incomingTotals.total_money_pledged) : "—"}
-                </div>
-              </div>
-
-              <div className="profileStat">
-                <div className="profileStat__label">Volunteer hours to me</div>
-                <div className="profileStat__value">
-                  {incomingTotals?.total_time_hours_pledged ?? "—"}
-                </div>
-              </div>
-
-              <div className="profileStat">
-                <div className="profileStat__label">Items pledged to me</div>
-                <div className="profileStat__value">
-                  {incomingTotals?.total_item_quantity_pledged ?? "—"}
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-
-        <div className="profileHeaderDivider" />
-      </header>
-
-      {loading && <div className="profilePage__state">Loading…</div>}
-      {!loading && error && <div className="profilePage__error">{error}</div>}
-
-      {!loading && !error && (
-        <div className="profileGrid">
-          {/* SUPPORTER VIEW */}
-          {activeRole === "supporter" && (
-            <>
-              <section className="profileCard">
-                <div className="profileCard__top">
-                  <div className="profileCard__topLeft">
-                    <h2 className="profileCard__title">Pledges I’ve made</h2>
-
-                    <div className="profileChips">
-                      <span className="chip">
-                        Total: <strong>{myPledges.length}</strong>
-                      </span>
-                      {Object.keys(myPledgesByStatus)
-                        .slice(0, 3)
-                        .map((k) => (
-                          <span key={k} className={`chip is-${k}`}>
-                            {toTitleCase(k)}: <strong>{myPledgesByStatus[k]}</strong>
-                          </span>
-                        ))}
+                      <div className="profileChips">
+                        <span className="chip">
+                          Total: <strong>{myPledges.length}</strong>
+                        </span>
+                        {Object.keys(myPledgesByStatus)
+                          .slice(0, 3)
+                          .map((k) => (
+                            <span key={k} className={`chip is-${k}`}>
+                              {toTitleCase(k)}: <strong>{myPledgesByStatus[k]}</strong>
+                            </span>
+                          ))}
+                      </div>
                     </div>
+
+                    <Link className="profileCard__link" to="/fundraisers">
+                      Browse fundraisers →
+                    </Link>
                   </div>
 
-                  <Link className="profileCard__link" to="/fundraisers">
-                    Browse fundraisers →
-                  </Link>
-                </div>
-
-                {myPledges.length === 0 ? (
-                  <div className="profileCard__empty">
-                    You haven’t made any pledges yet.
-                    <div style={{ marginTop: 10 }}>
-                      <Link className="btnTiny" to="/fundraisers">
-                        Find a fundraiser to support
-                      </Link>
+                  {myPledges.length === 0 ? (
+                    <div className="profileCard__empty">
+                      You haven’t made any pledges yet.
+                      <div style={{ marginTop: 10 }}>
+                        <Link className="btnTiny" to="/fundraisers">
+                          Find a fundraiser to support
+                        </Link>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <ul className="profileList">
-                    {myPledgesSorted.map((p, idx) => {
-                      const pledgeKey = p.id ?? `pledge-${idx}`;
-                      const fundraiserId = p.fundraiser_id ?? p.fundraiser ?? null;
-                      const isPending = safeLower(p.status) === "pending";
+                  ) : (
+                    <ul className="profileList">
+                      {myPledgesSorted.map((p, idx) => {
+                        const pledgeKey = p.id ?? `pledge-${idx}`;
+                        const fundraiserId = p.fundraiser_id ?? p.fundraiser ?? null;
+                        const isPending = safeLower(p.status) === "pending";
 
-                      return (
-                        <li
-                          key={pledgeKey}
-                          className={`profileRow ${isPending ? "profileRow--pending" : ""}`}
-                        >
-                          <div className="profileRow__main">
-                            {fundraiserId ? (
-                              <Link className="profileRow__title" to={`/fundraisers/${fundraiserId}`}>
-                                {p.fundraiser_title || "Fundraiser"}
-                              </Link>
-                            ) : (
-                              <span className="profileRow__title">
-                                {p.fundraiser_title || "Fundraiser"}
-                              </span>
-                            )}
+                        return (
+                          <li
+                            key={pledgeKey}
+                            className={`profileRow ${isPending ? "profileRow--pending" : ""}`}
+                          >
+                            <div className="profileRow__main">
+                              {fundraiserId ? (
+                                <Link
+                                  className="profileRow__title"
+                                  to={`/fundraisers/${fundraiserId}`}
+                                >
+                                  {p.fundraiser_title || "Fundraiser"}
+                                </Link>
+                              ) : (
+                                <span className="profileRow__title">
+                                  {p.fundraiser_title || "Fundraiser"}
+                                </span>
+                              )}
 
-                            <div className="profileRow__meta">
-                              Need: <strong>{p.need_title || "—"}</strong>{" "}
-                              <span className="muted">({p.need_type || "—"})</span>
-                              <span className={`valueBadge is-${pledgeValueKind(p)}`}>
-                                {pledgeValueLabel(p)}
-                              </span>
-                            </div>
-
-                            {p.reward_tier_name && (
                               <div className="profileRow__meta">
-                                Reward: <strong>{p.reward_tier_name}</strong>
+                                Need: <strong>{p.need_title || "—"}</strong>{" "}
+                                <span className="muted">({p.need_type || "—"})</span>
+                                <span className={`valueBadge is-${pledgeValueKind(p)}`}>
+                                  {pledgeValueLabel(p)}
+                                </span>
                               </div>
-                            )}
 
-                            <div className="profileRow__meta">
-                              Status: <strong>{statusLabel(p.status)}</strong>
-                            </div>
-                          </div>
+                              {p.reward_tier_name && (
+                                <div className="profileRow__meta">
+                                  Reward: <strong>{p.reward_tier_name}</strong>
+                                </div>
+                              )}
 
-                          <div className="profileRow__actions">
-                            {fundraiserId && (
-                              <Link className="btnTiny" to={`/fundraisers/${fundraiserId}`}>
-                                View
-                              </Link>
-                            )}
-
-                            {safeLower(p.status) === "pending" && (
-                              <button
-                                className="btnTiny btnTiny--danger"
-                                onClick={() => handleCancelPledge(p.id)}
-                                type="button"
-                              >
-                                Cancel
-                              </button>
-                            )}
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </section>
-
-              <section className="profileCard">
-                <div className="profileCard__top">
-                  <div className="profileCard__topLeft">
-                    <h2 className="profileCard__title">Rewards I’ve earned</h2>
-                    <div className="muted" style={{ marginTop: 6 }}>
-                      Rewards are cumulative per fundraiser. This shows what you’ve unlocked so far.
-                    </div>
-                  </div>
-                </div>
-
-                {Object.keys(myRewardsByFundraiser).length === 0 ? (
-                  <div className="profileCard__empty">
-                    No rewards data yet (or you haven’t pledged to any fundraisers with rewards).
-                  </div>
-                ) : (
-                  <ul className="profileList">
-                    {Object.values(myRewardsByFundraiser).map((r) => {
-                      const fid = r?.fundraiser?.id;
-                      const title = r?.fundraiser?.title || "Fundraiser";
-
-                      const earnedMoney = Array.isArray(r?.earned_money_reward_tiers)
-                        ? r.earned_money_reward_tiers
-                        : [];
-                      const earnedOther = Array.isArray(r?.earned_other_reward_tiers)
-                        ? r.earned_other_reward_tiers
-                        : [];
-
-                      return (
-                        <li key={fid ?? title} className="profileRow">
-                          <div className="profileRow__main">
-                            {fid ? (
-                              <Link className="profileRow__title" to={`/fundraisers/${fid}`}>
-                                {title}
-                              </Link>
-                            ) : (
-                              <span className="profileRow__title">{title}</span>
-                            )}
-
-                            <div className="profileRow__meta">
-                              Totals: <strong>{formatAUD(r?.totals?.total_money_pledged)}</strong>{" "}
-                              <span className="muted">/</span>{" "}
-                              <strong>{r?.totals?.total_time_hours_pledged ?? 0} hrs</strong>{" "}
-                              <span className="muted">/</span>{" "}
-                              <strong>Qty {r?.totals?.total_item_quantity_pledged ?? 0}</strong>
-                            </div>
-
-                            <div className="profileRow__meta">
-                              Earned:
-                              <div className="rewardPills">
-                                {earnedMoney.length === 0 && earnedOther.length === 0 ? (
-                                  <span className="muted" style={{ marginLeft: 8 }}>
-                                    None yet
-                                  </span>
-                                ) : (
-                                  <>
-                                    {earnedMoney.map((t) => (
-                                      <span key={`m-${t?.id ?? t?.name}`} className="rewardPill">
-                                        {t?.name ?? "Money reward"}
-                                      </span>
-                                    ))}
-                                    {earnedOther.map((t) => (
-                                      <span key={`o-${t?.id ?? t?.name}`} className="rewardPill">
-                                        {t?.name ?? "Reward"}
-                                      </span>
-                                    ))}
-                                  </>
-                                )}
+                              <div className="profileRow__meta">
+                                Status: <strong>{statusLabel(p.status)}</strong>
                               </div>
                             </div>
-                          </div>
 
-                          <div className="profileRow__actions">
-                            {fid && (
-                              <Link className="btnTiny" to={`/fundraisers/${fid}`}>
-                                View
-                              </Link>
-                            )}
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </section>
-            </>
-          )}
-
-          {/* ORGANIZER VIEW */}
-          {activeRole === "organizer" && (
-            <>
-              <section className="profileCard">
-                <div className="profileCard__top">
-                  <div className="profileCard__topLeft">
-                    <h2 className="profileCard__title">Fundraisers I run</h2>
-
-                    <div className="profileChips">
-                      <span className="chip">
-                        Total: <strong>{myFundraisers.length}</strong>
-                      </span>
-                      {Object.keys(fundraisersByStatus)
-                        .slice(0, 3)
-                        .map((k) => (
-                          <span key={k} className={`chip is-${k}`}>
-                            {toTitleCase(k)}: <strong>{fundraisersByStatus[k]}</strong>
-                          </span>
-                        ))}
-                    </div>
-                  </div>
-
-                  <Link className="profileCard__link" to="/fundraisers/new">
-                    + New fundraiser
-                  </Link>
-                </div>
-
-                {myFundraisers.length === 0 ? (
-                  <div className="profileCard__empty">
-                    You haven’t created any fundraisers yet.
-                    <div style={{ marginTop: 10 }}>
-                      <Link className="btnTiny" to="/fundraisers/new">
-                        Create your first fundraiser
-                      </Link>
-                    </div>
-                  </div>
-                ) : (
-                  <ul className="profileList">
-                    {myFundraisers.map((f, idx) => {
-                      const fundraiserId = getFundraiserId(f);
-                      const key = fundraiserId ?? `fundraiser-${idx}`;
-
-                      return (
-                        <li key={key} className="profileRow">
-                          <div className="profileRow__main">
-                            {fundraiserId ? (
-                              <Link className="profileRow__title" to={`/fundraisers/${fundraiserId}`}>
-                                {f.title || f.name || `Fundraiser #${fundraiserId}`}
-                              </Link>
-                            ) : (
-                              <span className="profileRow__title">
-                                {f.title || f.name || "Fundraiser"}
-                              </span>
-                            )}
-
-                            <div className="profileRow__meta">
-                              Status: <strong>{statusLabel(f.status || f.lifecycle)}</strong>
-                            </div>
-                          </div>
-
-                          <div className="profileRow__actions">
-                            {fundraiserId ? (
-                              <>
+                            <div className="profileRow__actions">
+                              {fundraiserId && (
                                 <Link className="btnTiny" to={`/fundraisers/${fundraiserId}`}>
                                   View
                                 </Link>
-                                <Link className="btnTiny" to={`/fundraisers/${fundraiserId}/edit`}>
-                                  Edit
-                                </Link>
-                              </>
-                            ) : (
-                              <span className="muted">Missing ID</span>
-                            )}
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </section>
+                              )}
 
-              <section className="profileCard">
-                <div className="profileCard__top">
-                  <div className="profileCard__topLeft">
-                    <h2 className="profileCard__title">Incoming pledges (to my fundraisers)</h2>
+                              {safeLower(p.status) === "pending" && (
+                                <button
+                                  className="btnTiny btnTiny--danger"
+                                  onClick={() => handleCancelPledge(p.id)}
+                                  type="button"
+                                >
+                                  Cancel
+                                </button>
+                              )}
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </section>
 
-                    <div className="profileChips">
-                      <span className="chip">
-                        Total: <strong>{incomingPledges.length}</strong>
-                      </span>
-                      {Object.keys(incomingByStatus)
-                        .slice(0, 3)
-                        .map((k) => (
-                          <span key={k} className={`chip is-${k}`}>
-                            {toTitleCase(k)}: <strong>{incomingByStatus[k]}</strong>
-                          </span>
-                        ))}
+                <section className="profileCard">
+                  <div className="profileCard__top">
+                    <div className="profileCard__topLeft">
+                      <h2 className="profileCard__title">Rewards I’ve earned</h2>
+                      <div className="muted" style={{ marginTop: 6 }}>
+                        Rewards are cumulative per fundraiser. This shows what you’ve unlocked so far.
+                      </div>
                     </div>
                   </div>
 
-                  <Link className="profileCard__link" to="/fundraisers">
-                    View all fundraisers →
-                  </Link>
-                </div>
+                  {Object.keys(myRewardsByFundraiser).length === 0 ? (
+                    <div className="profileCard__empty">
+                      No rewards data yet (or you haven’t pledged to any fundraisers with rewards).
+                    </div>
+                  ) : (
+                    <ul className="profileList">
+                      {Object.values(myRewardsByFundraiser).map((r) => {
+                        const fid = r?.fundraiser?.id;
+                        const title = r?.fundraiser?.title || "Fundraiser";
 
-                {incomingPledges.length === 0 ? (
-                  <div className="profileCard__empty">No one has pledged to your fundraisers yet.</div>
-                ) : (
-                  <ul className="profileList">
-                    {incomingSorted.map((p, idx) => {
-                      const pledgeKey = p.id ?? `incoming-${idx}`;
-                      const fundraiserId = p.fundraiser_id ?? p.fundraiser ?? null;
-                      const isPending = safeLower(p.status) === "pending";
+                        const earnedMoney = Array.isArray(r?.earned_money_reward_tiers)
+                          ? r.earned_money_reward_tiers
+                          : [];
+                        const earnedOther = Array.isArray(r?.earned_other_reward_tiers)
+                          ? r.earned_other_reward_tiers
+                          : [];
 
-                      const supporterName = p.anonymous
-                        ? "Anonymous"
-                        : p.supporter_username || "Supporter";
+                        return (
+                          <li key={fid ?? title} className="profileRow">
+                            <div className="profileRow__main">
+                              {fid ? (
+                                <Link className="profileRow__title" to={`/fundraisers/${fid}`}>
+                                  {title}
+                                </Link>
+                              ) : (
+                                <span className="profileRow__title">{title}</span>
+                              )}
 
-                      return (
-                        <li
-                          key={pledgeKey}
-                          className={`profileRow ${isPending ? "profileRow--pending" : ""}`}
-                        >
-                          <div className="profileRow__main">
-                            {fundraiserId ? (
-                              <Link className="profileRow__title" to={`/fundraisers/${fundraiserId}`}>
-                                {p.fundraiser_title || "Fundraiser"}
-                              </Link>
-                            ) : (
-                              <span className="profileRow__title">
-                                {p.fundraiser_title || "Fundraiser"}
-                              </span>
-                            )}
-
-                            <div className="profileRow__meta">
-                              Supporter: <strong>{supporterName}</strong>
-                            </div>
-
-                            <div className="profileRow__meta">
-                              Need: <strong>{p.need_title || "—"}</strong>{" "}
-                              <span className="muted">({p.need_type || "—"})</span>
-                              <span className={`valueBadge is-${pledgeValueKind(p)}`}>
-                                {pledgeValueLabel(p)}
-                              </span>
-                            </div>
-
-                            {p.reward_tier_name && (
                               <div className="profileRow__meta">
-                                Reward: <strong>{p.reward_tier_name}</strong>
+                                Totals: <strong>{formatAUD(r?.totals?.total_money_pledged)}</strong>{" "}
+                                <span className="muted">/</span>{" "}
+                                <strong>{r?.totals?.total_time_hours_pledged ?? 0} hrs</strong>{" "}
+                                <span className="muted">/</span>{" "}
+                                <strong>Qty {r?.totals?.total_item_quantity_pledged ?? 0}</strong>
                               </div>
-                            )}
 
-                            <div className="profileRow__meta">
-                              Status: <strong>{statusLabel(p.status)}</strong>
+                              <div className="profileRow__meta">
+                                Earned:
+                                <div className="rewardPills">
+                                  {earnedMoney.length === 0 && earnedOther.length === 0 ? (
+                                    <span className="muted" style={{ marginLeft: 8 }}>
+                                      None yet
+                                    </span>
+                                  ) : (
+                                    <>
+                                      {earnedMoney.map((t) => (
+                                        <span
+                                          key={`m-${t?.id ?? t?.name}`}
+                                          className="rewardPill"
+                                        >
+                                          {t?.name ?? "Money reward"}
+                                        </span>
+                                      ))}
+                                      {earnedOther.map((t) => (
+                                        <span
+                                          key={`o-${t?.id ?? t?.name}`}
+                                          className="rewardPill"
+                                        >
+                                          {t?.name ?? "Reward"}
+                                        </span>
+                                      ))}
+                                    </>
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                          </div>
 
-                          <div className="profileRow__actions">
-                            {fundraiserId && (
-                              <Link className="btnTiny" to={`/fundraisers/${fundraiserId}`}>
-                                View
-                              </Link>
-                            )}
+                            <div className="profileRow__actions">
+                              {fid && (
+                                <Link className="btnTiny" to={`/fundraisers/${fid}`}>
+                                  View
+                                </Link>
+                              )}
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </section>
+              </>
+            )}
 
-                            {isPending && (
-                              <>
-                                <button
-                                  type="button"
-                                  className="btnTiny btnTiny--approve"
-                                  onClick={() => handleApproveIncoming(p.id)}
+            {/* ORGANIZER VIEW */}
+            {activeRole === "organizer" && (
+              <>
+                <section className="profileCard">
+                  <div className="profileCard__top">
+                    <div className="profileCard__topLeft">
+                      <h2 className="profileCard__title">Fundraisers I run</h2>
+
+                      <div className="profileChips">
+                        <span className="chip">
+                          Total: <strong>{myFundraisers.length}</strong>
+                        </span>
+                        {Object.keys(fundraisersByStatus)
+                          .slice(0, 3)
+                          .map((k) => (
+                            <span key={k} className={`chip is-${k}`}>
+                              {toTitleCase(k)}: <strong>{fundraisersByStatus[k]}</strong>
+                            </span>
+                          ))}
+                      </div>
+                    </div>
+
+                    <Link className="profileCard__link" to="/fundraisers/new">
+                      + New fundraiser
+                    </Link>
+                  </div>
+
+                  {myFundraisers.length === 0 ? (
+                    <div className="profileCard__empty">
+                      You haven’t created any fundraisers yet.
+                      <div style={{ marginTop: 10 }}>
+                        <Link className="btnTiny" to="/fundraisers/new">
+                          Create your first fundraiser
+                        </Link>
+                      </div>
+                    </div>
+                  ) : (
+                    <ul className="profileList">
+                      {myFundraisers.map((f, idx) => {
+                        const fundraiserId = getFundraiserId(f);
+                        const key = fundraiserId ?? `fundraiser-${idx}`;
+
+                        return (
+                          <li key={key} className="profileRow">
+                            <div className="profileRow__main">
+                              {fundraiserId ? (
+                                <Link
+                                  className="profileRow__title"
+                                  to={`/fundraisers/${fundraiserId}`}
                                 >
-                                  Approve
-                                </button>
+                                  {f.title || f.name || `Fundraiser #${fundraiserId}`}
+                                </Link>
+                              ) : (
+                                <span className="profileRow__title">
+                                  {f.title || f.name || "Fundraiser"}
+                                </span>
+                              )}
 
-                                <button
-                                  type="button"
-                                  className="btnTiny btnTiny--danger"
-                                  onClick={() => handleDeclineIncoming(p.id)}
+                              <div className="profileRow__meta">
+                                Status: <strong>{statusLabel(f.status || f.lifecycle)}</strong>
+                              </div>
+                            </div>
+
+                            <div className="profileRow__actions">
+                              {fundraiserId ? (
+                                <>
+                                  <Link className="btnTiny" to={`/fundraisers/${fundraiserId}`}>
+                                    View
+                                  </Link>
+                                  <Link
+                                    className="btnTiny"
+                                    to={`/fundraisers/${fundraiserId}/edit`}
+                                  >
+                                    Edit
+                                  </Link>
+                                </>
+                              ) : (
+                                <span className="muted">Missing ID</span>
+                              )}
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </section>
+
+                <section className="profileCard">
+                  <div className="profileCard__top">
+                    <div className="profileCard__topLeft">
+                      <h2 className="profileCard__title">
+                        Incoming pledges (to my fundraisers)
+                      </h2>
+
+                      <div className="profileChips">
+                        <span className="chip">
+                          Total: <strong>{incomingPledges.length}</strong>
+                        </span>
+                        {Object.keys(incomingByStatus)
+                          .slice(0, 3)
+                          .map((k) => (
+                            <span key={k} className={`chip is-${k}`}>
+                              {toTitleCase(k)}: <strong>{incomingByStatus[k]}</strong>
+                            </span>
+                          ))}
+                      </div>
+                    </div>
+
+                    <Link className="profileCard__link" to="/fundraisers">
+                      View all fundraisers →
+                    </Link>
+                  </div>
+
+                  {incomingPledges.length === 0 ? (
+                    <div className="profileCard__empty">
+                      No one has pledged to your fundraisers yet.
+                    </div>
+                  ) : (
+                    <ul className="profileList">
+                      {incomingSorted.map((p, idx) => {
+                        const pledgeKey = p.id ?? `incoming-${idx}`;
+                        const fundraiserId = p.fundraiser_id ?? p.fundraiser ?? null;
+                        const isPending = safeLower(p.status) === "pending";
+
+                        const supporterName = p.anonymous
+                          ? "Anonymous"
+                          : p.supporter_username || "Supporter";
+
+                        return (
+                          <li
+                            key={pledgeKey}
+                            className={`profileRow ${isPending ? "profileRow--pending" : ""}`}
+                          >
+                            <div className="profileRow__main">
+                              {fundraiserId ? (
+                                <Link
+                                  className="profileRow__title"
+                                  to={`/fundraisers/${fundraiserId}`}
                                 >
-                                  Decline
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </section>
-            </>
-          )}
-        </div>
-      )}
+                                  {p.fundraiser_title || "Fundraiser"}
+                                </Link>
+                              ) : (
+                                <span className="profileRow__title">
+                                  {p.fundraiser_title || "Fundraiser"}
+                                </span>
+                              )}
+
+                              <div className="profileRow__meta">
+                                Supporter: <strong>{supporterName}</strong>
+                              </div>
+
+                              <div className="profileRow__meta">
+                                Need: <strong>{p.need_title || "—"}</strong>{" "}
+                                <span className="muted">({p.need_type || "—"})</span>
+                                <span className={`valueBadge is-${pledgeValueKind(p)}`}>
+                                  {pledgeValueLabel(p)}
+                                </span>
+                              </div>
+
+                              {p.reward_tier_name && (
+                                <div className="profileRow__meta">
+                                  Reward: <strong>{p.reward_tier_name}</strong>
+                                </div>
+                              )}
+
+                              <div className="profileRow__meta">
+                                Status: <strong>{statusLabel(p.status)}</strong>
+                              </div>
+                            </div>
+
+                            <div className="profileRow__actions">
+                              {fundraiserId && (
+                                <Link className="btnTiny" to={`/fundraisers/${fundraiserId}`}>
+                                  View
+                                </Link>
+                              )}
+
+                              {isPending && (
+                                <>
+                                  <button
+                                    type="button"
+                                    className="btnTiny btnTiny--approve"
+                                    onClick={() => handleApproveIncoming(p.id)}
+                                  >
+                                    Approve
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    className="btnTiny btnTiny--danger"
+                                    onClick={() => handleDeclineIncoming(p.id)}
+                                  >
+                                    Decline
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </section>
+              </>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -3,20 +3,25 @@
 *::after {
   box-sizing: border-box;
 }
+:root {
+  --content-max: 1040px;  /* Explore + Dashboard width */
+  --content-pad: 16px;
+}
 
 /* Global reset to remove the white frame */
-html, body, #root {
+html,
+body,
+#root {
   margin: 0;
   padding: 0;
   width: 100%;
   background: #07492d; /* matches your navbar bg */
 }
 
-
 /* Optional: set your base font + background */
 body {
   font-family: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  background: #07492d; /* or a lighter background if you want the page not all green */
+  background: #07492d;
 }
 
 /* Global link reset */
@@ -24,5 +29,82 @@ a {
   color: inherit;
   text-decoration: none;
 }
+/* =========================
+   Shared site container
+   Use this on every page so widths match
+========================= */
+.bf-container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
 
+/* =========================
+   Global "under-navbar" depth
+   (anchored to TOP OF PAGE, not the hero)
+========================= */
 
+.page {
+  position: relative; /* anchor overlays */
+}
+
+/* Make sure overlays sit behind content */
+.page > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Optional warm ambience (subtle, full-width, no spotlight blobs) */
+.page.page--warm::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+
+  background:
+    radial-gradient(1200px 600px at 50% 0%, rgba(250, 187, 76, 0.14), transparent 60%),
+    radial-gradient(900px 520px at 0% 100%, rgba(246, 165, 81, 0.10), transparent 55%);
+}
+
+/* Optional top mist for dark hero images (full width, linear) */
+.page.page--topMist::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 160px;
+  pointer-events: none;
+  z-index: 0;
+
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.36),
+    rgba(0, 0, 0, 0)
+  );
+}
+
+/* Optional bottom fade, applied to a wrapper inside the page
+   so it never interferes with footer or outside layout */
+.pageBottomFade {
+  position: relative;
+}
+
+.pageBottomFade::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 90px;
+  pointer-events: none;
+  z-index: 0;
+
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0),
+    rgba(0, 0, 0, 0.22)
+  );
+}
