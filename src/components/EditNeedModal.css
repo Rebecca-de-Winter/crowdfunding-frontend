@@ -132,6 +132,12 @@
 .field__textarea:disabled {
   opacity: 0.65;
 }
+.field__hint {
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  opacity: 0.82;
+}
 
 /* =========================
    FOOTER ACTIONS

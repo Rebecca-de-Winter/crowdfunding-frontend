@@ -10,16 +10,15 @@ const emptyNeed = {
   status: "open",
   priority: "medium",
 
-  // money
   target_amount: "",
 
-  // item
   item_name: "",
   quantity_needed: 1,
   mode: "either",
   notes: "",
+  donation_reward_tier: null,
+  loan_reward_tier: null,
 
-  // time
   role_title: "",
   location: "",
   volunteers_needed: 1,
@@ -27,7 +26,6 @@ const emptyNeed = {
   start_time: "",
   end_date: "",
   end_time: "",
-
   reward_tier: null,
 };
 
@@ -52,10 +50,23 @@ const ITEM_MODE_OPTIONS = [
 
 function combineDateTime(date, time) {
   if (!date || !time) return "";
-  return `${date}T${time}`; // local datetime string
+  return `${date}T${time}`;
 }
 
-export default function AddNeedForm({ onCancel, onCreate, disabled }) {
+function toDropdownOptions(tiers = []) {
+  return tiers.map((tier) => ({
+    value: String(tier.id),
+    label: tier.name,
+  }));
+}
+
+export default function AddNeedForm({
+  fundraiserId,
+  rewardTiers = [],
+  onCancel,
+  onCreate,
+  disabled,
+}) {
   const [form, setForm] = useState(emptyNeed);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -69,10 +80,8 @@ export default function AddNeedForm({ onCancel, onCreate, disabled }) {
       ...f,
       need_type: value,
 
-      // money
       target_amount: value === "money" ? f.target_amount : "",
 
-      // time
       role_title: value === "time" ? f.role_title : "",
       location: value === "time" ? f.location : "",
       volunteers_needed: value === "time" ? f.volunteers_needed : 1,
@@ -82,13 +91,44 @@ export default function AddNeedForm({ onCancel, onCreate, disabled }) {
       end_time: value === "time" ? f.end_time : "",
       reward_tier: value === "time" ? f.reward_tier : null,
 
-      // item
       item_name: value === "item" ? f.item_name : "",
       quantity_needed: value === "item" ? f.quantity_needed : 1,
       mode: value === "item" ? f.mode : "either",
       notes: value === "item" ? f.notes : "",
+      donation_reward_tier: value === "item" ? f.donation_reward_tier : null,
+      loan_reward_tier: value === "item" ? f.loan_reward_tier : null,
     }));
   }
+
+  const fundraiserRewardTiers = useMemo(() => {
+    return rewardTiers.filter(
+      (tier) => String(tier.fundraiser) === String(fundraiserId)
+    );
+  }, [rewardTiers, fundraiserId]);
+
+  const timeRewardOptions = useMemo(() => {
+    return [
+      { value: "", label: "No time reward" },
+      ...toDropdownOptions(
+        fundraiserRewardTiers.filter((tier) => tier.reward_type === "time")
+      ),
+    ];
+  }, [fundraiserRewardTiers]);
+
+  const itemRewardOptions = useMemo(() => {
+    return [
+      { value: "", label: "No item reward" },
+      ...toDropdownOptions(
+        fundraiserRewardTiers.filter((tier) => tier.reward_type === "item")
+      ),
+    ];
+  }, [fundraiserRewardTiers]);
+
+  const showDonationReward =
+    form.mode === "donation" || form.mode === "either";
+
+  const showLoanReward =
+    form.mode === "loan" || form.mode === "either";
 
   const canSubmit = useMemo(() => {
     if (!form.title.trim()) return false;
@@ -142,7 +182,6 @@ export default function AddNeedForm({ onCancel, onCreate, disabled }) {
         return setError("Volunteers needed must be 1+.");
       }
 
-      // Validate end after start
       const start = new Date(combineDateTime(form.start_date, form.start_time));
       const end = new Date(combineDateTime(form.end_date, form.end_time));
       if (!(end > start)) return setError("End must be after start.");
@@ -157,12 +196,10 @@ export default function AddNeedForm({ onCancel, onCreate, disabled }) {
     try {
       const payload = { ...form };
 
-      // Convert date+time -> datetime fields expected by the API
       if (form.need_type === "time") {
         payload.start_datetime = combineDateTime(form.start_date, form.start_time);
         payload.end_datetime = combineDateTime(form.end_date, form.end_time);
 
-        // Remove split fields so we don't send unexpected keys to the API
         delete payload.start_date;
         delete payload.start_time;
         delete payload.end_date;
@@ -180,7 +217,6 @@ export default function AddNeedForm({ onCancel, onCreate, disabled }) {
 
   return (
     <div className="needAdd" role="region" aria-label="Add need">
-      {/* IMPORTANT: no <form> inside the EditFestivalPage <form> */}
       <div className="needAdd__grid">
         <div className="needAdd__field">
           <label className="needAdd__label">Need type</label>
@@ -293,6 +329,42 @@ export default function AddNeedForm({ onCancel, onCreate, disabled }) {
                 disabled={disabled || busy}
               />
             </div>
+
+            <div className="needAdd__field">
+              <label className="needAdd__label">Reward setup</label>
+              <div className="needAdd__hint">
+                Choose which reward is earned for this item need. The system uses the
+                pledge mode later to decide whether to apply the donation or loan reward.
+              </div>
+            </div>
+
+            {showDonationReward && (
+              <div className="needAdd__field">
+                <label className="needAdd__label">Donation reward</label>
+                <NeedsDropdown
+                  value={String(form.donation_reward_tier ?? "")}
+                  onChange={(v) =>
+                    setField("donation_reward_tier", v ? Number(v) : null)
+                  }
+                  disabled={disabled || busy}
+                  options={itemRewardOptions}
+                />
+              </div>
+            )}
+
+            {showLoanReward && (
+              <div className="needAdd__field">
+                <label className="needAdd__label">Loan reward</label>
+                <NeedsDropdown
+                  value={String(form.loan_reward_tier ?? "")}
+                  onChange={(v) =>
+                    setField("loan_reward_tier", v ? Number(v) : null)
+                  }
+                  disabled={disabled || busy}
+                  options={itemRewardOptions}
+                />
+              </div>
+            )}
           </>
         )}
 
@@ -379,6 +451,19 @@ export default function AddNeedForm({ onCancel, onCreate, disabled }) {
                   onChange={(e) => setField("end_time", e.target.value)}
                   disabled={disabled || busy}
                 />
+              </div>
+            </div>
+
+            <div className="needAdd__field">
+              <label className="needAdd__label">Time reward</label>
+              <NeedsDropdown
+                value={String(form.reward_tier ?? "")}
+                onChange={(v) => setField("reward_tier", v ? Number(v) : null)}
+                disabled={disabled || busy}
+                options={timeRewardOptions}
+              />
+              <div className="needAdd__hint">
+                This reward is earned when someone commits to this volunteer role.
               </div>
             </div>
           </>

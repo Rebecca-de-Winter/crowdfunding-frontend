@@ -1,4 +1,3 @@
-// src/pages/ProfilePage.jsx
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -49,6 +48,14 @@ function formatAUD(value) {
   }).format(n);
 }
 
+function formatHours(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "0 hrs";
+
+  const rounded = Math.round(n);
+  return `${rounded} hr${rounded === 1 ? "" : "s"}`;
+}
+
 function byPendingThenNewest(a, b) {
   const ap = safeLower(a?.status) === "pending" ? 0 : 1;
   const bp = safeLower(b?.status) === "pending" ? 0 : 1;
@@ -73,8 +80,9 @@ function getFundraiserId(obj) {
 
 function pledgeValueLabel(p) {
   if (p?.money_detail?.amount != null) return formatAUD(p.money_detail.amount);
-  if (p?.time_detail?.hours_committed != null)
-    return `${p.time_detail.hours_committed} hrs`;
+  if (p?.time_detail?.hours_committed != null) {
+    return formatHours(p.time_detail.hours_committed);
+  }
   if (p?.item_detail?.quantity != null) return `Qty ${p.item_detail.quantity}`;
   return "—";
 }
@@ -84,6 +92,24 @@ function pledgeValueKind(p) {
   if (p?.time_detail?.hours_committed != null) return "time";
   if (p?.item_detail?.quantity != null) return "item";
   return "other";
+}
+
+function rewardMetaLabel(t, isMoney = false) {
+  if (isMoney) return "Money reward";
+  return t?.earned_via_label || "Reward";
+}
+
+function rewardPillClass(t, isMoney = false) {
+  if (isMoney) return "rewardPill rewardPill--money";
+
+  const via = safeLower(t?.earned_via);
+
+  if (via === "time") return "rewardPill rewardPill--time";
+  if (via === "item_loan") return "rewardPill rewardPill--item-loan";
+  if (via === "item_donation") return "rewardPill rewardPill--item-donation";
+  if (via === "item") return "rewardPill rewardPill--item";
+
+  return "rewardPill rewardPill--default";
 }
 
 function sumIncomingTotals(pledges) {
@@ -136,7 +162,6 @@ function ProfilePage() {
       setError("");
 
       try {
-        // 1) My fundraisers + my pledges in parallel
         const [fundraisersData, pledgesReport] = await Promise.all([
           getMyFundraisersReport(),
           getMyPledgesReport(),
@@ -148,14 +173,13 @@ function ProfilePage() {
         const pledgesList = Array.isArray(pledgesReport)
           ? pledgesReport
           : Array.isArray(pledgesReport?.pledges)
-          ? pledgesReport.pledges
-          : safeArray(pledgesReport);
+            ? pledgesReport.pledges
+            : safeArray(pledgesReport);
 
         setMyPledges(pledgesList);
         setPledgeTotals(pledgesReport?.totals ?? null);
         setSupporter(pledgesReport?.supporter ?? null);
 
-        // 2) Incoming pledges for my fundraisers
         const fundraiserIds = fundraisersList
           .map((f) => getFundraiserId(f))
           .filter(Boolean);
@@ -188,7 +212,6 @@ function ProfilePage() {
           setIncomingTotals(sumIncomingTotals([]));
         }
 
-        // 3) Supporter rewards per fundraiser I pledged to
         const supporterFundraiserIds = Array.from(
           new Set(
             pledgesList
@@ -242,7 +265,6 @@ function ProfilePage() {
         prev.map((p) => (p.id === id ? { ...p, ...updated } : p))
       );
 
-      // recompute totals using the next list
       setIncomingTotals((prevTotals) => {
         if (!prevTotals) return prevTotals;
         const next = incomingPledges.map((p) => (p.id === id ? { ...p, ...updated } : p));
@@ -272,9 +294,6 @@ function ProfilePage() {
     }
   }
 
-  /* -------------------------
-     Derived stats
-  ------------------------- */
   const fundraisersByStatus = useMemo(
     () => groupCountsByStatus(myFundraisers, "status"),
     [myFundraisers]
@@ -307,10 +326,6 @@ function ProfilePage() {
 
   return (
     <div className="profilePage">
-      {/* ✅ THIS is the width-lock container.
-          Your CSS can keep using .profilePage for max-width if you want,
-          but if you already changed pages to use an inner wrapper, this keeps it consistent.
-      */}
       <div className="profilePage__inner">
         <header className="profilePage__header">
           <div className="profilePage__headerTop">
@@ -318,8 +333,8 @@ function ProfilePage() {
               <h1 className="profilePage__title">My Dashboard</h1>
 
               <p className="profilePage__subtitle">
-                Switch between <strong>Supporter</strong> and{" "}
-                <strong>Organiser</strong> to see your festivals and pledges.
+                Switch between <strong>Supporter</strong> and <strong>Organiser</strong> to
+                see your festivals and pledges.
               </p>
 
               <div className="profilePage__roleRow">
@@ -418,7 +433,7 @@ function ProfilePage() {
                 <div className="profileStat">
                   <div className="profileStat__label">Volunteer hours</div>
                   <div className="profileStat__value">
-                    {pledgeTotals?.total_time_hours_pledged ?? "—"}
+                    {pledgeTotals ? formatHours(pledgeTotals.total_time_hours_pledged) : "—"}
                   </div>
                 </div>
 
@@ -448,7 +463,7 @@ function ProfilePage() {
                 <div className="profileStat">
                   <div className="profileStat__label">Volunteer hours to me</div>
                   <div className="profileStat__value">
-                    {incomingTotals?.total_time_hours_pledged ?? "—"}
+                    {incomingTotals ? formatHours(incomingTotals.total_time_hours_pledged) : "—"}
                   </div>
                 </div>
 
@@ -470,7 +485,6 @@ function ProfilePage() {
 
         {!loading && !error && (
           <div className="profileGrid">
-            {/* SUPPORTER VIEW */}
             {activeRole === "supporter" && (
               <>
                 <section className="profileCard">
@@ -532,9 +546,11 @@ function ProfilePage() {
                                 </span>
                               )}
 
-                              <div className="profileRow__meta">
-                                Need: <strong>{p.need_title || "—"}</strong>{" "}
-                                <span className="muted">({p.need_type || "—"})</span>
+                              <div className="profileRow__meta profileRow__meta--need">
+                                <span>
+                                  Need: <strong>{p.need_title || "—"}</strong>{" "}
+                                  <span className="muted">({p.need_type || "—"})</span>
+                                </span>
                                 <span className={`valueBadge is-${pledgeValueKind(p)}`}>
                                   {pledgeValueLabel(p)}
                                 </span>
@@ -580,7 +596,8 @@ function ProfilePage() {
                     <div className="profileCard__topLeft">
                       <h2 className="profileCard__title">Rewards I’ve earned</h2>
                       <div className="muted" style={{ marginTop: 6 }}>
-                        Rewards are cumulative per fundraiser. This shows what you’ve unlocked so far.
+                        Rewards are cumulative per fundraiser. This shows what you’ve unlocked
+                        so far.
                       </div>
                     </div>
                   </div>
@@ -603,7 +620,7 @@ function ProfilePage() {
                           : [];
 
                         return (
-                          <li key={fid ?? title} className="profileRow">
+                          <li key={fid ?? title} className="profileRow profileRow--reward">
                             <div className="profileRow__main">
                               {fid ? (
                                 <Link className="profileRow__title" to={`/fundraisers/${fid}`}>
@@ -613,37 +630,70 @@ function ProfilePage() {
                                 <span className="profileRow__title">{title}</span>
                               )}
 
-                              <div className="profileRow__meta">
-                                Totals: <strong>{formatAUD(r?.totals?.total_money_pledged)}</strong>{" "}
-                                <span className="muted">/</span>{" "}
-                                <strong>{r?.totals?.total_time_hours_pledged ?? 0} hrs</strong>{" "}
-                                <span className="muted">/</span>{" "}
-                                <strong>Qty {r?.totals?.total_item_quantity_pledged ?? 0}</strong>
+                              <div className="profileRewardBlock">
+                                <div className="profileRewardBlock__title">
+                                  Contribution totals
+                                </div>
+
+                                <div className="profileRewardTotals" aria-label="Reward totals">
+                                  <span className="profileRewardStat profileRewardStat--money">
+                                    <span className="profileRewardStat__label">Money</span>
+                                    <span className="profileRewardStat__value">
+                                      {formatAUD(r?.totals?.total_money_pledged)}
+                                    </span>
+                                  </span>
+
+                                  <span className="profileRewardStat profileRewardStat--time">
+                                    <span className="profileRewardStat__label">Time</span>
+                                    <span className="profileRewardStat__value">
+                                      {formatHours(r?.totals?.total_time_hours_pledged)}
+                                    </span>
+                                  </span>
+
+                                  <span className="profileRewardStat profileRewardStat--item">
+                                    <span className="profileRewardStat__label">Items</span>
+                                    <span className="profileRewardStat__value">
+                                      {r?.totals?.total_item_quantity_pledged ?? 0}
+                                    </span>
+                                  </span>
+                                </div>
                               </div>
 
-                              <div className="profileRow__meta">
-                                Earned:
+                              <div className="profileRewardBlock">
+                                <div className="profileRewardBlock__title">Rewards earned</div>
+
                                 <div className="rewardPills">
                                   {earnedMoney.length === 0 && earnedOther.length === 0 ? (
-                                    <span className="muted" style={{ marginLeft: 8 }}>
-                                      None yet
+                                    <span className="profileRewardEmpty">
+                                      No rewards earned yet
                                     </span>
                                   ) : (
                                     <>
                                       {earnedMoney.map((t) => (
                                         <span
                                           key={`m-${t?.id ?? t?.name}`}
-                                          className="rewardPill"
+                                          className={rewardPillClass(t, true)}
                                         >
-                                          {t?.name ?? "Money reward"}
+                                          <span className="rewardPill__name">
+                                            {t?.name ?? "Money reward"}
+                                          </span>
+                                          <span className="rewardPill__meta">
+                                            {rewardMetaLabel(t, true)}
+                                          </span>
                                         </span>
                                       ))}
+
                                       {earnedOther.map((t) => (
                                         <span
-                                          key={`o-${t?.id ?? t?.name}`}
-                                          className="rewardPill"
+                                          key={`o-${t?.id ?? t?.name}-${t?.earned_via ?? "other"}`}
+                                          className={rewardPillClass(t)}
                                         >
-                                          {t?.name ?? "Reward"}
+                                          <span className="rewardPill__name">
+                                            {t?.name ?? "Reward"}
+                                          </span>
+                                          <span className="rewardPill__meta">
+                                            {rewardMetaLabel(t)}
+                                          </span>
                                         </span>
                                       ))}
                                     </>
@@ -668,7 +718,6 @@ function ProfilePage() {
               </>
             )}
 
-            {/* ORGANIZER VIEW */}
             {activeRole === "organizer" && (
               <>
                 <section className="profileCard">

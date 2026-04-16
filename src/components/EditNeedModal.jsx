@@ -42,10 +42,9 @@ function normaliseItemMode(raw) {
   return "either";
 }
 
-// ---------- time helpers (LOCAL display, UTC save) ----------
 function isoToLocalParts(iso) {
   if (!iso) return { date: "", time: "" };
-  const d = new Date(iso); // ISO Z -> local Date
+  const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return { date: "", time: "" };
 
   const yyyy = String(d.getFullYear());
@@ -58,17 +57,16 @@ function isoToLocalParts(iso) {
   return { date: `${yyyy}-${mm}-${dd}`, time: `${hh}:${min}` };
 }
 
-// LOCAL date + time -> UTC ISO with Z
 function localPartsToUtcIso(dateStr, timeStr) {
   if (!dateStr || !timeStr) return null;
 
   const t = String(timeStr).trim();
   const timeWithSeconds = /^\d{2}:\d{2}$/.test(t) ? `${t}:00` : t;
 
-  const d = new Date(`${dateStr}T${timeWithSeconds}`); // interpreted as LOCAL
+  const d = new Date(`${dateStr}T${timeWithSeconds}`);
   if (Number.isNaN(d.getTime())) return null;
 
-  return d.toISOString(); // ✅ UTC Z
+  return d.toISOString();
 }
 
 function isEndAfterStartUtc(startIso, endIso) {
@@ -80,7 +78,6 @@ function isEndAfterStartUtc(startIso, endIso) {
     end > start
   );
 }
-// -----------------------------------------------------------
 
 function prettyType(t) {
   if (t === "money") return "Money";
@@ -88,13 +85,21 @@ function prettyType(t) {
   return "Item";
 }
 
+function toDropdownOptions(tiers = []) {
+  return tiers.map((tier) => ({
+    value: String(tier.id),
+    label: tier.name,
+  }));
+}
+
 export default function EditNeedModal({
   open,
   need,
+  rewardTiers = [],
   onClose,
   onSaved,
   disabled = false,
-  variant = "inline", // "inline" | "overlay"
+  variant = "inline",
 }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -137,7 +142,38 @@ export default function EditNeedModal({
     reward_tier: null,
   });
 
-  // Lock page scroll ONLY for overlay mode
+  const currentFundraiserId = need?.fundraiser ?? need?.fundraiser_id ?? null;
+
+  const fundraiserRewardTiers = useMemo(() => {
+    return rewardTiers.filter(
+      (tier) => String(tier.fundraiser) === String(currentFundraiserId)
+    );
+  }, [rewardTiers, currentFundraiserId]);
+
+  const timeRewardOptions = useMemo(() => {
+    return [
+      { value: "", label: "No time reward" },
+      ...toDropdownOptions(
+        fundraiserRewardTiers.filter((tier) => tier.reward_type === "time")
+      ),
+    ];
+  }, [fundraiserRewardTiers]);
+
+  const itemRewardOptions = useMemo(() => {
+    return [
+      { value: "", label: "No item reward" },
+      ...toDropdownOptions(
+        fundraiserRewardTiers.filter((tier) => tier.reward_type === "item")
+      ),
+    ];
+  }, [fundraiserRewardTiers]);
+
+  const showDonationReward =
+    item.mode === "donation" || item.mode === "either";
+
+  const showLoanReward =
+    item.mode === "loan" || item.mode === "either";
+
   useEffect(() => {
     if (!open || variant !== "overlay") return;
     const prev = document.body.style.overflow;
@@ -147,7 +183,6 @@ export default function EditNeedModal({
     };
   }, [open, variant]);
 
-  // Load detail row when opened / need changes
   useEffect(() => {
     if (!open || !need) return;
 
@@ -230,7 +265,6 @@ export default function EditNeedModal({
           return;
         }
 
-        // money
         id = await findNeedDetailId("money", need.id);
         if (cancelled) return;
 
@@ -294,7 +328,6 @@ export default function EditNeedModal({
 
     setBusy(true);
     try {
-      // 1) Update base need
       const updatedBase = await updateNeed(need.id, {
         fundraiser: need.fundraiser ?? need.fundraiser_id,
         need_type: need.need_type,
@@ -305,7 +338,6 @@ export default function EditNeedModal({
         sort_order: need.sort_order ?? 0,
       });
 
-      // 2) Save / create detail
       if (type === "money") {
         const payload = {
           need: need.id,
@@ -497,6 +529,48 @@ export default function EditNeedModal({
                 disabled={isDisabled}
               />
             </div>
+
+            <div className="field field--full">
+              <label className="field__label">Reward setup</label>
+              <div className="field__hint">
+                Choose which reward is earned for this item need. The system will apply
+                the donation or loan reward based on the supporter’s pledge mode.
+              </div>
+            </div>
+
+            {showDonationReward && (
+              <div className="field">
+                <label className="field__label">Donation reward</label>
+                <NeedsDropdown
+                  value={String(item.donation_reward_tier ?? "")}
+                  onChange={(v) =>
+                    setItem((p) => ({
+                      ...p,
+                      donation_reward_tier: v ? Number(v) : null,
+                    }))
+                  }
+                  options={itemRewardOptions}
+                  disabled={isDisabled}
+                />
+              </div>
+            )}
+
+            {showLoanReward && (
+              <div className="field">
+                <label className="field__label">Loan reward</label>
+                <NeedsDropdown
+                  value={String(item.loan_reward_tier ?? "")}
+                  onChange={(v) =>
+                    setItem((p) => ({
+                      ...p,
+                      loan_reward_tier: v ? Number(v) : null,
+                    }))
+                  }
+                  options={itemRewardOptions}
+                  disabled={isDisabled}
+                />
+              </div>
+            )}
           </>
         )}
 
@@ -579,16 +653,44 @@ export default function EditNeedModal({
                 disabled={isDisabled}
               />
             </div>
+
+            <div className="field field--full">
+              <label className="field__label">Time reward</label>
+              <NeedsDropdown
+                value={String(time.reward_tier ?? "")}
+                onChange={(v) =>
+                  setTime((p) => ({
+                    ...p,
+                    reward_tier: v ? Number(v) : null,
+                  }))
+                }
+                options={timeRewardOptions}
+                disabled={isDisabled}
+              />
+              <div className="field__hint">
+                This reward is earned when someone commits to this volunteer role.
+              </div>
+            </div>
           </>
         )}
       </div>
 
       <div className="modal__foot">
-        <button type="button" className="rtBtn rtBtn--secondary" onClick={onClose} disabled={isDisabled}>
+        <button
+          type="button"
+          className="rtBtn rtBtn--secondary"
+          onClick={onClose}
+          disabled={isDisabled}
+        >
           Cancel
         </button>
 
-        <button type="button" className="rtBtn rtBtn--primary" onClick={handleSave} disabled={isDisabled}>
+        <button
+          type="button"
+          className="rtBtn rtBtn--primary"
+          onClick={handleSave}
+          disabled={isDisabled}
+        >
           {busy ? "Saving…" : "Save changes"}
         </button>
       </div>

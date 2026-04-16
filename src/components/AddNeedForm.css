@@ -20,6 +20,13 @@
   opacity: 0.92;
 }
 
+.needAdd__hint {
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  opacity: 0.82;
+}
+
 .needAdd__input,
 .needAdd__textarea,
 .needAdd__select {

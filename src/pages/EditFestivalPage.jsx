@@ -462,38 +462,39 @@ export default function EditFestivalPage() {
               />
 
               <NeedsPanel
-                fundraiserId={id}
-                needs={needs}
-                disabled={isSaving || tierBusy}
-                onAddNeed={async (created) => {
-                  setNeeds((cur) => {
-                    if (cur.some((n) => n.id === created.id)) return cur;
+                  fundraiserId={id}
+                  needs={needs}
+                  rewardTiers={tiers}
+                  disabled={isSaving || tierBusy}
+                  onAddNeed={async (created) => {
+                    setNeeds((cur) => {
+                      if (cur.some((n) => n.id === created.id)) return cur;
 
-                    const sameType = cur.filter((n) => n.need_type === created.need_type);
-                    const maxSort = sameType.reduce((max, n) => {
-                      const so = Number(n.sort_order);
-                      return Number.isFinite(so) && so > max ? so : max;
-                    }, 0);
+                      const sameType = cur.filter((n) => n.need_type === created.need_type);
+                      const maxSort = sameType.reduce((max, n) => {
+                        const so = Number(n.sort_order);
+                        return Number.isFinite(so) && so > max ? so : max;
+                      }, 0);
 
-                    const withSort =
-                      Number(created.sort_order) > 0
-                        ? created
-                        : { ...created, sort_order: maxSort + 10 };
+                      const withSort =
+                        Number(created.sort_order) > 0
+                          ? created
+                          : { ...created, sort_order: maxSort + 10 };
 
-                    return [...cur, withSort];
-                  });
+                      return [...cur, withSort];
+                    });
 
-                  await refreshFundraiserBits();
-                }}
-                onEditNeed={async (updated) => {
-                  setNeeds((cur) => cur.map((n) => (n.id === updated.id ? updated : n)));
-                  await refreshFundraiserBits();
-                }}
-                onDeleteNeed={async (deleted) => {
-                  setNeeds((cur) => cur.filter((n) => n.id !== deleted.id));
-                  await refreshFundraiserBits();
-                }}
-              />
+                    await refreshFundraiserBits();
+                  }}
+                  onEditNeed={async (updated) => {
+                    setNeeds((cur) => cur.map((n) => (n.id === updated.id ? updated : n)));
+                    await refreshFundraiserBits();
+                  }}
+                  onDeleteNeed={async (deleted) => {
+                    setNeeds((cur) => cur.filter((n) => n.id !== deleted.id));
+                    await refreshFundraiserBits();
+                  }}
+                />
 
               {saveError && <div className="form-alert">{saveError}</div>}
 
@@ -650,6 +651,19 @@ export default function EditFestivalPage() {
                             value={newTier.reward_type}
                             onChange={handleRewardTypeChange}
                           />
+
+                          {newTier.reward_type === "item" && (
+                            <div className="tierAdd__hint">
+                              Item rewards are assigned as <strong>loan</strong> or <strong>donation</strong>
+                              when attached to an item need.
+                            </div>
+                          )}
+
+                          {newTier.reward_type === "time" && (
+                            <div className="tierAdd__hint">
+                              Time rewards are assigned when attached to a volunteer role or time need.
+                            </div>
+                          )}
                         </div>
 
                         <div className="tierAdd__field">

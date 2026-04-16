@@ -1,4 +1,3 @@
-// src/components/NeedsPanel.jsx
 import { useEffect, useMemo, useState } from "react";
 import "./NeedsPanel.css";
 
@@ -34,7 +33,6 @@ function formatAUD(value) {
   }).format(Number.isFinite(n) ? n : 0);
 }
 
-// Time formatting (same vibe as your FundraiserPage)
 function formatShiftLineAU(startIso, endIso) {
   if (!startIso && !endIso) return null;
 
@@ -93,11 +91,6 @@ function groupByType(needs = []) {
   return { money, time, item };
 }
 
-/**
- * Sort rules:
- * - needs with a real (non-zero) sort_order come first, ascending
- * - needs with sort_order 0/null fall back to id order
- */
 function sortNeeds(arr) {
   return [...arr].sort((a, b) => {
     const sa = Number(a.sort_order);
@@ -241,6 +234,7 @@ function buildNeedPutPayload(existingNeed, fundraiserId, overrides = {}) {
 export default function NeedsPanel({
   fundraiserId,
   needs = [],
+  rewardTiers = [],
   disabled = false,
   onAddNeed,
   onEditNeed,
@@ -300,13 +294,11 @@ export default function NeedsPanel({
   const time = useMemo(() => sortNeeds(grouped.time), [grouped.time]);
   const item = useMemo(() => sortNeeds(grouped.item), [grouped.item]);
 
-  // Helper: compute missing IDs based on current map
   function missingIdsFor(list, map) {
     const ids = list.map((n) => n.id).filter(Boolean);
     return ids.filter((id) => map[id] === undefined);
   }
 
-  // Item detail cache
   useEffect(() => {
     let alive = true;
 
@@ -344,7 +336,6 @@ export default function NeedsPanel({
     };
   }, [item, itemNeedMap]);
 
-  // Money detail cache
   useEffect(() => {
     let alive = true;
 
@@ -382,7 +373,6 @@ export default function NeedsPanel({
     };
   }, [money, moneyNeedMap]);
 
-  // Time detail cache
   useEffect(() => {
     let alive = true;
 
@@ -491,8 +481,8 @@ export default function NeedsPanel({
           quantity_needed: Number(data.quantity_needed),
           mode: data.mode,
           notes: data.notes ?? "",
-          donation_reward_tier: null,
-          loan_reward_tier: null,
+          donation_reward_tier: data.donation_reward_tier || null,
+          loan_reward_tier: data.loan_reward_tier || null,
         });
 
         setItemNeedMap((prev) => {
@@ -510,7 +500,7 @@ export default function NeedsPanel({
           volunteers_needed: Number(data.volunteers_needed),
           role_title: data.role_title,
           location: data.location ?? "",
-          reward_tier: null,
+          reward_tier: data.reward_tier || null,
         });
 
         setTimeNeedMap((prev) => {
@@ -620,6 +610,7 @@ export default function NeedsPanel({
                     open
                     variant="inline"
                     need={editingNeed}
+                    rewardTiers={rewardTiers}
                     disabled={disabled}
                     onClose={closeEdit}
                     onSaved={applyUpdatedBase}
@@ -657,6 +648,8 @@ export default function NeedsPanel({
 
       {!readOnly && showAdd && (
         <AddNeedForm
+          fundraiserId={fundraiserId}
+          rewardTiers={rewardTiers}
           disabled={disabled}
           onCancel={() => setShowAdd(false)}
           onCreate={handleCreateNeed}

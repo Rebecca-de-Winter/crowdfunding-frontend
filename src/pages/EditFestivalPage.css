@@ -487,6 +487,13 @@
   font-weight: 900;
 }
 
+.tierAdd__hint {
+  margin-top: 0.45rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  opacity: 0.82;
+}
+
 .tierAdd__actions {
   display: flex;
   gap: 10px;
