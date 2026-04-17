@@ -267,7 +267,9 @@ function ProfilePage() {
 
       setIncomingTotals((prevTotals) => {
         if (!prevTotals) return prevTotals;
-        const next = incomingPledges.map((p) => (p.id === id ? { ...p, ...updated } : p));
+        const next = incomingPledges.map((p) =>
+          p.id === id ? { ...p, ...updated } : p
+        );
         return sumIncomingTotals(next);
       });
     } catch (err) {
@@ -285,7 +287,9 @@ function ProfilePage() {
 
       setIncomingTotals((prevTotals) => {
         if (!prevTotals) return prevTotals;
-        const next = incomingPledges.map((p) => (p.id === id ? { ...p, ...updated } : p));
+        const next = incomingPledges.map((p) =>
+          p.id === id ? { ...p, ...updated } : p
+        );
         return sumIncomingTotals(next);
       });
     } catch (err) {
@@ -514,8 +518,8 @@ function ProfilePage() {
                   {myPledges.length === 0 ? (
                     <div className="profileCard__empty">
                       You haven’t made any pledges yet.
-                      <div style={{ marginTop: 10 }}>
-                        <Link className="btnTiny" to="/fundraisers">
+                      <div className="profileCard__cta">
+                        <Link className="btnTiny btnTiny--accent" to="/fundraisers">
                           Find a fundraiser to support
                         </Link>
                       </div>
@@ -562,14 +566,20 @@ function ProfilePage() {
                                 </div>
                               )}
 
-                              <div className="profileRow__meta">
-                                Status: <strong>{statusLabel(p.status)}</strong>
+                              <div className="profileRow__meta profileRow__meta--status">
+                                <span>Status:</span>
+                                <span className={`statusBadge is-${safeLower(p.status)}`}>
+                                  {statusLabel(p.status)}
+                                </span>
                               </div>
                             </div>
 
                             <div className="profileRow__actions">
                               {fundraiserId && (
-                                <Link className="btnTiny" to={`/fundraisers/${fundraiserId}`}>
+                                <Link
+                                  className="btnTiny btnTiny--ghost"
+                                  to={`/fundraisers/${fundraiserId}`}
+                                >
                                   View
                                 </Link>
                               )}
@@ -595,7 +605,7 @@ function ProfilePage() {
                   <div className="profileCard__top">
                     <div className="profileCard__topLeft">
                       <h2 className="profileCard__title">Rewards I’ve earned</h2>
-                      <div className="muted" style={{ marginTop: 6 }}>
+                      <div className="profileCard__helper">
                         Rewards are cumulative per fundraiser. This shows what you’ve unlocked
                         so far.
                       </div>
@@ -704,7 +714,7 @@ function ProfilePage() {
 
                             <div className="profileRow__actions">
                               {fid && (
-                                <Link className="btnTiny" to={`/fundraisers/${fid}`}>
+                                <Link className="btnTiny btnTiny--ghost" to={`/fundraisers/${fid}`}>
                                   View
                                 </Link>
                               )}
@@ -747,8 +757,8 @@ function ProfilePage() {
                   {myFundraisers.length === 0 ? (
                     <div className="profileCard__empty">
                       You haven’t created any fundraisers yet.
-                      <div style={{ marginTop: 10 }}>
-                        <Link className="btnTiny" to="/fundraisers/new">
+                      <div className="profileCard__cta">
+                        <Link className="btnTiny btnTiny--accent" to="/fundraisers/new">
                           Create your first fundraiser
                         </Link>
                       </div>
@@ -775,19 +785,29 @@ function ProfilePage() {
                                 </span>
                               )}
 
-                              <div className="profileRow__meta">
-                                Status: <strong>{statusLabel(f.status || f.lifecycle)}</strong>
+                              <div className="profileRow__meta profileRow__meta--status">
+                                <span>Status:</span>
+                                <span
+                                  className={`statusBadge is-${safeLower(
+                                    f.status || f.lifecycle
+                                  )}`}
+                                >
+                                  {statusLabel(f.status || f.lifecycle)}
+                                </span>
                               </div>
                             </div>
 
                             <div className="profileRow__actions">
                               {fundraiserId ? (
                                 <>
-                                  <Link className="btnTiny" to={`/fundraisers/${fundraiserId}`}>
+                                  <Link
+                                    className="btnTiny btnTiny--ghost"
+                                    to={`/fundraisers/${fundraiserId}`}
+                                  >
                                     View
                                   </Link>
                                   <Link
-                                    className="btnTiny"
+                                    className="btnTiny btnTiny--accent"
                                     to={`/fundraisers/${fundraiserId}/edit`}
                                   >
                                     Edit
@@ -868,9 +888,11 @@ function ProfilePage() {
                                 Supporter: <strong>{supporterName}</strong>
                               </div>
 
-                              <div className="profileRow__meta">
-                                Need: <strong>{p.need_title || "—"}</strong>{" "}
-                                <span className="muted">({p.need_type || "—"})</span>
+                              <div className="profileRow__meta profileRow__meta--need">
+                                <span>
+                                  Need: <strong>{p.need_title || "—"}</strong>{" "}
+                                  <span className="muted">({p.need_type || "—"})</span>
+                                </span>
                                 <span className={`valueBadge is-${pledgeValueKind(p)}`}>
                                   {pledgeValueLabel(p)}
                                 </span>
@@ -882,14 +904,20 @@ function ProfilePage() {
                                 </div>
                               )}
 
-                              <div className="profileRow__meta">
-                                Status: <strong>{statusLabel(p.status)}</strong>
+                              <div className="profileRow__meta profileRow__meta--status">
+                                <span>Status:</span>
+                                <span className={`statusBadge is-${safeLower(p.status)}`}>
+                                  {statusLabel(p.status)}
+                                </span>
                               </div>
                             </div>
 
                             <div className="profileRow__actions">
                               {fundraiserId && (
-                                <Link className="btnTiny" to={`/fundraisers/${fundraiserId}`}>
+                                <Link
+                                  className="btnTiny btnTiny--ghost"
+                                  to={`/fundraisers/${fundraiserId}`}
+                                >
                                   View
                                 </Link>
                               )}
